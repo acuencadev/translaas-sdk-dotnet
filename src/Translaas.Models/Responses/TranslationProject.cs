@@ -1,0 +1,32 @@
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace Translaas.Models.Responses;
+
+/// <summary>
+/// Represents a translation project containing multiple translation groups.
+/// </summary>
+public class TranslationProject
+{
+    /// <summary>
+    /// Gets or sets the dictionary of translation groups, where the key is the group name
+    /// and the value is the translation group.
+    /// </summary>
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement> Groups { get; set; } = new Dictionary<string, JsonElement>();
+
+    /// <summary>
+    /// Gets a translation group by name.
+    /// </summary>
+    /// <param name="groupName">The group name.</param>
+    /// <returns>The translation group, or null if not found.</returns>
+    public TranslationGroup? GetGroup(string groupName)
+    {
+        if (Groups.TryGetValue(groupName, out var element))
+        {
+            return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText());
+        }
+        return null;
+    }
+}
