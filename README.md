@@ -1,5 +1,7 @@
 # Translaas SDK
 
+![Tests](https://github.com/acuencadev/Translaas.SDK/workflows/CI/badge.svg)
+
 A strongly-typed, performant, and modular .NET SDK for consuming the **Translaas Translation Delivery API**. This SDK provides a clean, dependency-injection friendly way to retrieve translations in your .NET applications.
 
 ## Features
