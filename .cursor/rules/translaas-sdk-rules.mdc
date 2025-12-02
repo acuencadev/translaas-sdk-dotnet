@@ -1,3 +1,6 @@
+---
+alwaysApply: true
+---
 # Translaas SDK - Cursor Rules
 
 ## Project Context
@@ -6,11 +9,12 @@ This is an open-source .NET SDK for the Translaas Translation Delivery API SaaS.
 
 ## Core Principles
 
-1. **SDK-First Design**: This is a client SDK - prioritize developer experience, ease of use, and clear APIs
-2. **Multi-Framework Support**: Must work seamlessly across netstandard2.0, net6.0, net8.0, and net10.0
-3. **Open Source Ready**: Code should be clean, well-documented, and welcoming to contributors
-4. **Performance**: Minimize allocations, use async/await properly, optimize for common use cases
-5. **Modularity**: Keep projects focused and dependencies minimal
+1. **Test-Driven Development (TDD)**: Write tests first, then implement code to make tests pass
+2. **SDK-First Design**: This is a client SDK - prioritize developer experience, ease of use, and clear APIs
+3. **Multi-Framework Support**: Must work seamlessly across netstandard2.0, net6.0, net8.0, and net10.0
+4. **Open Source Ready**: Code should be clean, well-documented, and welcoming to contributors
+5. **Performance**: Minimize allocations, use async/await properly, optimize for common use cases
+6. **Modularity**: Keep projects focused and dependencies minimal
 
 ## Code Style
 
@@ -255,14 +259,292 @@ Task<TranslationGroup> GetGroupAsync(
     CancellationToken cancellationToken = default);
 ```
 
+## Test-Driven Development (TDD)
+
+### TDD Workflow
+
+Follow the **Red-Green-Refactor** cycle:
+
+1. **Red**: Write a failing test that describes the desired behavior
+2. **Green**: Write the minimum code necessary to make the test pass
+3. **Refactor**: Improve the code while keeping tests green
+
+### TDD Principles
+
+- **Write tests first** - Tests define the API contract and expected behavior
+- **One test at a time** - Focus on a single behavior per test
+- **Test behavior, not implementation** - Tests should verify outcomes, not internal details
+- **Keep tests simple** - Each test should verify one thing
+- **Refactor with confidence** - Tests provide safety net for refactoring
+
+### TDD Workflow Example
+
+```csharp
+// 1. RED: Write failing test
+[Fact]
+public async Task GetEntryAsync_ReturnsTranslation_WhenEntryExists()
+{
+    // Arrange
+    var client = CreateClient();
+    
+    // Act
+    var result = await client.GetEntryAsync("ui", "button.save", "en");
+    
+    // Assert
+    Assert.Equal("Save", result);
+}
+
+// 2. GREEN: Implement minimum code to pass
+public async Task<string> GetEntryAsync(string group, string entry, string lang)
+{
+    // Minimal implementation
+    return "Save"; // Hard-coded to make test pass
+}
+
+// 3. REFACTOR: Improve implementation while keeping tests green
+public async Task<string> GetEntryAsync(string group, string entry, string lang)
+{
+    var request = new GetTranslationRequest { Group = group, Entry = entry, Lang = lang };
+    var response = await _httpClient.SendAsync(...);
+    return await response.Content.ReadAsStringAsync();
+}
+```
+
+## Test Project Structure
+
+### Directory Organization
+
+All test projects must be placed in the `tests/` directory:
+
+```
+tests/
+├── Translaas.Models.Tests/
+│   ├── Translaas.Models.Tests.csproj
+│   └── [Test files]
+├── Translaas.Client.Tests/
+│   ├── Translaas.Client.Tests.csproj
+│   └── [Test files]
+├── Translaas.Caching.Tests/
+│   ├── Translaas.Caching.Tests.csproj
+│   └── [Test files]
+├── Translaas.Extensions.Http.Tests/
+│   ├── Translaas.Extensions.Http.Tests.csproj
+│   └── [Test files]
+└── Translaas.Extensions.DependencyInjection.Tests/
+    ├── Translaas.Extensions.DependencyInjection.Tests.csproj
+    └── [Test files]
+```
+
+### Test Project Naming
+
+- Test project names: `{ProjectName}.Tests`
+- Example: `Translaas.Client.Tests` for `Translaas.Client`
+
+### Test Project Configuration
+
+Each test project should:
+- Reference the corresponding source project
+- Target the same frameworks as the source project (or at least net6.0+)
+- Use xUnit as the testing framework
+- Use Moq or NSubstitute for mocking
+- Use FluentAssertions for readable assertions
+
+### Example Test Project File
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Translaas.Client\Translaas.Client.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+## Testing Guidelines
+
+### Test Coverage Requirements
+
+- **Every public API** must have tests
+- **Every project** must have a corresponding test project in `tests/`
+- Aim for high code coverage (80%+ for critical paths)
+- Test both success and failure scenarios
+
+### Test Categories
+
+1. **Unit Tests**: Test individual components in isolation
+2. **Integration Tests**: Test component interactions (HTTP client, caching)
+3. **Framework Compatibility Tests**: Verify behavior across all target frameworks
+
+### Test Naming Conventions
+
+Use descriptive test names following the pattern:
+```
+{MethodName}_{Scenario}_{ExpectedBehavior}
+```
+
+Examples:
+- `GetEntryAsync_ReturnsTranslation_WhenEntryExists`
+- `GetEntryAsync_ThrowsException_WhenApiReturnsError`
+- `GetGroupAsync_UsesCache_WhenCacheEnabled`
+
+### Test Organization
+
+Organize tests to mirror source structure:
+
+```
+Translaas.Client.Tests/
+├── TranslaasClientTests.cs
+├── HttpRequestBuilderTests.cs
+└── ResponseHandlerTests.cs
+```
+
+### Test Patterns
+
+#### Arrange-Act-Assert (AAA)
+
+```csharp
+[Fact]
+public async Task GetEntryAsync_ReturnsTranslation_WhenEntryExists()
+{
+    // Arrange
+    var mockHttpClient = new Mock<HttpClient>();
+    var client = new TranslaasClient(mockHttpClient.Object, options);
+    
+    // Act
+    var result = await client.GetEntryAsync("ui", "button.save", "en");
+    
+    // Assert
+    result.Should().Be("Save");
+}
+```
+
+#### Testing Async Code
+
+```csharp
+[Fact]
+public async Task GetEntryAsync_ThrowsException_WhenRequestFails()
+{
+    // Arrange
+    var client = CreateClientWithFailingHttpClient();
+    
+    // Act & Assert
+    await Assert.ThrowsAsync<TranslaasApiException>(
+        () => client.GetEntryAsync("ui", "button.save", "en"));
+}
+```
+
+#### Testing Multi-Targeting
+
+```csharp
+[Theory]
+[InlineData("netstandard2.0")]
+[InlineData("net6.0")]
+[InlineData("net8.0")]
+[InlineData("net10.0")]
+public void Client_Compiles_ForAllTargetFrameworks(string framework)
+{
+    // This test ensures code compiles for all frameworks
+    // Actual runtime tests should verify behavior
+}
+```
+
+### Mocking Guidelines
+
+- **Mock external dependencies**: HTTP clients, cache providers, configuration
+- **Don't mock what you're testing**: Test the actual implementation
+- **Use test doubles**: Create test implementations for interfaces when appropriate
+- **Verify interactions**: Use mocks to verify method calls and parameters
+
+### Test Data
+
+- Use **test fixtures** for common test data
+- Create **test builders** for complex objects
+- Use **test data generators** for varied inputs
+- Keep test data **realistic** but **minimal**
+
+### Example Test Fixture
+
+```csharp
+public class TranslaasClientTestFixture
+{
+    public Mock<HttpClient> MockHttpClient { get; }
+    public TranslaasOptions Options { get; }
+    
+    public TranslaasClientTestFixture()
+    {
+        MockHttpClient = new Mock<HttpClient>();
+        Options = new TranslaasOptions
+        {
+            ApiKey = "test-api-key",
+            BaseUrl = "https://api.test.com"
+        };
+    }
+    
+    public TranslaasClient CreateClient() => new TranslaasClient(MockHttpClient.Object, Options);
+}
+```
+
+### Testing Error Scenarios
+
+Always test:
+- API errors (400, 404, 500, etc.)
+- Network failures
+- Timeout scenarios
+- Invalid configuration
+- Null/empty parameters
+- Edge cases (empty responses, malformed JSON)
+
+### Testing Caching
+
+Test caching behavior:
+- Cache hits (return cached value)
+- Cache misses (fetch from API)
+- Cache expiration
+- Cache invalidation
+- Cache key generation
+
+### Running Tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run tests for specific project
+dotnet test tests/Translaas.Client.Tests
+
+# Run tests with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run tests for specific framework
+dotnet test -f net6.0
+```
+
 ## Testing Considerations
 
-- Write unit tests for all public APIs
-- Test error scenarios (API errors, network failures)
-- Test caching behavior
-- Test multi-targeting compatibility
-- Use test doubles/mocks for HTTP client
-- Test configuration validation
+- **TDD is mandatory** - Write tests before implementation
+- **Every project must have tests** - No project is complete without tests
+- **Test all public APIs** - Every public method needs test coverage
+- **Test error scenarios** - API errors, network failures, timeouts
+- **Test caching behavior** - Verify cache hits, misses, expiration
+- **Test multi-targeting compatibility** - Ensure code works on all frameworks
+- **Use test doubles/mocks** - Mock HTTP client, cache providers
+- **Test configuration validation** - Verify options are validated correctly
+- **Test edge cases** - Null inputs, empty strings, boundary conditions
 
 ## Performance Guidelines
 
@@ -355,14 +637,20 @@ Use conventional commits:
 ## Code Review Checklist
 
 Before submitting code:
+- [ ] **TDD followed** - Tests written before implementation
+- [ ] **Test project created** - Test project exists in `tests/` directory
+- [ ] **All tests pass** - All tests in test project pass
+- [ ] **Test coverage adequate** - Public APIs have test coverage
 - [ ] All target frameworks compile successfully
+- [ ] All target frameworks have passing tests
 - [ ] XML documentation comments added for public APIs
 - [ ] No unnecessary dependencies added
 - [ ] Error handling is appropriate
 - [ ] Async/await used correctly
 - [ ] Nullability is explicit
 - [ ] Code follows naming conventions
-- [ ] Tests added/updated (when applicable)
+- [ ] Tests cover success and failure scenarios
+- [ ] Tests use proper mocking/test doubles
 - [ ] README/docs updated if needed
 
 ## Common Patterns
@@ -418,6 +706,8 @@ return result;
 
 ## Prohibited Patterns
 
+- ❌ **Don't write code without tests first** - TDD is mandatory
+- ❌ **Don't skip test projects** - Every project must have tests
 - ❌ Don't use `Newtonsoft.Json` - use `System.Text.Json`
 - ❌ Don't block async code (`.Result`, `.Wait()`)
 - ❌ Don't catch and swallow exceptions silently
@@ -426,8 +716,9 @@ return result;
 - ❌ Don't use `var` for unclear types (prefer explicit types for public APIs)
 - ❌ Don't ignore cancellation tokens
 - ❌ Don't create public APIs without XML documentation
+- ❌ Don't commit code with failing tests
+- ❌ Don't skip testing error scenarios
 
 ## Remember
 
 This SDK is the public face of Translaas for .NET developers. Every API, every error message, and every piece of documentation represents the Translaas brand. Make it excellent.
-

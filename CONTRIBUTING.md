@@ -288,7 +288,7 @@ dotnet test -f net6.0
 ## Additional Resources
 
 - [Multi-Targeting Guide](docs/MULTI-TARGETING.md) - Understanding framework compatibility
-- [Technical Specification](.specs/translaas-sdk.spec.md) - Detailed SDK architecture
+- [Technical Specification](specs/translaas-sdk.spec.md) - Detailed SDK architecture
 - [SDK Guidelines](.cursor/rules/sdk-guidelines.mdc) - Comprehensive development guidelines including TDD practices
 
 Thank you for contributing to Translaas SDK! 🎉
