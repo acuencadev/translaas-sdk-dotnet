@@ -36,6 +36,26 @@ We welcome contributions to the Translaas SDK! This document provides guidelines
   - `Translaas.Caching` - Caching layer
   - `Translaas.Extensions.*` - Extension methods and DI integration
 
+#### Test Project Structure
+
+All test projects must be placed in the `tests/` directory:
+
+```
+tests/
+├── Translaas.Models.Tests/
+├── Translaas.Client.Tests/
+├── Translaas.Caching.Tests/
+├── Translaas.Extensions.Http.Tests/
+└── Translaas.Extensions.DependencyInjection.Tests/
+```
+
+Each test project should:
+- Be named `{ProjectName}.Tests`
+- Reference the corresponding source project
+- Use xUnit as the testing framework
+- Include Moq or NSubstitute for mocking
+- Use FluentAssertions for readable assertions
+
 ### Multi-Targeting
 
 - Ensure all code compiles for all target frameworks:
@@ -52,12 +72,35 @@ We welcome contributions to the Translaas SDK! This document provides guidelines
   #endif
   ```
 
+### Test-Driven Development (TDD)
+
+We follow **Test-Driven Development (TDD)** practices. This means:
+
+1. **Write tests first** - Before implementing any feature, write a failing test
+2. **Make it pass** - Write the minimum code to make the test pass
+3. **Refactor** - Improve the code while keeping tests green
+
+#### TDD Workflow
+
+```
+Red → Green → Refactor
+```
+
+- **Red**: Write a failing test that describes the desired behavior
+- **Green**: Write the minimum code to make the test pass
+- **Refactor**: Improve code quality while keeping tests passing
+
 ### Testing
 
-- Write unit tests for new features and bug fixes
+- **Follow TDD** - Write tests before implementation
+- **Every project must have tests** - Test projects are located in `tests/` directory
+- **Test project naming**: `{ProjectName}.Tests` (e.g., `Translaas.Client.Tests`)
+- Write unit tests for all public APIs
+- Test both success and failure scenarios
 - Ensure all tests pass before submitting a pull request
-- Maintain or improve code coverage
+- Maintain or improve code coverage (aim for 80%+)
 - Test against all target frameworks when possible
+- Use proper test naming: `{MethodName}_{Scenario}_{ExpectedBehavior}`
 
 ### Dependencies
 
@@ -68,22 +111,40 @@ We welcome contributions to the Translaas SDK! This document provides guidelines
 
 ## Pull Request Process
 
-1. **Update documentation** if you're adding features or changing behavior
-2. **Update tests** - add tests for new features, update tests for bug fixes
-3. **Run the build** to ensure everything compiles:
+1. **Follow TDD workflow**:
+   - Write failing tests first (Red)
+   - Implement code to make tests pass (Green)
+   - Refactor while keeping tests green
+2. **Create test project** if adding a new source project:
+   - Create test project in `tests/` directory
+   - Name it `{ProjectName}.Tests`
+   - Add appropriate test dependencies (xUnit, Moq, FluentAssertions)
+3. **Update documentation** if you're adding features or changing behavior
+4. **Ensure test coverage**:
+   - All public APIs have tests
+   - Both success and failure scenarios are tested
+   - Tests follow naming convention: `{MethodName}_{Scenario}_{ExpectedBehavior}`
+5. **Run the build** to ensure everything compiles:
    ```bash
    dotnet build
    ```
-4. **Run tests** (when available):
+6. **Run tests** and ensure all pass:
    ```bash
    dotnet test
    ```
-5. **Update the README** if you're adding new features or changing usage
-6. **Write a clear PR description**:
+7. **Run tests for all frameworks**:
+   ```bash
+   dotnet test -f net6.0
+   dotnet test -f net8.0
+   dotnet test -f net10.0
+   ```
+8. **Update the README** if you're adding new features or changing usage
+9. **Write a clear PR description**:
    - What changes were made
    - Why the changes were made
    - How to test the changes
    - Any breaking changes
+   - Test coverage information
 
 ## Commit Messages
 
@@ -149,9 +210,85 @@ If you have questions about contributing, please:
 - Check existing issues and discussions
 - Review the codebase to understand patterns and conventions
 
+## Testing Resources
+
+### Creating a Test Project
+
+To create a new test project:
+
+```bash
+# Navigate to tests directory
+cd tests
+
+# Create test project
+dotnet new xunit -n Translaas.YourProject.Tests
+
+# Add project reference
+cd Translaas.YourProject.Tests
+dotnet add reference ../../src/Translaas.YourProject/Translaas.YourProject.csproj
+
+# Add test dependencies
+dotnet add package Moq
+dotnet add package FluentAssertions
+```
+
+### Example Test Structure
+
+```csharp
+using FluentAssertions;
+using Moq;
+using Xunit;
+
+namespace Translaas.Client.Tests;
+
+public class TranslaasClientTests
+{
+    [Fact]
+    public async Task GetEntryAsync_ReturnsTranslation_WhenEntryExists()
+    {
+        // Arrange
+        var client = CreateClient();
+        
+        // Act
+        var result = await client.GetEntryAsync("ui", "button.save", "en");
+        
+        // Assert
+        result.Should().Be("Save");
+    }
+    
+    [Fact]
+    public async Task GetEntryAsync_ThrowsException_WhenApiReturnsError()
+    {
+        // Arrange
+        var client = CreateClientWithFailingHttpClient();
+        
+        // Act & Assert
+        await Assert.ThrowsAsync<TranslaasApiException>(
+            () => client.GetEntryAsync("ui", "button.save", "en"));
+    }
+}
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run tests for specific project
+dotnet test tests/Translaas.Client.Tests
+
+# Run tests with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Run tests for specific framework
+dotnet test -f net6.0
+```
+
 ## Additional Resources
 
 - [Multi-Targeting Guide](docs/MULTI-TARGETING.md) - Understanding framework compatibility
 - [Technical Specification](.specs/translaas-sdk.spec.md) - Detailed SDK architecture
+- [SDK Guidelines](.cursor/rules/sdk-guidelines.mdc) - Comprehensive development guidelines including TDD practices
 
 Thank you for contributing to Translaas SDK! 🎉
