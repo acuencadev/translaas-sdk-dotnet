@@ -16,19 +16,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            dotnet-version: '6.0.x'
-            target-framework: 'net6.0'
-          - os: ubuntu-latest
             dotnet-version: '8.0.x'
             target-framework: 'net8.0'
-          - os: windows-latest
-            dotnet-version: '6.0.x'
-            target-framework: 'net6.0'
           - os: windows-latest
             dotnet-version: '8.0.x'
             target-framework: 'net8.0'
         # Note: .NET 10.0 is excluded from CI until SDK is available on GitHub Actions
         # Projects still target net10.0 for future compatibility
+        # Note: .NET 6.0 is temporarily removed due to VSTest test discovery compatibility issues
     
     steps:
     - name: Checkout code
