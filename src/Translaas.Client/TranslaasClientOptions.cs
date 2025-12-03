@@ -1,0 +1,52 @@
+using System;
+using System.Text.RegularExpressions;
+
+using Translaas.Models.Errors;
+
+namespace Translaas.Client;
+
+/// <summary>
+/// Configuration options for the Translaas client.
+/// </summary>
+public class TranslaasClientOptions
+{
+    private const string DefaultBaseUrl = "https://sdkapi.translaas.local/api";
+    private static readonly Regex UrlRegex = new Regex(@"^https?://", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Gets or sets the API key for authentication.
+    /// </summary>
+    public string ApiKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the base URL for the Translaas API.
+    /// </summary>
+    public string BaseUrl { get; set; } = DefaultBaseUrl;
+
+    /// <summary>
+    /// Gets or sets the timeout for HTTP requests.
+    /// </summary>
+    public TimeSpan? Timeout { get; set; }
+
+    /// <summary>
+    /// Validates the configuration options.
+    /// </summary>
+    /// <exception cref="TranslaasConfigurationException">Thrown when validation fails.</exception>
+    public void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(ApiKey))
+        {
+            throw new TranslaasConfigurationException("ApiKey is required and cannot be null or empty.");
+        }
+
+        if (string.IsNullOrWhiteSpace(BaseUrl))
+        {
+            throw new TranslaasConfigurationException("BaseUrl is required and cannot be null or empty.");
+        }
+
+        if (!UrlRegex.IsMatch(BaseUrl))
+        {
+            throw new TranslaasConfigurationException($"BaseUrl must be a valid HTTP or HTTPS URL. Provided value: {BaseUrl}");
+        }
+    }
+}
