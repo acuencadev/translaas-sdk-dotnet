@@ -60,7 +60,6 @@ Each test project should:
 
 - Ensure all code compiles for all target frameworks:
   - `netstandard2.0`
-  - `net6.0`
   - `net8.0`
   - `net10.0`
 - Use conditional compilation if framework-specific code is needed:
@@ -134,7 +133,6 @@ Red → Green → Refactor
    ```
 7. **Run tests for all frameworks**:
    ```bash
-   dotnet test -f net6.0
    dotnet test -f net8.0
    dotnet test -f net10.0
    ```
@@ -282,7 +280,7 @@ dotnet test tests/Translaas.Client.Tests
 dotnet test --collect:"XPlat Code Coverage"
 
 # Run tests for specific framework
-dotnet test -f net6.0
+dotnet test -f net8.0
 ```
 
 ## Additional Resources
