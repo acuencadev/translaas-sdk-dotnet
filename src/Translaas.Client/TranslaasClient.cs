@@ -264,11 +264,69 @@ public class TranslaasClient : ITranslaasClient
     }
 
     /// <inheritdoc />
-    public Task<Translaas.Models.Responses.ProjectLocales> GetProjectLocalesAsync(
+    public async Task<ProjectLocales> GetProjectLocalesAsync(
         string project,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        // Parameter validation
+        if (project == null)
+        {
+            throw new ArgumentNullException(nameof(project));
+        }
+
+        // Build request model
+        var requestModel = new GetProjectLocalesRequest
+        {
+            Project = project
+        };
+
+        // Create HTTP request
+        var request = BuildGetRequest("/api/translations/locales", requestModel);
+
+        try
+        {
+            // Send request
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            // Handle non-success status codes
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new TranslaasApiException(
+                    $"API request failed with status code {response.StatusCode}.",
+                    response.StatusCode,
+                    innerException: null,
+                    responseContent: responseContent);
+            }
+
+            // Deserialize JSON response
+            var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = JsonSerializer.Deserialize<ProjectLocales>(jsonContent, _jsonOptions);
+            
+            if (result == null)
+            {
+                throw new TranslaasApiException(
+                    "Failed to deserialize response from API.",
+                    response.StatusCode,
+                    responseContent: jsonContent);
+            }
+
+            return result;
+        }
+        catch (JsonException ex)
+        {
+            throw new TranslaasApiException(
+                $"Failed to deserialize response: {ex.Message}",
+                HttpStatusCode.BadRequest,
+                ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TranslaasApiException(
+                $"Failed to retrieve project locales: {ex.Message}",
+                HttpStatusCode.BadRequest,
+                ex);
+        }
     }
 
     /// <summary>
