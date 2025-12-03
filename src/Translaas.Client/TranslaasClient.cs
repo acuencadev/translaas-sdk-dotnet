@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using Translaas.Models.Errors;
 using Translaas.Models.Requests;
+using Translaas.Models.Responses;
 
 namespace Translaas.Client;
 
@@ -106,14 +107,85 @@ public class TranslaasClient : ITranslaasClient
     }
 
     /// <inheritdoc />
-    public Task<Translaas.Models.Responses.TranslationGroup> GetGroupAsync(
+    public async Task<Translaas.Models.Responses.TranslationGroup> GetGroupAsync(
         string project,
         string group,
         string lang,
         string? format = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        // Parameter validation
+        if (project == null)
+        {
+            throw new ArgumentNullException(nameof(project));
+        }
+
+        if (group == null)
+        {
+            throw new ArgumentNullException(nameof(group));
+        }
+
+        if (lang == null)
+        {
+            throw new ArgumentNullException(nameof(lang));
+        }
+
+        // Build request model
+        var requestModel = new GetGroupTranslationsRequest
+        {
+            Project = project,
+            Group = group,
+            Lang = lang,
+            Format = format
+        };
+
+        // Create HTTP request
+        var request = BuildGetRequest("/api/translations/group", requestModel);
+
+        try
+        {
+            // Send request
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            // Handle non-success status codes
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new TranslaasApiException(
+                    $"API request failed with status code {response.StatusCode}.",
+                    response.StatusCode,
+                    innerException: null,
+                    responseContent: responseContent);
+            }
+
+            // Deserialize JSON response
+            var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var result = JsonSerializer.Deserialize<TranslationGroup>(jsonContent, _jsonOptions);
+            
+            if (result == null)
+            {
+                throw new TranslaasApiException(
+                    "Failed to deserialize response from API.",
+                    response.StatusCode,
+                    responseContent: jsonContent);
+            }
+
+            return result;
+        }
+        catch (JsonException ex)
+        {
+            throw new TranslaasApiException(
+                $"Failed to deserialize response: {ex.Message}",
+                HttpStatusCode.BadRequest,
+                ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TranslaasApiException(
+                $"Failed to retrieve translation group: {ex.Message}",
+                HttpStatusCode.BadRequest,
+                ex);
+        }
     }
 
     /// <inheritdoc />
