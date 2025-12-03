@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -6,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Translaas.Models.Errors;
+using Translaas.Models.Requests;
 
 namespace Translaas.Client;
 
@@ -39,14 +41,68 @@ public class TranslaasClient : ITranslaasClient
     }
 
     /// <inheritdoc />
-    public Task<string> GetEntryAsync(
+    public async Task<string> GetEntryAsync(
         string group,
         string entry,
         string lang,
         int? number = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        // Parameter validation
+        if (group == null)
+        {
+            throw new ArgumentNullException(nameof(group));
+        }
+
+        if (entry == null)
+        {
+            throw new ArgumentNullException(nameof(entry));
+        }
+
+        if (lang == null)
+        {
+            throw new ArgumentNullException(nameof(lang));
+        }
+
+        // Build request model
+        var requestModel = new GetTranslationRequest
+        {
+            Group = group,
+            Entry = entry,
+            Lang = lang,
+            Number = number
+        };
+
+        // Create HTTP request
+        var request = BuildGetRequest("/api/translations/text", requestModel);
+
+        try
+        {
+            // Send request
+            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            // Handle non-success status codes
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                throw new TranslaasApiException(
+                    $"API request failed with status code {response.StatusCode}.",
+                    response.StatusCode,
+                    innerException: null,
+                    responseContent: responseContent);
+            }
+
+            // Parse raw text response
+            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return result;
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new TranslaasApiException(
+                $"Failed to retrieve translation: {ex.Message}",
+                HttpStatusCode.BadRequest,
+                ex);
+        }
     }
 
     /// <inheritdoc />
