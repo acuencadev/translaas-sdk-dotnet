@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,5 +76,58 @@ public class TranslaasClient : ITranslaasClient
         CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Builds a complete endpoint URL by combining the base URL with the endpoint path.
+    /// </summary>
+    /// <param name="endpoint">The endpoint path (e.g., "translations/text").</param>
+    /// <returns>The complete URL.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint is null.</exception>
+    internal string BuildEndpointUrl(string endpoint)
+    {
+        if (endpoint == null)
+        {
+            throw new ArgumentNullException(nameof(endpoint));
+        }
+
+        var baseUrl = _options.BaseUrl.TrimEnd('/');
+        var endpointPath = endpoint.TrimStart('/');
+
+        return $"{baseUrl}/{endpointPath}";
+    }
+
+    /// <summary>
+    /// Builds an HTTP GET request message with JSON body and API key header.
+    /// </summary>
+    /// <typeparam name="T">The type of the request model.</typeparam>
+    /// <param name="endpoint">The endpoint path.</param>
+    /// <param name="requestModel">The request model to serialize as JSON.</param>
+    /// <returns>An HttpRequestMessage configured for the API.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint or requestModel is null.</exception>
+    internal HttpRequestMessage BuildGetRequest<T>(string endpoint, T requestModel) where T : class
+    {
+        if (endpoint == null)
+        {
+            throw new ArgumentNullException(nameof(endpoint));
+        }
+
+        if (requestModel == null)
+        {
+            throw new ArgumentNullException(nameof(requestModel));
+        }
+
+        var url = BuildEndpointUrl(endpoint);
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        // Set API key header
+        request.Headers.Add("X-Api-Key", _options.ApiKey);
+
+        // Serialize request model to JSON
+        var json = JsonSerializer.Serialize(requestModel, _jsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        request.Content = content;
+
+        return request;
     }
 }
