@@ -10,6 +10,7 @@
     <!-- Test Dependencies -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
     <!-- Using 17.8.0 instead of 18.0.1 to avoid VSTest 18.0.1 compatibility issue with net6.0 test discovery -->
     <!-- VSTest 18.0.1 (bundled with .NET SDK 10.0.100) has a known bug that prevents test discovery for net6.0 projects -->
     <!-- Version 17.8.0 uses VSTest 17.x which works correctly with net6.0 -->
