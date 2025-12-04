@@ -80,22 +80,26 @@ public class TranslaasClient : ITranslaasClient
         try
         {
             // Send request
-            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                throw new TranslaasApiException(
-                    $"API request failed with status code {response.StatusCode}.",
-                    response.StatusCode,
-                    innerException: null,
-                    responseContent: responseContent);
+                await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
             // Parse raw text response
+#if NETSTANDARD2_0
             var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+            var result = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
             return result;
+        }
+        catch (TranslaasApiException)
+        {
+            // Re-throw API exceptions as-is
+            throw;
         }
         catch (HttpRequestException ex)
         {
@@ -145,21 +149,20 @@ public class TranslaasClient : ITranslaasClient
         try
         {
             // Send request
-            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                throw new TranslaasApiException(
-                    $"API request failed with status code {response.StatusCode}.",
-                    response.StatusCode,
-                    innerException: null,
-                    responseContent: responseContent);
+                await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
             // Deserialize JSON response
+#if NETSTANDARD2_0
             var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
             var result = JsonSerializer.Deserialize<TranslationGroup>(jsonContent, _jsonOptions);
             
             if (result == null)
@@ -171,6 +174,11 @@ public class TranslaasClient : ITranslaasClient
             }
 
             return result;
+        }
+        catch (TranslaasApiException)
+        {
+            // Re-throw API exceptions as-is
+            throw;
         }
         catch (JsonException ex)
         {
@@ -220,21 +228,20 @@ public class TranslaasClient : ITranslaasClient
         try
         {
             // Send request
-            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                throw new TranslaasApiException(
-                    $"API request failed with status code {response.StatusCode}.",
-                    response.StatusCode,
-                    innerException: null,
-                    responseContent: responseContent);
+                await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
             // Deserialize JSON response
+#if NETSTANDARD2_0
             var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
             var result = JsonSerializer.Deserialize<TranslationProject>(jsonContent, _jsonOptions);
             
             if (result == null)
@@ -246,6 +253,11 @@ public class TranslaasClient : ITranslaasClient
             }
 
             return result;
+        }
+        catch (TranslaasApiException)
+        {
+            // Re-throw API exceptions as-is
+            throw;
         }
         catch (JsonException ex)
         {
@@ -286,21 +298,20 @@ public class TranslaasClient : ITranslaasClient
         try
         {
             // Send request
-            var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
-                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                throw new TranslaasApiException(
-                    $"API request failed with status code {response.StatusCode}.",
-                    response.StatusCode,
-                    innerException: null,
-                    responseContent: responseContent);
+                await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
             // Deserialize JSON response
+#if NETSTANDARD2_0
             var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
             var result = JsonSerializer.Deserialize<ProjectLocales>(jsonContent, _jsonOptions);
             
             if (result == null)
@@ -312,6 +323,11 @@ public class TranslaasClient : ITranslaasClient
             }
 
             return result;
+        }
+        catch (TranslaasApiException)
+        {
+            // Re-throw API exceptions as-is
+            throw;
         }
         catch (JsonException ex)
         {
@@ -327,6 +343,58 @@ public class TranslaasClient : ITranslaasClient
                 HttpStatusCode.BadRequest,
                 ex);
         }
+    }
+
+    /// <summary>
+    /// Handles API error responses by parsing the error content and throwing an appropriate exception.
+    /// </summary>
+    /// <param name="response">The HTTP response message.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <exception cref="TranslaasApiException">Always thrown with details from the error response.</exception>
+    private async Task HandleApiError(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response == null)
+        {
+            throw new ArgumentNullException(nameof(response));
+        }
+
+        // Read response content
+#if NETSTANDARD2_0
+        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+
+        // Attempt to parse error response as JSON
+        TranslaasError? errorDetails = null;
+        if (!string.IsNullOrWhiteSpace(responseContent))
+        {
+            try
+            {
+                errorDetails = JsonSerializer.Deserialize<TranslaasError>(responseContent, _jsonOptions);
+            }
+            catch (JsonException)
+            {
+                // If deserialization fails, we'll use the raw content
+                errorDetails = null;
+            }
+        }
+
+        // Build error message
+        var errorMessage = errorDetails?.Message ?? $"API request failed with status code {response.StatusCode}.";
+        
+        // Include error code in message if available
+        if (!string.IsNullOrWhiteSpace(errorDetails?.Code))
+        {
+            errorMessage = $"[{errorDetails.Code}] {errorMessage}";
+        }
+
+        // Create and throw exception
+        throw new TranslaasApiException(
+            errorMessage,
+            response.StatusCode,
+            innerException: null,
+            responseContent: responseContent);
     }
 
     /// <summary>
