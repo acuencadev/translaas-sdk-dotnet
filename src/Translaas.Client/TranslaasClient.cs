@@ -35,6 +35,12 @@ public class TranslaasClient : ITranslaasClient
         
         _options.Validate();
         
+        // Apply timeout from options if specified
+        if (_options.Timeout.HasValue)
+        {
+            _httpClient.Timeout = _options.Timeout.Value;
+        }
+        
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -96,6 +102,14 @@ public class TranslaasClient : ITranslaasClient
         {
             // Re-throw API exceptions as-is
             throw;
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            // This is a timeout, not a cancellation
+            throw new TranslaasApiException(
+                $"Request timed out after {_httpClient.Timeout.TotalSeconds} seconds.",
+                HttpStatusCode.RequestTimeout,
+                ex);
         }
         catch (HttpRequestException ex)
         {
@@ -162,6 +176,14 @@ public class TranslaasClient : ITranslaasClient
             // Re-throw API exceptions as-is
             throw;
         }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            // This is a timeout, not a cancellation
+            throw new TranslaasApiException(
+                $"Request timed out after {_httpClient.Timeout.TotalSeconds} seconds.",
+                HttpStatusCode.RequestTimeout,
+                ex);
+        }
         catch (HttpRequestException ex)
         {
             throw new TranslaasApiException(
@@ -220,6 +242,14 @@ public class TranslaasClient : ITranslaasClient
             // Re-throw API exceptions as-is
             throw;
         }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            // This is a timeout, not a cancellation
+            throw new TranslaasApiException(
+                $"Request timed out after {_httpClient.Timeout.TotalSeconds} seconds.",
+                HttpStatusCode.RequestTimeout,
+                ex);
+        }
         catch (HttpRequestException ex)
         {
             throw new TranslaasApiException(
@@ -268,6 +298,14 @@ public class TranslaasClient : ITranslaasClient
         {
             // Re-throw API exceptions as-is
             throw;
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            // This is a timeout, not a cancellation
+            throw new TranslaasApiException(
+                $"Request timed out after {_httpClient.Timeout.TotalSeconds} seconds.",
+                HttpStatusCode.RequestTimeout,
+                ex);
         }
         catch (HttpRequestException ex)
         {

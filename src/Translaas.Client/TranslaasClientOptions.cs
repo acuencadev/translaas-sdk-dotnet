@@ -48,5 +48,10 @@ public class TranslaasClientOptions
         {
             throw new TranslaasConfigurationException($"BaseUrl must be a valid HTTP or HTTPS URL. Provided value: {BaseUrl}");
         }
+
+        if (Timeout.HasValue && Timeout.Value <= TimeSpan.Zero)
+        {
+            throw new TranslaasConfigurationException($"Timeout must be greater than zero. Provided value: {Timeout.Value}");
+        }
     }
 }
