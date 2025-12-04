@@ -89,11 +89,7 @@ public class TranslaasClient : ITranslaasClient
             }
 
             // Parse raw text response
-#if NETSTANDARD2_0
-            var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#else
-            var result = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-#endif
+            var result = await ParseTextResponse(response, cancellationToken).ConfigureAwait(false);
             return result;
         }
         catch (TranslaasApiException)
@@ -158,34 +154,13 @@ public class TranslaasClient : ITranslaasClient
             }
 
             // Deserialize JSON response
-#if NETSTANDARD2_0
-            var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#else
-            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-#endif
-            var result = JsonSerializer.Deserialize<TranslationGroup>(jsonContent, _jsonOptions);
-            
-            if (result == null)
-            {
-                throw new TranslaasApiException(
-                    "Failed to deserialize response from API.",
-                    response.StatusCode,
-                    responseContent: jsonContent);
-            }
-
+            var result = await ParseJsonResponse<TranslationGroup>(response, cancellationToken).ConfigureAwait(false);
             return result;
         }
         catch (TranslaasApiException)
         {
             // Re-throw API exceptions as-is
             throw;
-        }
-        catch (JsonException ex)
-        {
-            throw new TranslaasApiException(
-                $"Failed to deserialize response: {ex.Message}",
-                HttpStatusCode.BadRequest,
-                ex);
         }
         catch (HttpRequestException ex)
         {
@@ -237,34 +212,13 @@ public class TranslaasClient : ITranslaasClient
             }
 
             // Deserialize JSON response
-#if NETSTANDARD2_0
-            var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#else
-            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-#endif
-            var result = JsonSerializer.Deserialize<TranslationProject>(jsonContent, _jsonOptions);
-            
-            if (result == null)
-            {
-                throw new TranslaasApiException(
-                    "Failed to deserialize response from API.",
-                    response.StatusCode,
-                    responseContent: jsonContent);
-            }
-
+            var result = await ParseJsonResponse<TranslationProject>(response, cancellationToken).ConfigureAwait(false);
             return result;
         }
         catch (TranslaasApiException)
         {
             // Re-throw API exceptions as-is
             throw;
-        }
-        catch (JsonException ex)
-        {
-            throw new TranslaasApiException(
-                $"Failed to deserialize response: {ex.Message}",
-                HttpStatusCode.BadRequest,
-                ex);
         }
         catch (HttpRequestException ex)
         {
@@ -307,34 +261,13 @@ public class TranslaasClient : ITranslaasClient
             }
 
             // Deserialize JSON response
-#if NETSTANDARD2_0
-            var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-#else
-            var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-#endif
-            var result = JsonSerializer.Deserialize<ProjectLocales>(jsonContent, _jsonOptions);
-            
-            if (result == null)
-            {
-                throw new TranslaasApiException(
-                    "Failed to deserialize response from API.",
-                    response.StatusCode,
-                    responseContent: jsonContent);
-            }
-
+            var result = await ParseJsonResponse<ProjectLocales>(response, cancellationToken).ConfigureAwait(false);
             return result;
         }
         catch (TranslaasApiException)
         {
             // Re-throw API exceptions as-is
             throw;
-        }
-        catch (JsonException ex)
-        {
-            throw new TranslaasApiException(
-                $"Failed to deserialize response: {ex.Message}",
-                HttpStatusCode.BadRequest,
-                ex);
         }
         catch (HttpRequestException ex)
         {
@@ -343,6 +276,77 @@ public class TranslaasClient : ITranslaasClient
                 HttpStatusCode.BadRequest,
                 ex);
         }
+    }
+
+    /// <summary>
+    /// Parses a text response from the API.
+    /// </summary>
+    /// <param name="response">The HTTP response message.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The response content as a string.</returns>
+    private async Task<string> ParseTextResponse(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response == null)
+        {
+            throw new ArgumentNullException(nameof(response));
+        }
+
+#if NETSTANDARD2_0
+        var result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var result = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+
+        // Return empty string if response is null or empty
+        return result ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Parses a JSON response from the API and deserializes it to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="response">The HTTP response message.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The deserialized object.</returns>
+    /// <exception cref="TranslaasApiException">Thrown when deserialization fails or returns null.</exception>
+    private async Task<T> ParseJsonResponse<T>(HttpResponseMessage response, CancellationToken cancellationToken) where T : class
+    {
+        if (response == null)
+        {
+            throw new ArgumentNullException(nameof(response));
+        }
+
+        // Read response content
+#if NETSTANDARD2_0
+        var jsonContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+#else
+        var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+#endif
+
+        // Deserialize JSON response
+        T? result;
+        try
+        {
+            result = JsonSerializer.Deserialize<T>(jsonContent, _jsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            throw new TranslaasApiException(
+                $"Failed to deserialize response: {ex.Message}",
+                response.StatusCode,
+                ex,
+                responseContent: jsonContent);
+        }
+
+        if (result == null)
+        {
+            throw new TranslaasApiException(
+                "Failed to deserialize response from API.",
+                response.StatusCode,
+                responseContent: jsonContent);
+        }
+
+        return result;
     }
 
     /// <summary>
