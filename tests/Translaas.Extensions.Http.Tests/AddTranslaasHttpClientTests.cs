@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 using Translaas.Client;
+using Translaas.Models.Errors;
 
 namespace Translaas.Extensions.Http.Tests;
 
@@ -200,21 +201,15 @@ public class AddTranslaasHttpClientTests
         // Arrange
         var services = new ServiceCollection();
 
-        // Act
-        services.AddTranslaasHttpClient(options =>
-        {
-            // Invalid options - empty ApiKey
-            options.ApiKey = string.Empty;
-            options.BaseUrl = "https://api.test.com";
-        });
+        // Act & Assert - Validation happens during registration (fail fast)
+        var exception = Assert.Throws<TranslaasConfigurationException>(() =>
+            services.AddTranslaasHttpClient(options =>
+            {
+                // Invalid options - empty ApiKey
+                options.ApiKey = string.Empty;
+                options.BaseUrl = "https://api.test.com";
+            }));
 
-        var serviceProvider = services.BuildServiceProvider();
-        var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-
-        // Assert - Validation happens when HttpClient is created, not during registration
-        // The HttpClientFactory will create the client, but validation will fail when TranslaasClient is instantiated
-        // For now, we just verify the HttpClient can be created
-        var httpClient = httpClientFactory.CreateClient(nameof(ITranslaasClient));
-        httpClient.Should().NotBeNull();
+        exception.Message.Should().Contain("ApiKey is required and cannot be null or empty");
     }
 }
