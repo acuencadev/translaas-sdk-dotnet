@@ -51,6 +51,47 @@ This is an open-source .NET SDK for the Translaas Translation Delivery API SaaS.
 // 7. Nested types
 ```
 
+## Project and Solution File Management
+
+### File Synchronization
+
+**CRITICAL**: When files are added or removed, project files (`.csproj`) must be updated accordingly. When projects are added or removed, the solution file (`.sln`) must be updated accordingly.
+
+#### File Management Rules
+
+- **When creating a new file**: Add it to the appropriate `.csproj` file if it's not automatically included (e.g., `.cs` files in SDK-style projects are usually auto-included, but other file types may need explicit inclusion)
+- **When deleting a file**: Remove it from the `.csproj` file if it was explicitly included
+- **When creating a new project**: Add the project to the solution file using `dotnet sln add <project-path>` or by manually editing the `.sln` file
+- **When removing a project**: Remove the project from the solution file using `dotnet sln remove <project-path>` or by manually editing the `.sln` file
+
+#### Verification
+
+After adding or removing files/projects:
+- Verify the project builds successfully: `dotnet build <project-path>`
+- Verify the solution builds successfully: `dotnet build`
+- Ensure all projects in the solution are properly referenced
+- Ensure all test projects reference their corresponding source projects
+
+#### Example: Adding a Project to Solution
+
+```bash
+# Add a new project to the solution
+dotnet sln add src/Translaas.NewProject/Translaas.NewProject.csproj
+
+# Add a new test project to the solution
+dotnet sln add tests/Translaas.NewProject.Tests/Translaas.NewProject.Tests.csproj
+```
+
+#### Example: Removing a Project from Solution
+
+```bash
+# Remove a project from the solution
+dotnet sln remove src/Translaas.OldProject/Translaas.OldProject.csproj
+
+# Remove a test project from the solution
+dotnet sln remove tests/Translaas.OldProject.Tests/Translaas.OldProject.Tests.csproj
+```
+
 ## Architecture Guidelines
 
 ### Project Responsibilities
@@ -641,6 +682,8 @@ Before submitting code:
 - [ ] **Test project created** - Test project exists in `tests/` directory
 - [ ] **All tests pass** - All tests in test project pass
 - [ ] **Test coverage adequate** - Public APIs have test coverage
+- [ ] **Project files updated** - `.csproj` files updated when files are added/removed
+- [ ] **Solution file updated** - `.sln` file updated when projects are added/removed
 - [ ] All target frameworks compile successfully
 - [ ] All target frameworks have passing tests
 - [ ] XML documentation comments added for public APIs
@@ -708,6 +751,8 @@ return result;
 
 - ❌ **Don't write code without tests first** - TDD is mandatory
 - ❌ **Don't skip test projects** - Every project must have tests
+- ❌ **Don't forget to update project files** - Always update `.csproj` files when adding/removing files
+- ❌ **Don't forget to update solution files** - Always update `.sln` files when adding/removing projects
 - ❌ Don't use `Newtonsoft.Json` - use `System.Text.Json`
 - ❌ Don't block async code (`.Result`, `.Wait()`)
 - ❌ Don't catch and swallow exceptions silently

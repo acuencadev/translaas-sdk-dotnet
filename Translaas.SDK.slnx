@@ -7,7 +7,9 @@
     <Project Path="src/Translaas.Models/Translaas.Models.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Translaas.Client.IntegrationTests/Translaas.Client.IntegrationTests.csproj" />
     <Project Path="tests/Translaas.Client.Tests/Translaas.Client.Tests.csproj" />
+    <Project Path="tests/Translaas.Extensions.Http.Tests/Translaas.Extensions.Http.Tests.csproj" />
     <Project Path="tests/Translaas.Models.Tests/Translaas.Models.Tests.csproj" />
   </Folder>
 </Solution>
