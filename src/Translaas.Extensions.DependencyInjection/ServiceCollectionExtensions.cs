@@ -1,0 +1,130 @@
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+#if !NETSTANDARD2_0
+using Microsoft.Extensions.Http;
+#endif
+
+using System;
+using System.Linq;
+using System.Net.Http;
+
+using Translaas.Caching;
+using Translaas.Client;
+using Translaas.Extensions.Http;
+
+namespace Translaas.Extensions.DependencyInjection;
+
+/// <summary>
+/// Extension methods for configuring Translaas services with dependency injection.
+/// </summary>
+public static class ServiceCollectionExtensions
+{
+    /// <summary>
+    /// Adds Translaas services to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configure">A delegate to configure the <see cref="TranslaasOptions"/>.</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when services or configure is null.</exception>
+    /// <example>
+    /// <code>
+    /// services.AddHttpClient();
+    /// services.AddTranslaas(options =>
+    /// {
+    ///     options.ApiKey = "your-api-key";
+    ///     options.BaseUrl = "https://api.translaas.com";
+    ///     options.CacheMode = CacheMode.Group;
+    ///     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+    /// });
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddTranslaas(
+        this IServiceCollection services,
+        Action<TranslaasOptions> configure)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        if (configure == null)
+        {
+            throw new ArgumentNullException(nameof(configure));
+        }
+
+        // Register TranslaasOptions using Options pattern
+        services.Configure(configure);
+
+        // Register HttpClient via HttpClientFactory
+        services.AddTranslaasHttpClient(options =>
+        {
+            // Get configured options to convert to TranslaasClientOptions
+            var translaasOptions = new TranslaasOptions();
+            configure(translaasOptions);
+
+            options.ApiKey = translaasOptions.ApiKey;
+            options.BaseUrl = translaasOptions.BaseUrl;
+            options.Timeout = translaasOptions.Timeout;
+        });
+
+        // Register ITranslaasClient as scoped
+        services.AddScoped<ITranslaasClient>(serviceProvider =>
+        {
+#if NETSTANDARD2_0
+            // For netstandard2.0, IHttpClientFactory might not be available
+            // Use dynamic resolution
+            var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http");
+            if (httpClientFactoryType == null)
+            {
+                throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
+            }
+            var httpClientFactory = serviceProvider.GetService(httpClientFactoryType);
+            if (httpClientFactory == null)
+            {
+                throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
+            }
+            var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", new[] { typeof(string) });
+            var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, new object[] { nameof(ITranslaasClient) })!;
+#else
+            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            var httpClient = httpClientFactory.CreateClient(nameof(ITranslaasClient));
+#endif
+            var optionsMonitor = serviceProvider.GetRequiredService<IOptions<TranslaasOptions>>();
+            var translaasOptions = optionsMonitor.Value;
+
+            // Convert TranslaasOptions to TranslaasClientOptions
+            var clientOptions = new TranslaasClientOptions
+            {
+                ApiKey = translaasOptions.ApiKey,
+                BaseUrl = translaasOptions.BaseUrl,
+                Timeout = translaasOptions.Timeout
+            };
+
+            return new TranslaasClient(httpClient, clientOptions);
+        });
+
+        // Register caching services if caching is enabled
+        var tempOptions = new TranslaasOptions();
+        configure(tempOptions);
+
+        if (tempOptions.CacheMode != CacheMode.None)
+        {
+            // Register IMemoryCache if not already registered
+            if (!services.Any(s => s.ServiceType == typeof(IMemoryCache)))
+            {
+                services.AddMemoryCache();
+            }
+
+            // Register ITranslaasCacheProvider as singleton
+            services.AddSingleton<ITranslaasCacheProvider>(serviceProvider =>
+            {
+                var memoryCache = serviceProvider.GetRequiredService<IMemoryCache>();
+                return new MemoryCacheProvider(memoryCache);
+            });
+        }
+
+        return services;
+    }
+}
