@@ -7,6 +7,8 @@ A strongly-typed, performant, and modular .NET SDK for consuming the **Translaas
 ## Features
 
 - ✅ **Strongly-typed API** - Full IntelliSense support with strongly-typed models
+- ✅ **Convenience API** - Simple `T()` method for quick translation lookups via `ITranslaasService`
+- ✅ **Razor View Support** - Tag Helpers and HTML Helpers for easy translation in `.cshtml` files
 - ✅ **Dependency Injection Ready** - Seamless integration with `IServiceCollection`
 - ✅ **Flexible Caching** - Built-in memory caching with configurable cache modes
 - ✅ **Multiple Framework Support** - Compatible with .NET Standard 2.0, .NET 6, .NET 8, and .NET 10
@@ -43,6 +45,7 @@ If you prefer to use individual packages:
 - `Translaas.Caching` - Caching layer
 - `Translaas.Extensions.Http` - HttpClientFactory integration
 - `Translaas.Extensions.DependencyInjection` - Full DI integration (recommended)
+- `Translaas.Extensions.Mvc` - Razor Tag Helpers and HTML Helpers for ASP.NET Core MVC
 
 ## Quick Start
 
@@ -64,6 +67,38 @@ builder.Services.AddTranslaas(options =>
 ```
 
 ### 2. Inject and Use
+
+You can use either `ITranslaasClient` (full API) or `ITranslaasService` (convenience wrapper):
+
+**Option A: Using ITranslaasService (Recommended for simple lookups)**
+
+```csharp
+using Translaas.Extensions.DependencyInjection;
+
+public class MyService
+{
+    private readonly ITranslaasService _translaas;
+
+    public MyService(ITranslaasService translaas)
+    {
+        _translaas = translaas;
+    }
+
+    public async Task<string> GetWelcomeMessageAsync()
+    {
+        // Use the convenient T() method
+        return await _translaas.T("common", "welcome", "en");
+    }
+
+    public async Task<string> GetPluralMessageAsync(int count)
+    {
+        // With pluralization
+        return await _translaas.T("messages", "item", "en", count);
+    }
+}
+```
+
+**Option B: Using ITranslaasClient (Full API access)**
 
 ```csharp
 using Translaas.Client;
@@ -150,6 +185,18 @@ services.AddTranslaas(options =>
 
 ### Get Single Translation Entry
 
+**Using ITranslaasService (Convenience API):**
+
+```csharp
+// Basic usage with the convenient T() method
+string translation = await _translaas.T("ui", "button.save", "en");
+
+// With pluralization
+string message = await _translaas.T("messages", "item.count", "en", 5);
+```
+
+**Using ITranslaasClient (Full API):**
+
 ```csharp
 // Basic usage
 string translation = await _client.GetEntryAsync(
@@ -215,6 +262,93 @@ foreach (string locale in locales.Locales)
 }
 ```
 
+### Using Translaas in Razor Views
+
+For ASP.NET Core MVC applications, you can use Translaas directly in your `.cshtml` files using Tag Helpers or HTML Helpers.
+
+**Installation:**
+
+```bash
+dotnet add package Translaas.Extensions.Mvc
+```
+
+**Setup:**
+
+1. Register MVC services (in `Program.cs` or `Startup.cs`):
+
+```csharp
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc;
+
+services.AddTranslaas(options =>
+{
+    options.ApiKey = "your-api-key";
+    options.BaseUrl = "https://api.translaas.com";
+});
+
+// Optional: Explicitly register MVC helpers (Tag Helpers are auto-discovered)
+services.AddTranslaasMvc();
+```
+
+2. Add to `_ViewImports.cshtml`:
+
+```razor
+@addTagHelper *, Translaas.Extensions.Mvc
+@using Translaas.Extensions.Mvc
+```
+
+**Usage in Razor Views:**
+
+**Option 1: Tag Helper (Declarative)**
+
+```razor
+<!-- Basic usage -->
+<h1><translaas group="common" entry="welcome" lang="en" /></h1>
+
+<!-- With pluralization -->
+<p><translaas group="messages" entry="item" lang="en" number="5" /></p>
+
+<!-- In attributes -->
+<button title="@Translaas.T(Html, "ui", "button.save.tooltip", "en")">
+    <translaas group="ui" entry="button.save" lang="en" />
+</button>
+```
+
+**Option 2: Static Helper (Recommended - Consistent Naming)**
+
+The `Translaas.T()` static helper provides consistent naming with the Tag Helper and service:
+
+```razor
+<!-- Basic usage - Html is available by default in Razor views -->
+<h1>@Translaas.T(Html, "common", "welcome", "en")</h1>
+
+<!-- With pluralization -->
+<p>@Translaas.T(Html, "messages", "item", "en", 5)</p>
+
+<!-- In code blocks -->
+@{
+    var greeting = Translaas.T(Html, "common", "greeting", "en");
+}
+<span>@greeting</span>
+```
+
+**Option 3: Direct Service Injection (Async Support)**
+
+```razor
+@inject ITranslaasService Translaas
+
+<!-- Async usage -->
+<h1>@await Translaas.T("common", "welcome", "en")</h1>
+<p>@await Translaas.T("messages", "item", "en", 5)</p>
+```
+
+**All approaches:**
+- Automatically resolve `ITranslaasService` from the DI container
+- Support caching (if configured)
+- Support pluralization via the `number` parameter
+- Tag Helper and Static Helper are HTML-encoded by default
+- Direct service injection allows async/await and gives you control over encoding
+
 ## Caching
 
 The SDK supports multiple caching modes to optimize performance:
@@ -252,7 +386,42 @@ services.AddTranslaas(options => { /* ... */ });
 
 ## API Reference
 
-### ITranslaasClient Interface
+### ITranslaasService Interface (Convenience API)
+
+`ITranslaasService` provides a simplified API for common translation lookups. It's automatically registered when you call `AddTranslaas()`.
+
+```csharp
+public interface ITranslaasService
+{
+    /// <summary>
+    /// Gets a translation entry (shorthand for GetEntryAsync).
+    /// </summary>
+    /// <param name="group">The translation group name</param>
+    /// <param name="entry">The translation entry key</param>
+    /// <param name="lang">The language code (e.g., "en", "fr")</param>
+    /// <param name="number">Optional number for pluralization</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The translated text</returns>
+    Task<string> T(string group, string entry, string lang, int? number = null, CancellationToken cancellationToken = default);
+}
+```
+
+**Example Usage:**
+
+```csharp
+// Inject ITranslaasService
+private readonly ITranslaasService _translaas;
+
+// Simple translation lookup
+string welcome = await _translaas.T("common", "welcome", "en");
+
+// With pluralization
+string items = await _translaas.T("messages", "item", "en", 5);
+```
+
+### ITranslaasClient Interface (Full API)
+
+`ITranslaasClient` provides complete access to all Translaas API features.
 
 ```csharp
 public interface ITranslaasClient
@@ -264,8 +433,9 @@ public interface ITranslaasClient
     /// <param name="entry">The translation entry key</param>
     /// <param name="lang">The language code (e.g., "en", "fr")</param>
     /// <param name="number">Optional number for pluralization</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The translated text</returns>
-    Task<string> GetEntryAsync(string group, string entry, string lang, int? number = null);
+    Task<string> GetEntryAsync(string group, string entry, string lang, int? number = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all translations for a group.
@@ -274,8 +444,9 @@ public interface ITranslaasClient
     /// <param name="group">The translation group name</param>
     /// <param name="lang">The language code</param>
     /// <param name="format">Optional format parameter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A TranslationGroup containing all entries</returns>
-    Task<TranslationGroup> GetGroupAsync(string project, string group, string lang, string? format = null);
+    Task<TranslationGroup> GetGroupAsync(string project, string group, string lang, string? format = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all translations for a project.
@@ -283,17 +454,69 @@ public interface ITranslaasClient
     /// <param name="project">The project identifier</param>
     /// <param name="lang">The language code</param>
     /// <param name="format">Optional format parameter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A TranslationProject containing all groups and entries</returns>
-    Task<TranslationProject> GetProjectAsync(string project, string lang, string? format = null);
+    Task<TranslationProject> GetProjectAsync(string project, string lang, string? format = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets available locales for a project.
     /// </summary>
     /// <param name="project">The project identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A ProjectLocales object containing available locales</returns>
-    Task<ProjectLocales> GetProjectLocalesAsync(string project);
+    Task<ProjectLocales> GetProjectLocalesAsync(string project, CancellationToken cancellationToken = default);
 }
 ```
+
+**When to Use Which:**
+
+- **Use `ITranslaasService`** when you only need simple translation lookups (`T()` method)
+- **Use `ITranslaasClient`** when you need full API access (groups, projects, locales, etc.)
+
+Both services are registered as scoped and share the same underlying client instance.
+
+### Razor View Helpers
+
+For ASP.NET Core MVC applications, use Tag Helpers or HTML Helpers in Razor views.
+
+**Tag Helper (Declarative):**
+
+```html
+<translaas group="common" entry="welcome" lang="en" />
+<translaas group="messages" entry="item" lang="en" number="5" />
+```
+
+**Static Helper (Recommended - Consistent Naming):**
+
+```csharp
+@Translaas.T(Html, "common", "welcome", "en")
+@Translaas.T(Html, "messages", "item", "en", 5)
+```
+
+**Note:** `Html` is available by default in Razor views (no injection needed).
+
+**Direct Service Injection (Async Support):**
+
+```csharp
+@inject ITranslaasService Translaas
+@await Translaas.T("common", "welcome", "en")
+@await Translaas.T("messages", "item", "en", 5)
+```
+
+**Parameters:**
+
+- `group` (required) - The translation group name
+- `entry` (required) - The translation entry key
+- `lang` (required) - The language code (e.g., "en", "fr")
+- `number` (optional) - Number for pluralization
+
+**Notes:**
+
+- Tag Helper and Static Helper (`Translaas.T()`) are recommended for consistency
+- `Html` is available by default in Razor views - no injection needed for `Translaas.T(Html, ...)`
+- All helpers automatically resolve `ITranslaasService` from the DI container
+- All helpers support caching if configured
+- Direct service injection allows async/await usage and gives you control over HTML encoding
 
 ## Framework Compatibility
 

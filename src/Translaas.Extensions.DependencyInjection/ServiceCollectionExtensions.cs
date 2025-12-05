@@ -29,6 +29,9 @@ namespace Translaas.Extensions.DependencyInjection;
 /// <description><see cref="ITranslaasClient"/> - Registered as <see cref="ServiceLifetime.Scoped"/>. A new instance is created for each service scope (e.g., per HTTP request in ASP.NET Core).</description>
 /// </item>
 /// <item>
+/// <description><see cref="ITranslaasService"/> - Registered as <see cref="ServiceLifetime.Scoped"/>. A convenience wrapper around <see cref="ITranslaasClient"/> with a simplified API.</description>
+/// </item>
+/// <item>
 /// <description><see cref="IOptions{TranslaasOptions}"/> - Registered as <see cref="ServiceLifetime.Singleton"/> via the Options pattern. Configuration is loaded once at application startup.</description>
 /// </item>
 /// <item>
@@ -123,6 +126,13 @@ public static class ServiceCollectionExtensions
             };
 
             return new TranslaasClient(httpClient, clientOptions);
+        });
+
+        // Register ITranslaasService as scoped (convenience wrapper)
+        services.AddScoped<ITranslaasService>(serviceProvider =>
+        {
+            var client = serviceProvider.GetRequiredService<ITranslaasClient>();
+            return new TranslaasService(client);
         });
 
         // Register caching services if caching is enabled
