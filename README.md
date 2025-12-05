@@ -376,7 +376,7 @@ Copyright (c) 2025 Translaas SDK Contributors
 ## Support
 
 - **Documentation**: [Link to full documentation]
-- **Issues**: [GitHub Issues URL]
+- **Issues**: [https://github.com/acuencadev/Translaas.SDK/issues]
 - **API Reference**: [Swagger/API Docs URL]
 
 ## Contributing
