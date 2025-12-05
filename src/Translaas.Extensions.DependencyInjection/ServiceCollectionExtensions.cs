@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -126,5 +127,76 @@ public static class ServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds Translaas services to the specified <see cref="IServiceCollection"/> using configuration.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configuration">The <see cref="IConfiguration"/> instance.</param>
+    /// <param name="sectionName">Optional configuration section name. Defaults to "Translaas".</param>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when services or configuration is null.</exception>
+    /// <example>
+    /// <code>
+    /// // appsettings.json:
+    /// // {
+    /// //   "Translaas": {
+    /// //     "ApiKey": "your-api-key",
+    /// //     "BaseUrl": "https://api.translaas.com",
+    /// //     "CacheMode": "Group",
+    /// //     "Timeout": "00:00:30"
+    /// //   }
+    /// // }
+    /// 
+    /// services.AddHttpClient();
+    /// services.AddTranslaas(configuration);
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddTranslaas(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string sectionName = "Translaas")
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        if (string.IsNullOrWhiteSpace(sectionName))
+        {
+            throw new ArgumentException("Section name cannot be null or whitespace.", nameof(sectionName));
+        }
+
+        // Bind configuration section to TranslaasOptions
+        var configurationSection = configuration.GetSection(sectionName);
+        
+        return services.AddTranslaas(options =>
+        {
+            configurationSection.Bind(options);
+            
+            // Validate required properties
+            // Check if ApiKey was explicitly set in configuration
+            var apiKeyValue = configurationSection[nameof(TranslaasOptions.ApiKey)];
+            if (string.IsNullOrWhiteSpace(apiKeyValue) || string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                throw new InvalidOperationException(
+                    $"Translaas configuration is invalid: ApiKey is required. Ensure '{sectionName}:ApiKey' is set in configuration.");
+            }
+
+            // Check if BaseUrl was explicitly set in configuration
+            // BaseUrl has a default value, so we need to check if it was actually set in config
+            var baseUrlValue = configurationSection[nameof(TranslaasOptions.BaseUrl)];
+            if (string.IsNullOrWhiteSpace(baseUrlValue))
+            {
+                throw new InvalidOperationException(
+                    $"Translaas configuration is invalid: BaseUrl is required. Ensure '{sectionName}:BaseUrl' is set in configuration.");
+            }
+        });
     }
 }
