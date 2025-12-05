@@ -172,7 +172,10 @@ public class TranslaasClient : ITranslaasClient
             var cacheKey = CacheKeyBuilder.BuildGroupKey(project, group, lang, format);
             if (_cacheProvider.TryGetValue<TranslationGroup>(cacheKey, out var cachedValue))
             {
-                return cachedValue!;
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
             }
         }
 
