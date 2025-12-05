@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Translaas.Caching;
 using Translaas.Models.Errors;
 using Translaas.Models.Requests;
 using Translaas.Models.Responses;
@@ -20,18 +21,21 @@ public class TranslaasClient : ITranslaasClient
     private readonly HttpClient _httpClient;
     private readonly TranslaasClientOptions _options;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly ITranslaasCacheProvider? _cacheProvider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranslaasClient"/> class.
     /// </summary>
     /// <param name="httpClient">The HTTP client to use for requests.</param>
     /// <param name="options">The client options.</param>
+    /// <param name="cacheProvider">Optional cache provider for caching translation data.</param>
     /// <exception cref="ArgumentNullException">Thrown when httpClient or options is null.</exception>
     /// <exception cref="TranslaasConfigurationException">Thrown when options validation fails.</exception>
-    public TranslaasClient(HttpClient httpClient, TranslaasClientOptions options)
+    public TranslaasClient(HttpClient httpClient, TranslaasClientOptions options, ITranslaasCacheProvider? cacheProvider = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _cacheProvider = cacheProvider;
         
         _options.Validate();
         
@@ -71,6 +75,20 @@ public class TranslaasClient : ITranslaasClient
             throw new ArgumentNullException(nameof(lang));
         }
 
+        // Check cache if caching is enabled for entries
+        if (_cacheProvider != null && _options.CacheMode == CacheMode.Entry)
+        {
+            var cacheKey = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number);
+            if (_cacheProvider.TryGetValue<string>(cacheKey, out var cachedValue))
+            {
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+                // If cachedValue is null, fall through to fetch from API
+            }
+        }
+
         // Build request model
         var requestModel = new GetTranslationRequest
         {
@@ -96,6 +114,14 @@ public class TranslaasClient : ITranslaasClient
 
             // Parse raw text response
             var result = await ParseTextResponse(response, cancellationToken).ConfigureAwait(false);
+
+            // Store in cache if caching is enabled for entries
+            if (_cacheProvider != null && _options.CacheMode == CacheMode.Entry)
+            {
+                var cacheKey = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number);
+                _cacheProvider.Set(cacheKey, result, _options.CacheAbsoluteExpiration, _options.CacheSlidingExpiration);
+            }
+
             return result;
         }
         catch (TranslaasApiException)
@@ -144,6 +170,19 @@ public class TranslaasClient : ITranslaasClient
             throw new ArgumentNullException(nameof(lang));
         }
 
+        // Check cache if caching is enabled for groups or projects
+        if (_cacheProvider != null && (_options.CacheMode == CacheMode.Group || _options.CacheMode == CacheMode.Project))
+        {
+            var cacheKey = CacheKeyBuilder.BuildGroupKey(project, group, lang, format);
+            if (_cacheProvider.TryGetValue<TranslationGroup>(cacheKey, out var cachedValue))
+            {
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+            }
+        }
+
         // Build request model
         var requestModel = new GetGroupTranslationsRequest
         {
@@ -169,6 +208,14 @@ public class TranslaasClient : ITranslaasClient
 
             // Deserialize JSON response
             var result = await ParseJsonResponse<TranslationGroup>(response, cancellationToken).ConfigureAwait(false);
+
+            // Store in cache if caching is enabled for groups or projects
+            if (_cacheProvider != null && (_options.CacheMode == CacheMode.Group || _options.CacheMode == CacheMode.Project))
+            {
+                var cacheKey = CacheKeyBuilder.BuildGroupKey(project, group, lang, format);
+                _cacheProvider.Set(cacheKey, result, _options.CacheAbsoluteExpiration, _options.CacheSlidingExpiration);
+            }
+
             return result;
         }
         catch (TranslaasApiException)
@@ -211,6 +258,20 @@ public class TranslaasClient : ITranslaasClient
             throw new ArgumentNullException(nameof(lang));
         }
 
+        // Check cache if caching is enabled for projects
+        if (_cacheProvider != null && _options.CacheMode == CacheMode.Project)
+        {
+            var cacheKey = CacheKeyBuilder.BuildProjectKey(project, lang, format);
+            if (_cacheProvider.TryGetValue<TranslationProject>(cacheKey, out var cachedValue))
+            {
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+                // If cachedValue is null, treat as cache miss and continue to fetch from API
+            }
+        }
+
         // Build request model
         var requestModel = new GetProjectTranslationsRequest
         {
@@ -235,6 +296,14 @@ public class TranslaasClient : ITranslaasClient
 
             // Deserialize JSON response
             var result = await ParseJsonResponse<TranslationProject>(response, cancellationToken).ConfigureAwait(false);
+
+            // Store in cache if caching is enabled for projects
+            if (_cacheProvider != null && _options.CacheMode == CacheMode.Project)
+            {
+                var cacheKey = CacheKeyBuilder.BuildProjectKey(project, lang, format);
+                _cacheProvider.Set(cacheKey, result, _options.CacheAbsoluteExpiration, _options.CacheSlidingExpiration);
+            }
+
             return result;
         }
         catch (TranslaasApiException)
@@ -270,6 +339,20 @@ public class TranslaasClient : ITranslaasClient
             throw new ArgumentNullException(nameof(project));
         }
 
+        // Check cache if caching is enabled (locales can be cached with any cache mode)
+        if (_cacheProvider != null && _options.CacheMode != CacheMode.None)
+        {
+            var cacheKey = CacheKeyBuilder.BuildLocalesKey(project);
+            if (_cacheProvider.TryGetValue<ProjectLocales>(cacheKey, out var cachedValue))
+            {
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+                // If cachedValue is null, fall through to fetch from API
+            }
+        }
+
         // Build request model
         var requestModel = new GetProjectLocalesRequest
         {
@@ -292,6 +375,14 @@ public class TranslaasClient : ITranslaasClient
 
             // Deserialize JSON response
             var result = await ParseJsonResponse<ProjectLocales>(response, cancellationToken).ConfigureAwait(false);
+
+            // Store in cache if caching is enabled (locales can be cached with any cache mode)
+            if (_cacheProvider != null && _options.CacheMode != CacheMode.None)
+            {
+                var cacheKey = CacheKeyBuilder.BuildLocalesKey(project);
+                _cacheProvider.Set(cacheKey, result, _options.CacheAbsoluteExpiration, _options.CacheSlidingExpiration);
+            }
+
             return result;
         }
         catch (TranslaasApiException)
