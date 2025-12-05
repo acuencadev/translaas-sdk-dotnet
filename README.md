@@ -7,6 +7,7 @@ A strongly-typed, performant, and modular .NET SDK for consuming the **Translaas
 ## Features
 
 - ✅ **Strongly-typed API** - Full IntelliSense support with strongly-typed models
+- ✅ **Convenience API** - Simple `T()` method for quick translation lookups via `ITranslaasService`
 - ✅ **Dependency Injection Ready** - Seamless integration with `IServiceCollection`
 - ✅ **Flexible Caching** - Built-in memory caching with configurable cache modes
 - ✅ **Multiple Framework Support** - Compatible with .NET Standard 2.0, .NET 6, .NET 8, and .NET 10
@@ -64,6 +65,38 @@ builder.Services.AddTranslaas(options =>
 ```
 
 ### 2. Inject and Use
+
+You can use either `ITranslaasClient` (full API) or `ITranslaasService` (convenience wrapper):
+
+**Option A: Using ITranslaasService (Recommended for simple lookups)**
+
+```csharp
+using Translaas.Extensions.DependencyInjection;
+
+public class MyService
+{
+    private readonly ITranslaasService _translaas;
+
+    public MyService(ITranslaasService translaas)
+    {
+        _translaas = translaas;
+    }
+
+    public async Task<string> GetWelcomeMessageAsync()
+    {
+        // Use the convenient T() method
+        return await _translaas.T("common", "welcome", "en");
+    }
+
+    public async Task<string> GetPluralMessageAsync(int count)
+    {
+        // With pluralization
+        return await _translaas.T("messages", "item", "en", count);
+    }
+}
+```
+
+**Option B: Using ITranslaasClient (Full API access)**
 
 ```csharp
 using Translaas.Client;
@@ -149,6 +182,18 @@ services.AddTranslaas(options =>
 ## Usage Examples
 
 ### Get Single Translation Entry
+
+**Using ITranslaasService (Convenience API):**
+
+```csharp
+// Basic usage with the convenient T() method
+string translation = await _translaas.T("ui", "button.save", "en");
+
+// With pluralization
+string message = await _translaas.T("messages", "item.count", "en", 5);
+```
+
+**Using ITranslaasClient (Full API):**
 
 ```csharp
 // Basic usage
@@ -252,7 +297,42 @@ services.AddTranslaas(options => { /* ... */ });
 
 ## API Reference
 
-### ITranslaasClient Interface
+### ITranslaasService Interface (Convenience API)
+
+`ITranslaasService` provides a simplified API for common translation lookups. It's automatically registered when you call `AddTranslaas()`.
+
+```csharp
+public interface ITranslaasService
+{
+    /// <summary>
+    /// Gets a translation entry (shorthand for GetEntryAsync).
+    /// </summary>
+    /// <param name="group">The translation group name</param>
+    /// <param name="entry">The translation entry key</param>
+    /// <param name="lang">The language code (e.g., "en", "fr")</param>
+    /// <param name="number">Optional number for pluralization</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The translated text</returns>
+    Task<string> T(string group, string entry, string lang, int? number = null, CancellationToken cancellationToken = default);
+}
+```
+
+**Example Usage:**
+
+```csharp
+// Inject ITranslaasService
+private readonly ITranslaasService _translaas;
+
+// Simple translation lookup
+string welcome = await _translaas.T("common", "welcome", "en");
+
+// With pluralization
+string items = await _translaas.T("messages", "item", "en", 5);
+```
+
+### ITranslaasClient Interface (Full API)
+
+`ITranslaasClient` provides complete access to all Translaas API features.
 
 ```csharp
 public interface ITranslaasClient
@@ -264,8 +344,9 @@ public interface ITranslaasClient
     /// <param name="entry">The translation entry key</param>
     /// <param name="lang">The language code (e.g., "en", "fr")</param>
     /// <param name="number">Optional number for pluralization</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The translated text</returns>
-    Task<string> GetEntryAsync(string group, string entry, string lang, int? number = null);
+    Task<string> GetEntryAsync(string group, string entry, string lang, int? number = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all translations for a group.
@@ -274,8 +355,9 @@ public interface ITranslaasClient
     /// <param name="group">The translation group name</param>
     /// <param name="lang">The language code</param>
     /// <param name="format">Optional format parameter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A TranslationGroup containing all entries</returns>
-    Task<TranslationGroup> GetGroupAsync(string project, string group, string lang, string? format = null);
+    Task<TranslationGroup> GetGroupAsync(string project, string group, string lang, string? format = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all translations for a project.
@@ -283,17 +365,26 @@ public interface ITranslaasClient
     /// <param name="project">The project identifier</param>
     /// <param name="lang">The language code</param>
     /// <param name="format">Optional format parameter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A TranslationProject containing all groups and entries</returns>
-    Task<TranslationProject> GetProjectAsync(string project, string lang, string? format = null);
+    Task<TranslationProject> GetProjectAsync(string project, string lang, string? format = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets available locales for a project.
     /// </summary>
     /// <param name="project">The project identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A ProjectLocales object containing available locales</returns>
-    Task<ProjectLocales> GetProjectLocalesAsync(string project);
+    Task<ProjectLocales> GetProjectLocalesAsync(string project, CancellationToken cancellationToken = default);
 }
 ```
+
+**When to Use Which:**
+
+- **Use `ITranslaasService`** when you only need simple translation lookups (`T()` method)
+- **Use `ITranslaasClient`** when you need full API access (groups, projects, locales, etc.)
+
+Both services are registered as scoped and share the same underlying client instance.
 
 ## Framework Compatibility
 
