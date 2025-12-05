@@ -341,7 +341,11 @@ public class TranslaasClient : ITranslaasClient
             var cacheKey = CacheKeyBuilder.BuildLocalesKey(project);
             if (_cacheProvider.TryGetValue<ProjectLocales>(cacheKey, out var cachedValue))
             {
-                return cachedValue!;
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+                // If cachedValue is null, fall through to fetch from API
             }
         }
 
