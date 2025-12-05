@@ -20,7 +20,6 @@ public static class ServiceCollectionExtensions
     /// <exception cref="ArgumentNullException">Thrown when services or configure is null.</exception>
     /// <example>
     /// <code>
-    /// services.AddHttpClient();
     /// services.AddTranslaasHttpClient(options =>
     /// {
     ///     options.ApiKey = "your-api-key";
