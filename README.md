@@ -116,10 +116,6 @@ services.AddTranslaas(options =>
     
     // HTTP Client
     options.Timeout = TimeSpan.FromSeconds(30);
-    options.RetryPolicy = RetryPolicy.ExponentialBackoff(
-        maxRetries: 3,
-        initialDelay: TimeSpan.FromSeconds(1)
-    );
 });
 ```
 
@@ -137,10 +133,16 @@ services.AddTranslaas(options =>
 ```
 
 ```csharp
+using Microsoft.Extensions.Configuration;
+
+// Option 1: Using the IConfiguration overload (recommended)
+services.AddHttpClient();
+services.AddTranslaas(builder.Configuration);
+
+// Option 2: Manual binding
 services.AddTranslaas(options =>
 {
-    var config = builder.Configuration.GetSection("Translaas");
-    config.Bind(options);
+    builder.Configuration.GetSection("Translaas").Bind(options);
 });
 ```
 

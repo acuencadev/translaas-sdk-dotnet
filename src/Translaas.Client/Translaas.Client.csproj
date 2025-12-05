@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Translaas.Caching\Translaas.Caching.csproj" />
     <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj" />
   </ItemGroup>
 
