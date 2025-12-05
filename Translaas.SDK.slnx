@@ -4,6 +4,7 @@
     <Project Path="src/Translaas.Client/Translaas.Client.csproj" />
     <Project Path="src/Translaas.Extensions.DependencyInjection/Translaas.Extensions.DependencyInjection.csproj" />
     <Project Path="src/Translaas.Extensions.Http/Translaas.Extensions.Http.csproj" />
+    <Project Path="src/Translaas.Extensions.Mvc/Translaas.Extensions.Mvc.csproj" />
     <Project Path="src/Translaas.Models/Translaas.Models.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -12,6 +13,7 @@
     <Project Path="tests/Translaas.Client.Tests/Translaas.Client.Tests.csproj" />
     <Project Path="tests/Translaas.Extensions.DependencyInjection.Tests/Translaas.Extensions.DependencyInjection.Tests.csproj" />
     <Project Path="tests/Translaas.Extensions.Http.Tests/Translaas.Extensions.Http.Tests.csproj" />
+    <Project Path="tests/Translaas.Extensions.Mvc.Tests/Translaas.Extensions.Mvc.Tests.csproj" />
     <Project Path="tests/Translaas.Models.Tests/Translaas.Models.Tests.csproj" />
   </Folder>
 </Solution>
