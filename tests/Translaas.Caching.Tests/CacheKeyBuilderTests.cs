@@ -215,6 +215,20 @@ public class CacheKeyBuilderTests
     }
 
     [Fact]
+    public void BuildProjectKey_ShouldNotIncludeFormat_WhenFormatIsWhitespace()
+    {
+        // Arrange
+        var project = "my-project";
+        var lang = "en";
+
+        // Act
+        var key = CacheKeyBuilder.BuildProjectKey(project, lang, "   ");
+
+        // Assert
+        key.Should().Be("project:my-project:en");
+    }
+
+    [Fact]
     public void BuildProjectKey_ShouldThrowArgumentNullException_WhenProjectIsNull()
     {
         // Arrange & Act
