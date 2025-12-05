@@ -309,7 +309,7 @@ services.AddTranslaasMvc();
 <p><translaas group="messages" entry="item" lang="en" number="5" /></p>
 
 <!-- In attributes -->
-<button title="<translaas group="ui" entry="button.save.tooltip" lang="en" />">
+<button title="@Translaas.T(Html, "ui", "button.save.tooltip", "en")">
     <translaas group="ui" entry="button.save" lang="en" />
 </button>
 ```
