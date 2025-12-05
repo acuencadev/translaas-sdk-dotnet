@@ -78,7 +78,7 @@ public static class Translaas
         }
 
         // For synchronous helpers, we need to get the result synchronously
-        var translation = translaasService.T(group, entry, lang, number).GetAwaiter().GetResult();
+        var translation = translaasService.T(group, entry, lang, number).ConfigureAwait(false).GetAwaiter().GetResult();
 
         return new HtmlString(translation);
     }
