@@ -1,6 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 
+using Translaas.Caching;
 using Translaas.Models.Errors;
 
 namespace Translaas.Client;
@@ -27,6 +28,31 @@ public class TranslaasClientOptions
     /// Gets or sets the timeout for HTTP requests.
     /// </summary>
     public TimeSpan? Timeout { get; set; }
+
+    /// <summary>
+    /// Gets or sets the caching mode for translation data.
+    /// </summary>
+    /// <remarks>
+    /// Defaults to <see cref="CacheMode.None"/> if not specified.
+    /// </remarks>
+    public CacheMode CacheMode { get; set; } = CacheMode.None;
+
+    /// <summary>
+    /// Gets or sets the absolute expiration time for cached items.
+    /// </summary>
+    /// <remarks>
+    /// If specified, cached items will expire after this duration, regardless of activity.
+    /// </remarks>
+    public TimeSpan? CacheAbsoluteExpiration { get; set; }
+
+    /// <summary>
+    /// Gets or sets the sliding expiration time for cached items.
+    /// </summary>
+    /// <remarks>
+    /// If specified, cached items will expire if not accessed within this duration.
+    /// It will not extend beyond the absolute expiration.
+    /// </remarks>
+    public TimeSpan? CacheSlidingExpiration { get; set; }
 
     /// <summary>
     /// Validates the configuration options.
