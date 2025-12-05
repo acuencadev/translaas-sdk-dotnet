@@ -1,7 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Razor.TagHelpers;
@@ -9,8 +5,6 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 using Moq;
 
 using Translaas.Extensions.DependencyInjection;
-
-using Xunit;
 
 namespace Translaas.Extensions.Mvc.Tests;
 
