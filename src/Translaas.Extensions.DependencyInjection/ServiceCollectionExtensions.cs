@@ -20,6 +20,25 @@ namespace Translaas.Extensions.DependencyInjection;
 /// <summary>
 /// Extension methods for configuring Translaas services with dependency injection.
 /// </summary>
+/// <remarks>
+/// <para>
+/// Service lifetimes:
+/// </para>
+/// <list type="bullet">
+/// <item>
+/// <description><see cref="ITranslaasClient"/> - Registered as <see cref="ServiceLifetime.Scoped"/>. A new instance is created for each service scope (e.g., per HTTP request in ASP.NET Core).</description>
+/// </item>
+/// <item>
+/// <description><see cref="IOptions{TranslaasOptions}"/> - Registered as <see cref="ServiceLifetime.Singleton"/> via the Options pattern. Configuration is loaded once at application startup.</description>
+/// </item>
+/// <item>
+/// <description><see cref="IMemoryCache"/> - Registered as <see cref="ServiceLifetime.Singleton"/> when caching is enabled. A single cache instance is shared across the application.</description>
+/// </item>
+/// <item>
+/// <description><see cref="ITranslaasCacheProvider"/> - Registered as <see cref="ServiceLifetime.Singleton"/> when caching is enabled. A single cache provider instance wraps the memory cache.</description>
+/// </item>
+/// </list>
+/// </remarks>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
