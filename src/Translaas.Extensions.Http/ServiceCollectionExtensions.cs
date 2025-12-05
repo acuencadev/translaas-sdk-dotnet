@@ -45,14 +45,13 @@ public static class ServiceCollectionExtensions
         // Create options instance
         var options = new TranslaasClientOptions();
         configure(options);
+        options.Validate();
 
         // Register HttpClient with the name of ITranslaasClient
         var builder = services.AddHttpClient(nameof(ITranslaasClient), client =>
         {
             // Configure base address
-            var baseUrl = options.BaseUrl.TrimEnd('/');
-            var baseAddress = baseUrl + "/";
-            client.BaseAddress = new Uri(baseAddress, UriKind.Absolute);
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/", UriKind.Absolute);
 
             // Set API key header
             client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);

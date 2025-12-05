@@ -1,15 +1,8 @@
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
 
 using Translaas.Client;
-
-using Xunit;
 
 namespace Translaas.Extensions.Http.Tests;
 
@@ -23,7 +16,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
 
         // Act
         var builder = services.AddTranslaasHttpClient(options =>
@@ -44,7 +36,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
         var expectedBaseUrl = "https://api.test.com";
 
         // Act
@@ -68,7 +59,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
         var expectedApiKey = "test-api-key-123";
 
         // Act
@@ -92,7 +82,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
         var expectedTimeout = TimeSpan.FromSeconds(30);
 
         // Act
@@ -116,7 +105,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
 
         // Act
         services.AddTranslaasHttpClient(options =>
@@ -139,7 +127,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
 
         // Act
         var builder = services.AddTranslaasHttpClient(options =>
@@ -158,7 +145,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
 
         // Act
         var builder = services.AddTranslaasHttpClient(options =>
@@ -202,7 +188,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
@@ -214,7 +199,6 @@ public class AddTranslaasHttpClientTests
     {
         // Arrange
         var services = new ServiceCollection();
-        services.AddHttpClient();
 
         // Act
         services.AddTranslaasHttpClient(options =>
