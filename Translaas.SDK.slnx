@@ -13,6 +13,7 @@
     <Project Path="tests/Translaas.Client.Tests/Translaas.Client.Tests.csproj" />
     <Project Path="tests/Translaas.Extensions.DependencyInjection.Tests/Translaas.Extensions.DependencyInjection.Tests.csproj" />
     <Project Path="tests/Translaas.Extensions.Http.Tests/Translaas.Extensions.Http.Tests.csproj" />
+    <Project Path="tests/Translaas.Extensions.Mvc.Tests/Translaas.Extensions.Mvc.Tests.csproj" />
     <Project Path="tests/Translaas.Models.Tests/Translaas.Models.Tests.csproj" />
   </Folder>
 </Solution>
