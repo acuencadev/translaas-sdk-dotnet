@@ -260,7 +260,11 @@ public class TranslaasClient : ITranslaasClient
             var cacheKey = CacheKeyBuilder.BuildProjectKey(project, lang, format);
             if (_cacheProvider.TryGetValue<TranslationProject>(cacheKey, out var cachedValue))
             {
-                return cachedValue!;
+                if (cachedValue != null)
+                {
+                    return cachedValue;
+                }
+                // If cachedValue is null, treat as cache miss and continue to fetch from API
             }
         }
 
