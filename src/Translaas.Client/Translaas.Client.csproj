@@ -1,8 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Translaas.Client</PackageId>
+    <Description>Core HTTP client implementation for the Translaas Translation Delivery API SDK. Provides ITranslaasClient interface and TranslaasClient implementation with caching support.</Description>
+    <PackageTags>translaas;translation;i18n;localization;http;client;api</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Translaas.Caching\Translaas.Caching.csproj" />
-    <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj" />
+    <ProjectReference Include="..\Translaas.Caching\Translaas.Caching.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

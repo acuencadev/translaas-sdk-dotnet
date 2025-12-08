@@ -12,6 +12,24 @@
   <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
   <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
   </PropertyGroup>
+  
+  <!-- Common NuGet Package Metadata -->
+  <PropertyGroup Condition="'$(IsPackable)' != 'false'">
+    <Version>0.1.0</Version>
+    <Authors>Translaas SDK Contributors</Authors>
+    <Company>Translaas</Company>
+    <Product>Translaas SDK</Product>
+    <Copyright>Copyright (c) 2025 Translaas SDK Contributors</Copyright>
+    <License>MIT</License>
+    <LicenseExpression>MIT</LicenseExpression>
+    <RepositoryUrl>https://github.com/acuencadev/Translaas.SDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/acuencadev/Translaas.SDK</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
   <ItemGroup Condition="'$(MSBuildProjectExtension)' != '.dcproj'">
     <PackageReference Include="SonarAnalyzer.CSharp">
       <PrivateAssets>all</PrivateAssets>

@@ -1,5 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Translaas.Models</PackageId>
+    <Description>Data transfer objects (DTOs) for the Translaas Translation Delivery API SDK. Contains request/response models and error types.</Description>
+    <PackageTags>translaas;translation;i18n;localization;dto;models</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>
