@@ -25,7 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Translaas.Client\Translaas.Client.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Extensions.Http\Translaas.Extensions.Http.csproj" />
+    <ProjectReference Include="..\..\src\Translaas.Models\Translaas.Models.csproj" />
   </ItemGroup>
 
 </Project>

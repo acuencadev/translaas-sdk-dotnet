@@ -58,18 +58,90 @@ Each test project should:
 
 ### Multi-Targeting
 
-- Ensure all code compiles for all target frameworks:
-  - `netstandard2.0`
-  - `net8.0`
-  - `net10.0`
-- Use conditional compilation if framework-specific code is needed:
-  ```csharp
-  #if NETSTANDARD2_0
-      // netstandard2.0 specific code
-  #elif NET6_0_OR_GREATER
-      // .NET 6+ specific code
-  #endif
-  ```
+All projects in the Translaas.SDK solution are configured to target multiple .NET frameworks:
+- `netstandard2.0` - Maximum compatibility (supports .NET Framework 4.6.1+, .NET Core 2.0+, etc.)
+- `net8.0` - .NET 8 LTS
+- `net10.0` - .NET 10 (latest)
+
+**Note**: .NET 6.0 is temporarily removed due to VSTest test discovery compatibility issues.
+
+#### Project File Configuration
+
+Each `.csproj` file uses `TargetFrameworks` (plural) instead of `TargetFramework`:
+
+```xml
+<PropertyGroup>
+  <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
+  <ImplicitUsings Condition="'$(TargetFramework)' != 'netstandard2.0'">enable</ImplicitUsings>
+  <Nullable>enable</Nullable>
+  <LangVersion>latest</LangVersion>
+</PropertyGroup>
+```
+
+#### Key Points
+
+1. **ImplicitUsings**: Conditionally enabled only for frameworks that support it (not netstandard2.0)
+2. **Build Output**: Each project builds separate DLLs for each target framework
+3. **NuGet Package**: When packaged, the NuGet package will contain all framework-specific DLLs
+
+#### Framework Compatibility
+
+When writing code, be aware of framework differences:
+
+- **netstandard2.0**: 
+  - No implicit usings
+  - May need explicit `using` statements
+  - Some newer APIs may not be available
+
+- **net8.0+**: 
+  - Implicit usings enabled
+  - Access to newer APIs
+  - Better performance optimizations
+
+#### Conditional Compilation
+
+If you need framework-specific code:
+
+```csharp
+#if NETSTANDARD2_0
+    // Code for netstandard2.0
+#elif NET8_0_OR_GREATER
+    // Code for .NET 8+
+#endif
+```
+
+#### Framework Compatibility Matrix
+
+NuGet uses a compatibility matrix to select the best matching DLL:
+
+| Customer's Target Framework | NuGet Will Use | Reason |
+|----------------------------|----------------|--------|
+| .NET Framework 4.6.1+ | `netstandard2.0` | Compatible with netstandard2.0 |
+| .NET Core 2.0 - 5.0 | `netstandard2.0` | Compatible with netstandard2.0 |
+| .NET 6 | `netstandard2.0` | Compatible with netstandard2.0 |
+| .NET 7 | `netstandard2.0` | Compatible with netstandard2.0 |
+| .NET 8 | `net8.0` | Exact match |
+| .NET 9 | `net8.0` | .NET 9 is compatible with .NET 8 DLLs |
+| .NET 10+ | `net10.0` | Exact match or latest compatible |
+
+**Important Notes:**
+- ✅ **.NET 6/7 customers**: Will automatically use the `netstandard2.0` DLL - this works perfectly!
+- ✅ **.NET 9 customers**: Will automatically use the `net8.0` DLL - this works perfectly!
+- .NET maintains backward compatibility within major versions
+- NuGet automatically selects the highest compatible framework version
+
+#### Building for Specific Frameworks
+
+```bash
+# Build all frameworks
+dotnet build
+
+# Build specific framework
+dotnet build -f net8.0
+
+# Build Release
+dotnet build -c Release
+```
 
 ### Test-Driven Development (TDD)
 
@@ -285,8 +357,149 @@ dotnet test -f net8.0
 
 ## Additional Resources
 
-- [Multi-Targeting Guide](docs/MULTI-TARGETING.md) - Understanding framework compatibility
-- [Technical Specification](specs/translaas-sdk.spec.md) - Detailed SDK architecture
 - [SDK Guidelines](.cursor/rules/sdk-guidelines.mdc) - Comprehensive development guidelines including TDD practices
+
+## Release Notes and Version Management
+
+### Version Management
+
+#### How to Update the Version
+
+The SDK uses a centralized version management approach. To update the version for all packages:
+
+1. **Update the version in `Directory.Build.props`**:
+   ```xml
+   <PropertyGroup Condition="'$(IsPackable)' != 'false'">
+     <Version>X.Y.Z</Version>
+     <!-- other metadata -->
+   </PropertyGroup>
+   ```
+
+2. **Update the release notes section in this file (`CONTRIBUTING.md`)**:
+   - Add a new version section at the top of the "Release Notes" section
+   - Update package version numbers in the "Packages Included" section
+   - Document new features, changes, fixes, etc.
+
+3. **Rebuild and repack all packages**:
+   ```bash
+   # Clean previous packages (optional)
+   Remove-Item -Path "nupkgs\*" -Force
+   
+   # Build all projects
+   dotnet build --configuration Release
+   
+   # Pack all packages
+   Get-ChildItem -Path src -Filter *.csproj -Recurse | ForEach-Object { 
+     dotnet pack -Path $_.FullName --configuration Release --output ./nupkgs
+   }
+   ```
+
+#### Version Numbering
+
+We follow [Semantic Versioning](https://semver.org/) (SemVer):
+- **MAJOR** (X.0.0): Breaking changes
+- **MINOR** (0.Y.0): New features, backward compatible
+- **PATCH** (0.0.Z): Bug fixes, backward compatible
+
+#### Pre-Release Versions
+
+For pre-release versions, use version numbers like:
+- `0.1.0` - Initial pre-release
+- `0.2.0` - Pre-release with new features
+- `0.1.1` - Pre-release bug fix
+
+Once stable, release `1.0.0` as the first stable version.
+
+---
+
+### Release Notes
+
+## Version 0.1.0 (Pre-Release)
+
+### Initial Pre-Release
+
+This is the initial pre-release of the Translaas SDK for .NET. This version is still under active development and may have breaking changes before the 1.0.0 release.
+
+### Packages Included
+
+- **Translaas.Models** (0.1.0) - Data transfer objects (DTOs) for the Translaas Translation Delivery API
+- **Translaas.Client** (0.1.0) - Core HTTP client implementation with caching support
+- **Translaas.Caching** (0.1.0) - Caching abstractions and implementations
+- **Translaas.Extensions.Http** (0.1.0) - HttpClientFactory integration extensions
+- **Translaas.Extensions.DependencyInjection** (0.1.0) - Full dependency injection integration
+- **Translaas.Extensions.Mvc** (0.1.0) - ASP.NET Core MVC/Razor integration with Tag Helpers
+
+### Features
+
+- ✅ Strongly-typed API with full IntelliSense support
+- ✅ Convenience API via `ITranslaasService` with `T()` method
+- ✅ Razor View Support with Tag Helpers and static helpers
+- ✅ Dependency Injection ready with seamless `IServiceCollection` integration
+- ✅ Flexible caching with configurable cache modes (None, Entry, Group, Project)
+- ✅ Multiple framework support (.NET Standard 2.0, .NET 8, .NET 10)
+- ✅ Fully asynchronous API for optimal performance
+- ✅ Modular design - use only what you need
+
+### Supported Frameworks
+
+- .NET Standard 2.0
+- .NET 8.0
+- .NET 10.0
+
+### Installation
+
+```bash
+# Full DI integration (recommended)
+dotnet add package Translaas.Extensions.DependencyInjection
+
+# Or install individual packages
+dotnet add package Translaas.Client
+dotnet add package Translaas.Models
+dotnet add package Translaas.Caching
+dotnet add package Translaas.Extensions.Http
+dotnet add package Translaas.Extensions.Mvc
+```
+
+### Documentation
+
+- [README.md](README.md) - Getting started guide
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+- [GitHub Repository](https://github.com/acuencadev/Translaas.SDK)
+
+### Breaking Changes
+
+None - This is the initial pre-release.
+
+### Known Issues
+
+None at this time.
+
+---
+
+### Template for Future Releases
+
+When adding a new release, add it at the top of the "Release Notes" section above, following this template:
+
+```markdown
+## Version X.Y.Z
+
+### Added
+- New features added in this release
+
+### Changed
+- Changes to existing functionality
+
+### Fixed
+- Bug fixes
+
+### Deprecated
+- Features that will be removed in a future release
+
+### Removed
+- Features removed in this release
+
+### Security
+- Security fixes
+```
 
 Thank you for contributing to Translaas SDK! 🎉
