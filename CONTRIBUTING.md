@@ -390,7 +390,7 @@ The SDK uses a centralized version management approach. To update the version fo
    
    # Pack all packages
    Get-ChildItem -Path src -Filter *.csproj -Recurse | ForEach-Object { 
-     dotnet pack $_.FullName --configuration Release --output ./nupkgs 
+     dotnet pack -Path $_.FullName --configuration Release --output ./nupkgs
    }
    ```
 
