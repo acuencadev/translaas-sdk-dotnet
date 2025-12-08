@@ -20,7 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Translaas.Caching\Translaas.Caching.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Client\Translaas.Client.csproj" />
+    <ProjectReference Include="..\..\src\Translaas.Models\Translaas.Models.csproj" />
   </ItemGroup>
 
 </Project>
