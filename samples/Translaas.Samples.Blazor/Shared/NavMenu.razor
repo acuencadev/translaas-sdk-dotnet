@@ -1,0 +1,46 @@
+@inject ITranslaasService Translaas
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">@await Translaas.T("common", "app.name", "en")</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" @bind="collapseNavMenu" />
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+                @await Translaas.T("navigation", "home", "en")
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink href="counter">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span>
+                @await Translaas.T("navigation", "counter", "en")
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink href="fetchdata">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
+                @await Translaas.T("navigation", "fetch.data", "en")
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

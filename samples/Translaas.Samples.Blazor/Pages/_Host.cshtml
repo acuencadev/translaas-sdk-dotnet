@@ -1,0 +1,11 @@
+@page "/"
+@namespace Translaas.Samples.Blazor.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Translaas.Extensions.Mvc
+@using Translaas.Extensions.Mvc
+@inject ITranslaasService Translaas
+@{
+    Layout = "_Layout";
+}
+
+<component type="typeof(App)" render-mode="ServerPrerendered" />

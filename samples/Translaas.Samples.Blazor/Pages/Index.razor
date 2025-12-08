@@ -1,0 +1,123 @@
+@page "/"
+@using Translaas.Models.Responses
+@inject ITranslaasService Translaas
+@inject ITranslaasClient TranslaasClient
+
+<PageTitle>Home</PageTitle>
+
+<h1>@await Translaas.T("common", "welcome", "en")</h1>
+
+<p>@await Translaas.T("common", "welcome.message", "en")</p>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2>Translation Examples</h2>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>1. Direct Service Injection</h3>
+            </div>
+            <div class="card-body">
+                <p>Using injected <code>ITranslaasService</code>:</p>
+                <pre><code>@await Translaas.T("common", "welcome", "en")</code></pre>
+                <p>Result: @await Translaas.T("common", "welcome", "en")</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>2. Using ITranslaasClient</h3>
+            </div>
+            <div class="card-body">
+                <p>Using injected <code>ITranslaasClient</code>:</p>
+                <pre><code>@await TranslaasClient.GetEntryAsync("common", "welcome", "en")</code></pre>
+                <p>Result: @await TranslaasClient.GetEntryAsync("common", "welcome", "en")</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>3. Pluralization</h3>
+            </div>
+            <div class="card-body">
+                <p>Using pluralization with the <code>number</code> parameter:</p>
+                <pre><code>@await Translaas.T("messages", "item", "en", 1)
+@await Translaas.T("messages", "item", "en", 5)</code></pre>
+                <p>1 item: @await Translaas.T("messages", "item", "en", 1)</p>
+                <p>5 items: @await Translaas.T("messages", "item", "en", 5)</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>4. Multiple Languages</h3>
+            </div>
+            <div class="card-body">
+                <p>Switching languages:</p>
+                <ul>
+                    <li>English: @await Translaas.T("common", "welcome", "en")</li>
+                    <li>French: @await Translaas.T("common", "welcome", "fr")</li>
+                    <li>Spanish: @await Translaas.T("common", "welcome", "es")</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>5. Dynamic Translation</h3>
+            </div>
+            <div class="card-body">
+                <p>Dynamic translation based on component state:</p>
+                <p>Current language: <strong>@currentLang</strong></p>
+                <p>Translation: @await Translaas.T("common", "welcome", currentLang)</p>
+                <button class="btn btn-primary" @onclick="ToggleLanguage">Toggle Language</button>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>6. Translation Group</h3>
+            </div>
+            <div class="card-body">
+                @if (translationGroup != null)
+                {
+                    <p>Group '@translationGroup.Group' contains @translationGroup.Entries.Count entries:</p>
+                    <ul>
+                        @foreach (var entry in translationGroup.Entries)
+                        {
+                            <li><strong>@entry.Key</strong>: @entry.Value</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Loading translation group...</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string currentLang = "en";
+    private TranslationGroup? translationGroup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            translationGroup = await TranslaasClient.GetGroupAsync("my-project", "common", "en");
+        }
+        catch (Exception ex)
+        {
+            // Handle error - in production, log this
+            Console.WriteLine($"Error loading translation group: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleLanguage()
+    {
+        currentLang = currentLang == "en" ? "fr" : "en";
+        StateHasChanged();
+    }
+}

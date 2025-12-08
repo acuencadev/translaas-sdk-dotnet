@@ -1,0 +1,63 @@
+@page "/fetchdata"
+@inject ITranslaasService Translaas
+
+<PageTitle>Weather Forecast</PageTitle>
+
+<h1>@await Translaas.T("pages", "weather.title", "en")</h1>
+
+<p>@await Translaas.T("pages", "weather.description", "en")</p>
+
+@if (forecasts == null)
+{
+    <p><em>@await Translaas.T("common", "loading", "en")</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@await Translaas.T("weather", "date", "en")</th>
+                <th>@await Translaas.T("weather", "temperature.c", "en")</th>
+                <th>@await Translaas.T("weather", "temperature.f", "en")</th>
+                <th>@await Translaas.T("weather", "summary", "en")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate async data loading
+        await Task.Delay(500);
+        
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        {
+            Date = startDate.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = $"Weather {index}"
+        }).ToArray();
+    }
+
+    public class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public string? Summary { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    }
+}

@@ -1,0 +1,78 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">
+        <translaas group="common" entry="welcome" lang="en" />
+    </h1>
+    <p>
+        <translaas group="common" entry="welcome.message" lang="en" />
+    </p>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2>Translation Examples</h2>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>1. Tag Helper Usage</h3>
+            </div>
+            <div class="card-body">
+                <p>Using the <code>&lt;translaas&gt;</code> tag helper:</p>
+                <pre><code>&lt;translaas group="common" entry="welcome" lang="en" /&gt;</code></pre>
+                <p>Result: <translaas group="common" entry="welcome" lang="en" /></p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>2. Static Helper Usage</h3>
+            </div>
+            <div class="card-body">
+                <p>Using the <code>Translaas.T()</code> static helper:</p>
+                <pre><code>@Translaas.T(Html, "common", "welcome", "en")</code></pre>
+                <p>Result: @Translaas.T(Html, "common", "welcome", "en")</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>3. Direct Service Injection</h3>
+            </div>
+            <div class="card-body">
+                <p>Using injected <code>ITranslaasService</code> (already injected in _ViewImports.cshtml):</p>
+                <pre><code>@await Translaas.T("common", "welcome", "en")</code></pre>
+                <p>Result: @await Translaas.T("common", "welcome", "en")</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>4. Pluralization</h3>
+            </div>
+            <div class="card-body">
+                <p>Using pluralization with the <code>number</code> attribute:</p>
+                <pre><code>&lt;translaas group="messages" entry="item" lang="en" number="1" /&gt;
+&lt;translaas group="messages" entry="item" lang="en" number="5" /&gt;</code></pre>
+                <p>1 item: <translaas group="messages" entry="item" lang="en" number="1" /></p>
+                <p>5 items: <translaas group="messages" entry="item" lang="en" number="5" /></p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>5. Multiple Languages</h3>
+            </div>
+            <div class="card-body">
+                <p>Switching languages:</p>
+                <ul>
+                    <li>English: <translaas group="common" entry="welcome" lang="en" /></li>
+                    <li>French: <translaas group="common" entry="welcome" lang="fr" /></li>
+                    <li>Spanish: <translaas group="common" entry="welcome" lang="es" /></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
