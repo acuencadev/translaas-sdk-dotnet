@@ -1,8 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Translaas.Extensions.Http</PackageId>
+    <Description>HttpClientFactory integration extensions for the Translaas Translation Delivery API SDK. Provides AddTranslaasHttpClient extension method for IHttpClientBuilder.</Description>
+    <PackageTags>translaas;translation;i18n;localization;httpclient;httpclientfactory;extensions</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Translaas.Client\Translaas.Client.csproj" />
-    <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj" />
+    <ProjectReference Include="..\Translaas.Client\Translaas.Client.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

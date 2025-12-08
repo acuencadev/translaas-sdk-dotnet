@@ -4,10 +4,17 @@
     <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings Condition="'$(TargetFramework)' != 'netstandard2.0'">enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>Translaas.Extensions.Mvc</PackageId>
+    <Description>ASP.NET Core MVC/Razor integration for the Translaas Translation Delivery API SDK. Provides Tag Helpers and static helpers for easy translation lookups in Razor views (.cshtml files).</Description>
+    <PackageTags>translaas;translation;i18n;localization;mvc;razor;tag-helpers;aspnetcore;extensions</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Translaas.Extensions.DependencyInjection\Translaas.Extensions.DependencyInjection.csproj" />
+    <ProjectReference Include="..\Translaas.Extensions.DependencyInjection\Translaas.Extensions.DependencyInjection.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">

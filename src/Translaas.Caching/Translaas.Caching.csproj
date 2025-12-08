@@ -1,7 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Translaas.Caching</PackageId>
+    <Description>Caching abstractions and implementations for the Translaas Translation Delivery API SDK. Provides CacheMode enum and ITranslaasCacheProvider interface with MemoryCacheProvider implementation.</Description>
+    <PackageTags>translaas;translation;i18n;localization;caching;cache</PackageTags>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj" />
+    <ProjectReference Include="..\Translaas.Models\Translaas.Models.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
