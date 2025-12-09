@@ -197,9 +197,7 @@ options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
 Translaas.Samples.Blazor/
 ├── Pages/
 │   ├── _Host.cshtml              # Host page
-│   ├── Index.razor               # Home page with examples
-│   ├── Counter.razor             # Counter page
-│   └── FetchData.razor           # Weather forecast page
+│   └── Index.razor               # Home page with examples
 ├── Shared/
 │   ├── MainLayout.razor          # Main layout component
 │   └── NavMenu.razor             # Navigation menu component

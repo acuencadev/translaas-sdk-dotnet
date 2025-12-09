@@ -19,18 +19,6 @@
                 @homeText
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span>
-                @counterText
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink href="fetchdata">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
-                @fetchDataText
-            </NavLink>
-        </div>
     </nav>
 </div>
 
@@ -38,8 +26,6 @@
     private bool collapseNavMenu = true;
     private string appName = string.Empty;
     private string homeText = string.Empty;
-    private string counterText = string.Empty;
-    private string fetchDataText = string.Empty;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -52,7 +38,5 @@
     {
         appName = await Translaas.T("common", "app.name", "en");
         homeText = await Translaas.T("navigation", "home", "en");
-        counterText = await Translaas.T("navigation", "counter", "en");
-        fetchDataText = await Translaas.T("navigation", "fetch.data", "en");
     }
 }
