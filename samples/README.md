@@ -125,11 +125,11 @@ All samples require configuration of the Translaas API key and base URL. This ca
 ```bash
 # Windows PowerShell
 $env:TRANSLAAS_API_KEY = "your-api-key"
-$env:TRANSLAAS_BASE_URL = "https://sdk-api.translaas.local/api"
+$env:TRANSLAAS_BASE_URL = "https://sdk-api.translaas.local"  # Do NOT include /api
 
 # Linux/macOS
 export TRANSLAAS_API_KEY="your-api-key"
-export TRANSLAAS_BASE_URL="https://sdk-api.translaas.local/api"
+export TRANSLAAS_BASE_URL="https://sdk-api.translaas.local"  # Do NOT include /api
 ```
 
 ### 2. Configuration Files
@@ -140,7 +140,7 @@ For Web API, WebApp, and Blazor samples, configure in `appsettings.json`:
 {
   "Translaas": {
     "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdk-api.translaas.local/api"
+    "BaseUrl": "https://sdk-api.translaas.local"
   }
 }
 ```
@@ -153,7 +153,8 @@ All samples show how to configure Translaas in code:
 services.AddTranslaas(options =>
 {
     options.ApiKey = "your-api-key-here";
-    options.BaseUrl = "https://sdk-api.translaas.local/api";
+    options.BaseUrl = "https://sdk-api.translaas.local";
+    // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     options.CacheMode = CacheMode.Group;
     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
     options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
