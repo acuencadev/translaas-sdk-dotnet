@@ -15,9 +15,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddTranslaas(options =>
 {
     // Required: Set your API key
-    options.ApiKey = builder.Configuration["Translaas:ApiKey"] 
-        ?? Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
-        ?? "fYMrUMSEt5NIEPiYDJQwzyTVW7YMILiv";
+    options.ApiKey = !string.IsNullOrWhiteSpace(builder.Configuration["Translaas:ApiKey"])
+        ? builder.Configuration["Translaas:ApiKey"]!
+        : Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
+        ?? "your-api-key-here";
 
     // Required: Set the base URL
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
