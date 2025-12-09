@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -112,6 +113,12 @@ public class TranslaasClient : ITranslaasClient
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
+            // Handle 204 No Content: Return the entry key as fallback (common i18n pattern)
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return entry;
+            }
+
             // Parse raw text response
             var result = await ParseTextResponse(response, cancellationToken).ConfigureAwait(false);
 
@@ -206,6 +213,12 @@ public class TranslaasClient : ITranslaasClient
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
+            // Handle 204 No Content: Return empty group
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new TranslationGroup();
+            }
+
             // Deserialize JSON response
             var result = await ParseJsonResponse<TranslationGroup>(response, cancellationToken).ConfigureAwait(false);
 
@@ -294,6 +307,12 @@ public class TranslaasClient : ITranslaasClient
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
             }
 
+            // Handle 204 No Content: Return empty project
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new TranslationProject();
+            }
+
             // Deserialize JSON response
             var result = await ParseJsonResponse<TranslationProject>(response, cancellationToken).ConfigureAwait(false);
 
@@ -371,6 +390,12 @@ public class TranslaasClient : ITranslaasClient
             if (!response.IsSuccessStatusCode)
             {
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
+            }
+
+            // Handle 204 No Content: Return empty locales list
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new ProjectLocales { Locales = new List<string>() };
             }
 
             // Deserialize JSON response
