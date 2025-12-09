@@ -1,6 +1,6 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 using Translaas.Caching;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
@@ -86,11 +86,16 @@ class Program
             System.Console.WriteLine("Use this when you need multiple entries, or use .T() for individual entries.\n");
             const string groupName = "common";
             var group = await translaasClient.GetGroupAsync(projectId, groupName, "en");
-            System.Console.WriteLine($"Group '{groupName}' contains {group.Entries.Count} entries:");
-            foreach (var entry in group.Entries)
+            
+            // Filter out metadata fields and only show actual translation entries
+            var translationEntries = group.Entries
+                .Where(e => e.Value.ValueKind == JsonValueKind.String)
+                .ToDictionary(e => e.Key, e => e.Value.GetString() ?? string.Empty);
+            
+            System.Console.WriteLine($"Group '{groupName}' contains {translationEntries.Count} translation entries:");
+            foreach (var entry in translationEntries)
             {
-                var value = entry.Value.GetString() ?? entry.Value.ToString();
-                System.Console.WriteLine($"  {entry.Key}: {value}");
+                System.Console.WriteLine($"  {entry.Key}: {entry.Value}");
             }
             System.Console.WriteLine();
 
