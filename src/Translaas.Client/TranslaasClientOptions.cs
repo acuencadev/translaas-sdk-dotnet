@@ -11,7 +11,8 @@ namespace Translaas.Client;
 /// </summary>
 public class TranslaasClientOptions
 {
-    private const string DefaultBaseUrl = "https://sdk-api.translaas.local/api";
+    // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
+    private const string DefaultBaseUrl = "https://sdk-api.translaas.local";
     private static readonly Regex UrlRegex = new Regex(@"^https?://", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>

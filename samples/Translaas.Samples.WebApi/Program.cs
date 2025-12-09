@@ -23,9 +23,10 @@ builder.Services.AddTranslaas(options =>
         ?? "your-api-key-here";
 
     // Required: Set the base URL
+    // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     options.BaseUrl = builder.Configuration["Translaas:BaseUrl"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
-        ?? "https://sdk-api.translaas.local/api";
+        ?? "https://sdk-api.translaas.local";
 
     // Optional: Configure caching
     options.CacheMode = CacheMode.Group; // Cache at group level
