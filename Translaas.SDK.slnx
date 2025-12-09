@@ -16,4 +16,10 @@
     <Project Path="tests/Translaas.Extensions.Mvc.Tests/Translaas.Extensions.Mvc.Tests.csproj" />
     <Project Path="tests/Translaas.Models.Tests/Translaas.Models.Tests.csproj" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Translaas.Samples.Blazor/Translaas.Samples.Blazor.csproj" />
+    <Project Path="samples/Translaas.Samples.Console/Translaas.Samples.Console.csproj" />
+    <Project Path="samples/Translaas.Samples.WebApi/Translaas.Samples.WebApi.csproj" />
+    <Project Path="samples/Translaas.Samples.WebApp/Translaas.Samples.WebApp.csproj" />
+  </Folder>
 </Solution>
