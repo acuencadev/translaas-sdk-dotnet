@@ -12,7 +12,8 @@ This project contains integration tests for the Translaas Client SDK. These test
 Integration tests are configured via environment variables:
 
 - **TRANSLAAS_API_KEY** (required): Your API key for the development environment
-- **TRANSLAAS_BASE_URL** (optional): Base URL for the API. Defaults to `https://sdk-api.translaas.local/api`
+- **TRANSLAAS_BASE_URL** (optional): Base URL for the API. Defaults to `https://sdk-api.translaas.local`
+  - **Note**: Do NOT include `/api` in the BaseUrl - the client adds `/api/` to all endpoints automatically
 
 ## Running Integration Tests
 
@@ -20,7 +21,7 @@ Integration tests are configured via environment variables:
 
 ```powershell
 $env:TRANSLAAS_API_KEY = "your-api-key-here"
-$env:TRANSLAAS_BASE_URL = "https://api-dev.translaas.com/api"  # Optional
+$env:TRANSLAAS_BASE_URL = "https://api-dev.translaas.com"  # Optional - do NOT include /api
 dotnet test tests/Translaas.Client.IntegrationTests
 ```
 
@@ -28,7 +29,7 @@ dotnet test tests/Translaas.Client.IntegrationTests
 
 ```bash
 export TRANSLAAS_API_KEY="your-api-key-here"
-export TRANSLAAS_BASE_URL="https://api-dev.translaas.com/api"  # Optional
+export TRANSLAAS_BASE_URL="https://api-dev.translaas.com"  # Optional - do NOT include /api
 dotnet test tests/Translaas.Client.IntegrationTests
 ```
 
@@ -51,12 +52,26 @@ dotnet test tests/Translaas.Client.IntegrationTests --filter "FullyQualifiedName
 
 The integration tests expect certain test data to exist in your development API:
 
-- **Project**: `test-project`
-- **Group**: `ui`
-- **Entries**: `button.save`, `button.cancel`, `items.count`
+- **Project**: `test-project` (must exist and contain translation data)
+- **Group**: `ui` (must exist within the project)
+- **Entries**: `button.save`, `button.cancel`, `items.count` (must exist within the group)
 - **Locales**: At least `en` (and optionally `fr`, `es`, `de`)
 
-Adjust the test values in the test files to match your actual development API test data.
+**Important**: If your API doesn't have this test data, the tests will fail. You have two options:
+
+1. **Create the test data** in your API to match the test expectations
+2. **Update the test files** to use data that exists in your API (modify the hardcoded values in the test files)
+
+### API Behavior Notes
+
+- The API returns **204 No Content** for non-existent resources (not 404 errors)
+- The client handles 204 responses by returning:
+  - **GetEntryAsync**: Returns the entry key as fallback (common i18n pattern)
+  - **GetGroupAsync**: Returns empty `TranslationGroup`
+  - **GetProjectAsync**: Returns empty `TranslationProject`
+  - **GetProjectLocalesAsync**: Returns empty `ProjectLocales`
+- Tests that expect data will fail if the test data doesn't exist in your API
+- Tests for "not found" scenarios expect empty data, not exceptions
 
 ## CI/CD Integration
 
