@@ -4,7 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>28864136-746e-4a2e-9b3f-532303872169</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Translaas.Caching\Translaas.Caching.csproj" />
