@@ -21,7 +21,7 @@ builder.Services.AddTranslaas(options =>
     // Required: Set the base URL
     options.BaseUrl = builder.Configuration["Translaas:BaseUrl"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
-        ?? "https://sdkapi.translaas.local/api";
+        ?? "https://sdk-api.translaas.local/api";
 
     // Optional: Configure caching
     options.CacheMode = CacheMode.Group; // Cache at group level

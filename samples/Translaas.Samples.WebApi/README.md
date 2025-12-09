@@ -28,7 +28,7 @@ Configure Translaas in `appsettings.json`:
 {
   "Translaas": {
     "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdkapi.translaas.local/api"
+    "BaseUrl": "https://sdk-api.translaas.local/api"
   }
 }
 ```
@@ -38,7 +38,7 @@ Configure Translaas in `appsettings.json`:
 Alternatively, use environment variables:
 
 - `TRANSLAAS_API_KEY`: Your Translaas API key (required)
-- `TRANSLAAS_BASE_URL`: The base URL for the Translaas API (defaults to `https://sdkapi.translaas.local/api`)
+- `TRANSLAAS_BASE_URL`: The base URL for the Translaas API (defaults to `https://sdk-api.translaas.local/api`)
 
 ### Code Configuration
 
@@ -53,7 +53,7 @@ builder.Services.AddTranslaas(options =>
     
     options.BaseUrl = builder.Configuration["Translaas:BaseUrl"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
-        ?? "https://sdkapi.translaas.local/api";
+        ?? "https://sdk-api.translaas.local/api";
     
     options.CacheMode = CacheMode.Group;
     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
@@ -68,11 +68,11 @@ builder.Services.AddTranslaas(options =>
    ```bash
    # Windows PowerShell
    $env:TRANSLAAS_API_KEY = "your-api-key"
-   $env:TRANSLAAS_BASE_URL = "https://sdkapi.translaas.local/api"
+   $env:TRANSLAAS_BASE_URL = "https://sdk-api.translaas.local/api"
 
    # Linux/macOS
    export TRANSLAAS_API_KEY="your-api-key"
-   export TRANSLAAS_BASE_URL="https://sdkapi.translaas.local/api"
+   export TRANSLAAS_BASE_URL="https://sdk-api.translaas.local/api"
    ```
 
 2. Run the application:

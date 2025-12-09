@@ -29,7 +29,7 @@ public class IntegrationTestConfiguration
     public IntegrationTestConfiguration()
     {
         ApiKey = Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") ?? string.Empty;
-        BaseUrl = Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") ?? "https://sdkapi.translaas.local/api";
+        BaseUrl = Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") ?? "https://sdk-api.translaas.local/api";
         
         // Integration tests are enabled if API key is provided
         IsEnabled = !string.IsNullOrWhiteSpace(ApiKey);

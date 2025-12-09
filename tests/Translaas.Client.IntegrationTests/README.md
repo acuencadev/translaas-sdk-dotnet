@@ -12,7 +12,7 @@ This project contains integration tests for the Translaas Client SDK. These test
 Integration tests are configured via environment variables:
 
 - **TRANSLAAS_API_KEY** (required): Your API key for the development environment
-- **TRANSLAAS_BASE_URL** (optional): Base URL for the API. Defaults to `https://sdkapi.translaas.local/api`
+- **TRANSLAAS_BASE_URL** (optional): Base URL for the API. Defaults to `https://sdk-api.translaas.local/api`
 
 ## Running Integration Tests
 

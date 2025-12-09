@@ -25,7 +25,7 @@ This console application shows:
 The application can be configured using environment variables:
 
 - `TRANSLAAS_API_KEY`: Your Translaas API key (required)
-- `TRANSLAAS_BASE_URL`: The base URL for the Translaas API (defaults to `https://sdkapi.translaas.local/api`)
+- `TRANSLAAS_BASE_URL`: The base URL for the Translaas API (defaults to `https://sdk-api.translaas.local/api`)
 
 ### Code Configuration
 
@@ -35,7 +35,7 @@ Alternatively, you can modify the configuration directly in `Program.cs`:
 services.AddTranslaas(options =>
 {
     options.ApiKey = "your-api-key-here";
-    options.BaseUrl = "https://sdkapi.translaas.local/api";
+    options.BaseUrl = "https://sdk-api.translaas.local/api";
     options.CacheMode = CacheMode.Group;
     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
     options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
@@ -49,11 +49,11 @@ services.AddTranslaas(options =>
    ```bash
    # Windows PowerShell
    $env:TRANSLAAS_API_KEY = "your-api-key"
-   $env:TRANSLAAS_BASE_URL = "https://sdkapi.translaas.local/api"
+   $env:TRANSLAAS_BASE_URL = "https://sdk-api.translaas.local/api"
 
    # Linux/macOS
    export TRANSLAAS_API_KEY="your-api-key"
-   export TRANSLAAS_BASE_URL="https://sdkapi.translaas.local/api"
+   export TRANSLAAS_BASE_URL="https://sdk-api.translaas.local/api"
    ```
 
 2. Run the application:

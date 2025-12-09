@@ -39,7 +39,7 @@ public class TranslaasClientOptionsTests
         var options = new TranslaasClientOptions();
 
         // Assert
-        options.BaseUrl.Should().Be("https://sdkapi.translaas.local/api");
+        options.BaseUrl.Should().Be("https://sdk-api.translaas.local/api");
     }
 
     [Fact]

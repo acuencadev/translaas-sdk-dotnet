@@ -1,6 +1,6 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Translaas.Caching;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
@@ -30,7 +30,7 @@ class Program
 
                     // Required: Set the base URL
                     options.BaseUrl = Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
-                        ?? "https://sdkapi.translaas.local/api";
+                        ?? "https://sdk-api.translaas.local/api";
 
                     // Optional: Configure caching
                     options.CacheMode = CacheMode.Group; // Cache at group level
