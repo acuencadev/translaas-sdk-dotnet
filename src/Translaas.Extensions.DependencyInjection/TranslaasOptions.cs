@@ -10,7 +10,7 @@ namespace Translaas.Extensions.DependencyInjection;
 /// </summary>
 public class TranslaasOptions
 {
-    private const string DefaultBaseUrl = "https://sdkapi.translaas.local/api";
+    private const string DefaultBaseUrl = "https://sdk-api.translaas.local/api";
 
     /// <summary>
     /// Gets or sets the API key for authentication.
@@ -25,7 +25,7 @@ public class TranslaasOptions
     /// Gets or sets the base URL for the Translaas API.
     /// </summary>
     /// <remarks>
-    /// Defaults to "https://sdkapi.translaas.local/api" if not specified.
+    /// Defaults to "https://sdk-api.translaas.local/api" if not specified.
     /// Must be a valid HTTP or HTTPS URL.
     /// </remarks>
     [Required(ErrorMessage = "BaseUrl is required and cannot be null or empty.")]

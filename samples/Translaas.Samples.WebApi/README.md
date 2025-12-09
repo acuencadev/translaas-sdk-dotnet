@@ -1,0 +1,234 @@
+# Translaas SDK Web API Sample
+
+This sample demonstrates how to use the Translaas SDK in an ASP.NET Core Web API application with dependency injection, MVC, and caching.
+
+## Overview
+
+This Web API sample shows:
+- How to configure Translaas services in an ASP.NET Core Web API
+- How to inject `ITranslaasService` and `ITranslaasClient` into controllers
+- How to use both convenience service and full client API
+- How to configure caching for improved performance
+- How to handle errors and logging
+- How to expose translation endpoints via REST API
+
+## Prerequisites
+
+- .NET 8.0 SDK or later
+- A valid Translaas API key
+- Access to a Translaas API endpoint
+
+## Configuration
+
+### appsettings.json
+
+Configure Translaas in `appsettings.json`:
+
+```json
+{
+  "Translaas": {
+    "ApiKey": "your-api-key-here",
+    "BaseUrl": "https://sdk-api.translaas.local"
+  }
+}
+```
+
+### Environment Variables
+
+Alternatively, use environment variables:
+
+- `TRANSLAAS_API_KEY`: Your Translaas API key (required)
+- `TRANSLAAS_BASE_URL`: The base URL for the Translaas API (defaults to `https://sdk-api.translaas.local`)
+  - **Note**: Do NOT include `/api` in the BaseUrl - the client adds `/api/` to all endpoints automatically
+
+### Code Configuration
+
+The configuration is set up in `Program.cs`:
+
+```csharp
+builder.Services.AddTranslaas(options =>
+{
+    options.ApiKey = builder.Configuration["Translaas:ApiKey"] 
+        ?? Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
+        ?? "your-api-key-here";
+    
+    options.BaseUrl = builder.Configuration["Translaas:BaseUrl"] 
+        ?? Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
+        ?? "https://sdk-api.translaas.local";
+    
+    // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
+    
+    options.CacheMode = CacheMode.Group;
+    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+    options.Timeout = TimeSpan.FromSeconds(30);
+});
+```
+
+## Running the Sample
+
+1. Configure your API key in `appsettings.json` or set environment variables:
+   ```bash
+   # Windows PowerShell
+   $env:TRANSLAAS_API_KEY = "your-api-key"
+   $env:TRANSLAAS_BASE_URL = "https://sdk-api.translaas.local"  # Do NOT include /api
+
+   # Linux/macOS
+   export TRANSLAAS_API_KEY="your-api-key"
+   export TRANSLAAS_BASE_URL="https://sdk-api.translaas.local"  # Do NOT include /api
+   ```
+
+2. Run the application:
+   ```bash
+   dotnet run --project samples/Translaas.Samples.WebApi
+   ```
+
+3. Open Swagger UI at `https://localhost:5001/swagger` (or the port shown in the console)
+
+## API Endpoints
+
+### Get Translation Entry (using ITranslaasService)
+
+```
+GET /api/translation/entry?group=common&entry=welcome&lang=en
+GET /api/translation/entry?group=messages&entry=item&lang=en&number=5
+```
+
+### Get Translation Entry (using ITranslaasClient)
+
+```
+GET /api/translation/entry/client?group=common&entry=welcome&lang=en
+```
+
+### Get Translation Group
+
+```
+GET /api/translation/group?project=my-project&group=common&lang=en
+```
+
+### Get Translation Project
+
+```
+GET /api/translation/project?project=my-project&lang=en
+```
+
+### Get Project Locales
+
+```
+GET /api/translation/locales?project=my-project
+```
+
+## Features Demonstrated
+
+### 1. Dependency Injection
+
+Both `ITranslaasService` and `ITranslaasClient` are injected into controllers:
+
+```csharp
+public TranslationController(
+    ITranslaasService translaasService,
+    ITranslaasClient translaasClient,
+    ILogger<TranslationController> logger)
+{
+    _translaasService = translaasService;
+    _translaasClient = translaasClient;
+    _logger = logger;
+}
+```
+
+### 2. Using ITranslaasService
+
+The convenience service provides a simple `T()` method:
+
+```csharp
+var translation = await _translaasService.T(group, entry, lang, number);
+```
+
+### 3. Using ITranslaasClient
+
+The full client provides access to all API methods:
+
+```csharp
+var translation = await _translaasClient.GetEntryAsync(group, entry, lang, number);
+var group = await _translaasClient.GetGroupAsync(project, group, lang);
+var project = await _translaasClient.GetProjectAsync(project, lang);
+var locales = await _translaasClient.GetProjectLocalesAsync(project);
+```
+
+### 4. Caching
+
+Caching is configured at the service level:
+
+```csharp
+options.CacheMode = CacheMode.Group; // Cache at group level
+options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+```
+
+### 5. Error Handling
+
+The controller includes error handling and logging:
+
+```csharp
+try
+{
+    var translation = await _translaasService.T(group, entry, lang, number);
+    return Ok(translation);
+}
+catch (Exception ex)
+{
+    _logger.LogError(ex, "Error retrieving translation entry");
+    return StatusCode(500, new { error = ex.Message });
+}
+```
+
+### 6. MVC Integration
+
+The sample includes MVC services for tag helpers (useful if you add views later):
+
+```csharp
+builder.Services.AddTranslaasMvc();
+```
+
+## Caching Modes
+
+- `CacheMode.None`: No caching (default)
+- `CacheMode.Entry`: Cache individual entries
+- `CacheMode.Group`: Cache entire translation groups (recommended)
+- `CacheMode.Project`: Cache entire projects
+
+## Service Lifetime
+
+- `ITranslaasClient`: Scoped (one instance per HTTP request)
+- `ITranslaasService`: Scoped (one instance per HTTP request)
+- `IMemoryCache`: Singleton (shared across all requests)
+- `ITranslaasCacheProvider`: Singleton (shared across all requests)
+
+## Testing the API
+
+### Using curl
+
+```bash
+# Get a translation entry
+curl "https://localhost:5001/api/translation/entry?group=common&entry=welcome&lang=en"
+
+# Get a translation group
+curl "https://localhost:5001/api/translation/group?project=my-project&group=common&lang=en"
+
+# Get project locales
+curl "https://localhost:5001/api/translation/locales?project=my-project"
+```
+
+### Using Swagger UI
+
+1. Navigate to `https://localhost:5001/swagger`
+2. Expand the `Translation` controller
+3. Click "Try it out" on any endpoint
+4. Fill in the parameters
+5. Click "Execute"
+
+## Next Steps
+
+- Explore the [Console sample](../Translaas.Samples.Console/README.md) for simple console application usage
+- Explore the [WebApp sample](../Translaas.Samples.WebApp/README.md) for Razor views and tag helpers
+- Explore the [Blazor sample](../Translaas.Samples.Blazor/README.md) for Blazor component usage

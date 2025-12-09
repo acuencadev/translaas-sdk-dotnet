@@ -1,0 +1,153 @@
+@page "/"
+@using Translaas.Models.Responses
+@inject ITranslaasService Translaas
+@inject ITranslaasClient TranslaasClient
+
+<PageTitle>Home</PageTitle>
+
+<h1>@welcome</h1>
+
+<p>@welcomeMessage</p>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2>Translation Examples</h2>
+        
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>1. Direct Service Injection</h3>
+            </div>
+            <div class="card-body">
+                <p>Using injected <code>ITranslaasService</code>:</p>
+                <pre><code>@@await Translaas.T("common", "welcome", "en")</code></pre>
+                <p>Result: @welcome</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>2. Using ITranslaasClient</h3>
+            </div>
+            <div class="card-body">
+                <p>Using injected <code>ITranslaasClient</code>:</p>
+                <pre><code>@@await TranslaasClient.GetEntryAsync("common", "welcome", "en")</code></pre>
+                <p>Result: @welcome</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>3. Pluralization</h3>
+            </div>
+            <div class="card-body">
+                <p>Using pluralization with the <code>number</code> parameter:</p>
+                <pre><code>@@await Translaas.T("messages", "item", "en", 1)
+@@await Translaas.T("messages", "item", "en", 5)</code></pre>
+                <p>1 item: @itemSingular</p>
+                <p>5 items: @itemPlural</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>4. Multiple Languages</h3>
+            </div>
+            <div class="card-body">
+                <p>Switching languages:</p>
+                <ul>
+                    <li>English: @welcomeEn</li>
+                    <li>French: @welcomeFr</li>
+                    <li>Spanish: @welcomeEs</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>5. Dynamic Translation</h3>
+            </div>
+            <div class="card-body">
+                <p>Dynamic translation based on component state:</p>
+                <p>Current language: <strong>@currentLang</strong></p>
+                <p>Translation: @currentWelcome</p>
+                <button class="btn btn-primary" @onclick="ToggleLanguage">Toggle Language</button>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>6. Translation Group (Bulk Operation)</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Note:</strong> <code>GetGroupAsync()</code> retrieves all entries in a group at once. For single entries, prefer using <code>Translaas.T()</code>.</p>
+                @if (translationGroup != null)
+                {
+                    // Filter out metadata fields and only show actual translation entries
+                    var translationEntries = translationGroup.Entries
+                        .Where(e => e.Value.ValueKind == System.Text.Json.JsonValueKind.String)
+                        .ToDictionary(e => e.Key, e => e.Value.GetString() ?? string.Empty);
+                    
+                    <p>Group 'common' contains @translationEntries.Count translation entries:</p>
+                    <ul>
+                        @foreach (var entry in translationEntries)
+                        {
+                            <li><strong>@entry.Key</strong>: @entry.Value</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>Loading translation group...</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string currentLang = "en";
+    private TranslationGroup? translationGroup;
+    
+    // Translation strings loaded in OnInitializedAsync
+    private string welcome = string.Empty;
+    private string welcomeMessage = string.Empty;
+    private string welcomeEn = string.Empty;
+    private string welcomeFr = string.Empty;
+    private string welcomeEs = string.Empty;
+    private string itemSingular = string.Empty;
+    private string itemPlural = string.Empty;
+    private string currentWelcome = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            const string projectId = "translaas-sdk-samples";
+            
+            // Load all translations upfront
+            welcome = await Translaas.T("common", "welcome", "en");
+            welcomeMessage = await Translaas.T("common", "welcome.message", "en");
+            welcomeEn = await Translaas.T("common", "welcome", "en");
+            welcomeFr = await Translaas.T("common", "welcome", "fr");
+            welcomeEs = await Translaas.T("common", "welcome", "es");
+            itemSingular = await Translaas.T("messages", "item", "en", 1);
+            itemPlural = await Translaas.T("messages", "item", "en", 5);
+            currentWelcome = await Translaas.T("common", "welcome", currentLang);
+            
+            // Load translation group
+            translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", "en");
+        }
+        catch (Exception ex)
+        {
+            // Handle error - in production, log this
+            Console.WriteLine($"Error loading translations: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleLanguage()
+    {
+        currentLang = currentLang == "en" ? "fr" : "en";
+        currentWelcome = await Translaas.T("common", "welcome", currentLang);
+        StateHasChanged();
+    }
+}
