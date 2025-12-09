@@ -123,7 +123,7 @@ public class ErrorScenariosIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task Client_ShouldHandle404NotFound_WhenResourceDoesNotExist()
+    public async Task Client_ShouldHandleNotFound_WhenResourceDoesNotExist()
     {
         // Skip if integration tests are not enabled
         if (!_configuration.IsEnabled)
@@ -145,12 +145,13 @@ public class ErrorScenariosIntegrationTests : IDisposable
         var client = new TranslaasClient(_httpClient, options);
 
         // Act
-        var exception = await Assert.ThrowsAsync<TranslaasApiException>(
-            () => client.GetEntryAsync("nonexistent-group", "nonexistent-entry", "nonexistent-lang"));
+        // Note: API returns 204 No Content for non-existent entries, which returns the entry key as fallback
+        var result = await client.GetEntryAsync("nonexistent-group", "nonexistent-entry", "nonexistent-lang");
 
         // Assert
-        exception.Should().NotBeNull();
-        exception.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        // When entry is not found, API returns 204 and client returns the entry key as fallback
+        result.Should().NotBeNull();
+        result.Should().Be("nonexistent-entry"); // Client returns entry key when 204 No Content is received
     }
 
     protected virtual void Dispose(bool disposing)

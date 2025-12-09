@@ -60,7 +60,7 @@ public class GetEntryAsyncIntegrationTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GetEntryAsync_ShouldThrowTranslaasApiException_WhenEntryNotFound()
+    public async Task GetEntryAsync_ShouldHandleNotFound_WhenEntryNotFound()
     {
         // Skip if integration tests are not enabled
         if (!Configuration.IsEnabled)
@@ -73,9 +73,14 @@ public class GetEntryAsyncIntegrationTests : IntegrationTestBase
         var entry = "nonexistent.entry";
         var lang = "en";
 
-        // Act & Assert
-        await Assert.ThrowsAsync<TranslaasApiException>(
-            () => Client.GetEntryAsync(group, entry, lang));
+        // Act
+        // Note: API returns 204 No Content for non-existent entries, which returns the entry key as fallback
+        var result = await Client.GetEntryAsync(group, entry, lang);
+
+        // Assert
+        // When entry is not found, API returns 204 and client returns the entry key as fallback
+        result.Should().NotBeNull();
+        result.Should().Be(entry); // Client returns entry key when 204 No Content is received
     }
 
     [Fact]

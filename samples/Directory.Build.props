@@ -1,0 +1,10 @@
+<Project>
+  <!-- 
+    Override Directory.Build.props multi-targeting for samples.
+    Samples should target a single framework (net10.0) for simplicity.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks></TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>
