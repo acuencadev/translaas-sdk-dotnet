@@ -1,6 +1,9 @@
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using System.Text.Json;
+
 using Translaas.Caching;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
@@ -16,6 +19,12 @@ class Program
     {
         // Build the host with dependency injection
         var host = Host.CreateDefaultBuilder(args)
+            .ConfigureLogging(logging =>
+            {
+                // Suppress HTTP client logging for cleaner console output
+                // Only filter out HTTP client logs, keep other logs at default level
+                logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
+            })
             .ConfigureServices((context, services) =>
             {
                 // Add HttpClient support (required for Translaas)
