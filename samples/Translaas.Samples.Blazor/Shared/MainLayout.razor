@@ -1,3 +1,4 @@
+@namespace Translaas.Samples.Blazor.Shared
 @inherits LayoutComponentBase
 @inject ITranslaasService Translaas
 
@@ -8,7 +9,7 @@
 
     <main>
         <div class="top-row px-4">
-            <h1>@await Translaas.T("common", "app.name", "en")</h1>
+            <h1>@appName</h1>
         </div>
 
         <article class="content px-4">
@@ -16,3 +17,12 @@
         </article>
     </main>
 </div>
+
+@code {
+    private string appName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        appName = await Translaas.T("common", "app.name", "en");
+    }
+}

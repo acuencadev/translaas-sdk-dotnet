@@ -3,7 +3,8 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @addTagHelper *, Translaas.Extensions.Mvc
 @using Translaas.Extensions.Mvc
-@inject ITranslaasService Translaas
+@using Translaas.Extensions.DependencyInjection
+@inject ITranslaasService TranslaasService
 @{
     Layout = "_Layout";
 }

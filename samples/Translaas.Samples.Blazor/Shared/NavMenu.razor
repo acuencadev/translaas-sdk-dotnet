@@ -2,7 +2,7 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">@await Translaas.T("common", "app.name", "en")</a>
+        <a class="navbar-brand" href="">@appName</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -16,19 +16,19 @@
         <div class="nav-item px-3">
             <NavLink href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
-                @await Translaas.T("navigation", "home", "en")
+                @homeText
             </NavLink>
         </div>
         <div class="nav-item px-3">
             <NavLink href="counter">
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span>
-                @await Translaas.T("navigation", "counter", "en")
+                @counterText
             </NavLink>
         </div>
         <div class="nav-item px-3">
             <NavLink href="fetchdata">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span>
-                @await Translaas.T("navigation", "fetch.data", "en")
+                @fetchDataText
             </NavLink>
         </div>
     </nav>
@@ -36,11 +36,23 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private string appName = string.Empty;
+    private string homeText = string.Empty;
+    private string counterText = string.Empty;
+    private string fetchDataText = string.Empty;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        appName = await Translaas.T("common", "app.name", "en");
+        homeText = await Translaas.T("navigation", "home", "en");
+        counterText = await Translaas.T("navigation", "counter", "en");
+        fetchDataText = await Translaas.T("navigation", "fetch.data", "en");
     }
 }

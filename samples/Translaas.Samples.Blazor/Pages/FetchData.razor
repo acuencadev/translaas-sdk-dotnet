@@ -3,23 +3,23 @@
 
 <PageTitle>Weather Forecast</PageTitle>
 
-<h1>@await Translaas.T("pages", "weather.title", "en")</h1>
+<h1>@weatherTitle</h1>
 
-<p>@await Translaas.T("pages", "weather.description", "en")</p>
+<p>@weatherDescription</p>
 
 @if (forecasts == null)
 {
-    <p><em>@await Translaas.T("common", "loading", "en")</em></p>
+    <p><em>@loadingText</em></p>
 }
 else
 {
     <table class="table">
         <thead>
             <tr>
-                <th>@await Translaas.T("weather", "date", "en")</th>
-                <th>@await Translaas.T("weather", "temperature.c", "en")</th>
-                <th>@await Translaas.T("weather", "temperature.f", "en")</th>
-                <th>@await Translaas.T("weather", "summary", "en")</th>
+                <th>@dateText</th>
+                <th>@temperatureCText</th>
+                <th>@temperatureFText</th>
+                <th>@summaryText</th>
             </tr>
         </thead>
         <tbody>
@@ -38,9 +38,25 @@ else
 
 @code {
     private WeatherForecast[]? forecasts;
+    private string weatherTitle = string.Empty;
+    private string weatherDescription = string.Empty;
+    private string loadingText = string.Empty;
+    private string dateText = string.Empty;
+    private string temperatureCText = string.Empty;
+    private string temperatureFText = string.Empty;
+    private string summaryText = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
+        // Load translations
+        weatherTitle = await Translaas.T("pages", "weather.title", "en");
+        weatherDescription = await Translaas.T("pages", "weather.description", "en");
+        loadingText = await Translaas.T("common", "loading", "en");
+        dateText = await Translaas.T("weather", "date", "en");
+        temperatureCText = await Translaas.T("weather", "temperature.c", "en");
+        temperatureFText = await Translaas.T("weather", "temperature.f", "en");
+        summaryText = await Translaas.T("weather", "summary", "en");
+
         // Simulate async data loading
         await Task.Delay(500);
         

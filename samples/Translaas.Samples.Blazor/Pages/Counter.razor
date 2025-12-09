@@ -3,20 +3,32 @@
 
 <PageTitle>Counter</PageTitle>
 
-<h1>@await Translaas.T("pages", "counter.title", "en")</h1>
+<h1>@counterTitle</h1>
 
-<p role="status">@await Translaas.T("pages", "counter.current", "en"): <strong>@currentCount</strong></p>
+<p role="status">@counterCurrentText: <strong>@currentCount</strong></p>
 
 <button class="btn btn-primary" @onclick="IncrementCount">
-    @await Translaas.T("buttons", "increment", "en")
+    @incrementText
 </button>
 
 <p class="mt-3">
-    @await Translaas.T("pages", "counter.description", "en")
+    @counterDescription
 </p>
 
 @code {
     private int currentCount = 0;
+    private string counterTitle = string.Empty;
+    private string counterCurrentText = string.Empty;
+    private string incrementText = string.Empty;
+    private string counterDescription = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        counterTitle = await Translaas.T("pages", "counter.title", "en");
+        counterCurrentText = await Translaas.T("pages", "counter.current", "en");
+        incrementText = await Translaas.T("buttons", "increment", "en");
+        counterDescription = await Translaas.T("pages", "counter.description", "en");
+    }
 
     private void IncrementCount()
     {
