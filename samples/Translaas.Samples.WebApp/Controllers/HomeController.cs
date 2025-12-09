@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+
 using Translaas.Extensions.DependencyInjection;
 
 namespace Translaas.Samples.WebApp.Controllers;
