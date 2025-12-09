@@ -76,9 +76,10 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>6. Translation Group</h3>
+                <h3>6. Translation Group (Bulk Operation)</h3>
             </div>
             <div class="card-body">
+                <p><strong>Note:</strong> <code>GetGroupAsync()</code> retrieves all entries in a group at once. For single entries, prefer using <code>Translaas.T()</code>.</p>
                 @if (translationGroup != null)
                 {
                     <p>Group '@translationGroup.Group' contains @translationGroup.Entries.Count entries:</p>
@@ -106,7 +107,10 @@
     {
         try
         {
-            translationGroup = await TranslaasClient.GetGroupAsync("my-project", "common", "en");
+            // Example: Using GetGroupAsync() for bulk retrieval
+            // For single entries, prefer: await Translaas.T("common", "welcome", "en")
+            const string projectId = "translaas-sdk-samples";
+            translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", "en");
         }
         catch (Exception ex)
         {

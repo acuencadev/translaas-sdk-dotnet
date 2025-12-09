@@ -84,23 +84,25 @@ public class TranslationController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all translations for a translation group.
+    /// Gets all translations for a translation group (bulk operation).
+    /// Uses the default project "translaas-sdk-samples".
+    /// Note: For single entries, prefer using the /entry endpoint with ITranslaasService.T().
+    /// Use this endpoint when you need all entries in a group at once.
     /// </summary>
-    /// <param name="project">The project identifier.</param>
     /// <param name="group">The translation group name.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
     /// <param name="format">Optional format parameter.</param>
     /// <returns>A translation group containing all entries.</returns>
     [HttpGet("group")]
     public async Task<ActionResult<TranslationGroup>> GetGroup(
-        [FromQuery] string project,
         [FromQuery] string group,
         [FromQuery] string lang,
         [FromQuery] string? format = null)
     {
         try
         {
-            var translationGroup = await _translaasClient.GetGroupAsync(project, group, lang, format);
+            const string projectId = "translaas-sdk-samples";
+            var translationGroup = await _translaasClient.GetGroupAsync(projectId, group, lang, format);
             return Ok(translationGroup);
         }
         catch (Exception ex)
@@ -112,20 +114,20 @@ public class TranslationController : ControllerBase
 
     /// <summary>
     /// Gets all translations for a project.
+    /// Uses the default project "translaas-sdk-samples".
     /// </summary>
-    /// <param name="project">The project identifier.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
     /// <param name="format">Optional format parameter.</param>
     /// <returns>A translation project containing all groups and entries.</returns>
     [HttpGet("project")]
     public async Task<ActionResult<TranslationProject>> GetProject(
-        [FromQuery] string project,
         [FromQuery] string lang,
         [FromQuery] string? format = null)
     {
         try
         {
-            var translationProject = await _translaasClient.GetProjectAsync(project, lang, format);
+            const string projectId = "translaas-sdk-samples";
+            var translationProject = await _translaasClient.GetProjectAsync(projectId, lang, format);
             return Ok(translationProject);
         }
         catch (Exception ex)
@@ -136,16 +138,16 @@ public class TranslationController : ControllerBase
     }
 
     /// <summary>
-    /// Gets available locales for a project.
+    /// Gets available locales for the default project "translaas-sdk-samples".
     /// </summary>
-    /// <param name="project">The project identifier.</param>
     /// <returns>Available locales for the project.</returns>
     [HttpGet("locales")]
-    public async Task<ActionResult<ProjectLocales>> GetLocales([FromQuery] string project)
+    public async Task<ActionResult<ProjectLocales>> GetLocales()
     {
         try
         {
-            var locales = await _translaasClient.GetProjectLocalesAsync(project);
+            const string projectId = "translaas-sdk-samples";
+            var locales = await _translaasClient.GetProjectLocalesAsync(projectId);
             return Ok(locales);
         }
         catch (Exception ex)

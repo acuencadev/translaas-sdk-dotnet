@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Translaas.Caching;
@@ -50,6 +51,8 @@ class Program
 
         try
         {
+            const string projectId = "translaas-sdk-samples";
+
             // Example 1: Using ITranslaasService (convenience wrapper)
             Console.WriteLine("Example 1: Using ITranslaasService.T()");
             var translation1 = await translaasService.T("common", "welcome", "en");
@@ -67,9 +70,20 @@ class Program
             Console.WriteLine($"1 item: {translation3a}");
             Console.WriteLine($"5 items: {translation3b}\n");
 
-            // Example 4: Get entire translation group
-            Console.WriteLine("Example 4: Get entire translation group");
-            var group = await translaasClient.GetGroupAsync("my-project", "common", "en");
+            // Example 4: Get multiple entries using .T() helper
+            Console.WriteLine("Example 4: Get multiple entries using .T() helper");
+            var appName = await translaasService.T("common", "app.name", "en");
+            var welcome = await translaasService.T("common", "welcome", "en");
+            var welcomeMessage = await translaasService.T("common", "welcome.message", "en");
+            Console.WriteLine($"App Name: {appName}");
+            Console.WriteLine($"Welcome: {welcome}");
+            Console.WriteLine($"Message: {welcomeMessage}\n");
+
+            // Example 5: Get entire translation group (bulk operation)
+            Console.WriteLine("Example 5: Get entire translation group (bulk operation)");
+            Console.WriteLine("Note: GetGroupAsync() retrieves all entries in a group at once.");
+            Console.WriteLine("Use this when you need multiple entries, or use .T() for individual entries.\n");
+            var group = await translaasClient.GetGroupAsync(projectId, "common", "en");
             Console.WriteLine($"Group '{group.Group}' contains {group.Entries.Count} entries:");
             foreach (var entry in group.Entries)
             {
@@ -77,25 +91,26 @@ class Program
             }
             Console.WriteLine();
 
-            // Example 5: Get project locales
-            Console.WriteLine("Example 5: Get available locales");
-            var locales = await translaasClient.GetProjectLocalesAsync("my-project");
+            // Example 6: Get project locales
+            Console.WriteLine("Example 6: Get available locales");
+            var locales = await translaasClient.GetProjectLocalesAsync(projectId);
             Console.WriteLine($"Available locales: {string.Join(", ", locales.Locales)}\n");
 
-            // Example 6: Caching demonstration
-            Console.WriteLine("Example 6: Caching demonstration");
+            // Example 7: Caching demonstration
+            Console.WriteLine("Example 7: Caching demonstration");
             Console.WriteLine("First call (cache miss):");
             var start1 = DateTime.UtcNow;
             await translaasService.T("common", "welcome", "en");
             var duration1 = DateTime.UtcNow - start1;
-            Console.WriteLine($"Duration: {duration1.TotalMilliseconds}ms");
+            Console.WriteLine($"Duration: {duration1.TotalMilliseconds:F2}ms");
 
             Console.WriteLine("Second call (cache hit):");
             var start2 = DateTime.UtcNow;
             await translaasService.T("common", "welcome", "en");
             var duration2 = DateTime.UtcNow - start2;
-            Console.WriteLine($"Duration: {duration2.TotalMilliseconds}ms");
-            Console.WriteLine($"Cache speedup: {(duration1.TotalMilliseconds / duration2.TotalMilliseconds):F2}x faster\n");
+            Console.WriteLine($"Duration: {duration2.TotalMilliseconds:F2}ms");
+            var speedup = duration1.TotalMilliseconds / duration2.TotalMilliseconds;
+            Console.WriteLine($"Cache speedup: {speedup:F2}x faster\n");
         }
         catch (Exception ex)
         {
