@@ -107,16 +107,17 @@ public class TranslaasClient : ITranslaasClient
             // Send request
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
+            // Handle 204 No Content: Return the entry key as fallback (common i18n pattern)
+            // Note: 204 is a success status code, so check it before the error handling
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return entry;
+            }
+
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
-            }
-
-            // Handle 204 No Content: Return the entry key as fallback (common i18n pattern)
-            if (response.StatusCode == HttpStatusCode.NoContent)
-            {
-                return entry;
             }
 
             // Parse raw text response
@@ -207,16 +208,17 @@ public class TranslaasClient : ITranslaasClient
             // Send request
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
+            // Handle 204 No Content: Return empty group
+            // Note: 204 is a success status code, so check it before the error handling
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new TranslationGroup();
+            }
+
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
-            }
-
-            // Handle 204 No Content: Return empty group
-            if (response.StatusCode == HttpStatusCode.NoContent)
-            {
-                return new TranslationGroup();
             }
 
             // Deserialize JSON response
@@ -301,16 +303,17 @@ public class TranslaasClient : ITranslaasClient
             // Send request
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
+            // Handle 204 No Content: Return empty project
+            // Note: 204 is a success status code, so check it before the error handling
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new TranslationProject();
+            }
+
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
-            }
-
-            // Handle 204 No Content: Return empty project
-            if (response.StatusCode == HttpStatusCode.NoContent)
-            {
-                return new TranslationProject();
             }
 
             // Deserialize JSON response
@@ -386,16 +389,17 @@ public class TranslaasClient : ITranslaasClient
             // Send request
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
+            // Handle 204 No Content: Return empty locales list
+            // Note: 204 is a success status code, so check it before the error handling
+            if (response.StatusCode == HttpStatusCode.NoContent)
+            {
+                return new ProjectLocales { Locales = new List<string>() };
+            }
+
             // Handle non-success status codes
             if (!response.IsSuccessStatusCode)
             {
                 await HandleApiError(response, cancellationToken).ConfigureAwait(false);
-            }
-
-            // Handle 204 No Content: Return empty locales list
-            if (response.StatusCode == HttpStatusCode.NoContent)
-            {
-                return new ProjectLocales { Locales = new List<string>() };
             }
 
             // Deserialize JSON response
