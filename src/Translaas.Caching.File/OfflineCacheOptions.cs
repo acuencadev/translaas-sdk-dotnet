@@ -78,4 +78,14 @@ public class OfflineCacheOptions
     /// Language codes should match the project's available locales (e.g., "en", "es", "fr").
     /// </remarks>
     public List<string> Languages { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the default project ID for single entry lookups.
+    /// </summary>
+    /// <remarks>
+    /// Required when using offline caching with <see cref="Client.ITranslaasClient.GetEntryAsync"/>,
+    /// as that method does not include a project parameter.
+    /// Should be set to the first project in <see cref="Projects"/> if not explicitly specified.
+    /// </remarks>
+    public string? DefaultProjectId { get; set; }
 }

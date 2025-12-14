@@ -93,49 +93,6 @@ public static class ServiceCollectionExtensions
             options.Timeout = translaasOptions.Timeout;
         });
 
-        // Register ITranslaasClient as scoped
-        services.AddScoped<ITranslaasClient>(serviceProvider =>
-        {
-#if NETSTANDARD2_0
-            // For netstandard2.0, IHttpClientFactory might not be available
-            // Use dynamic resolution
-            var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http");
-            if (httpClientFactoryType == null)
-            {
-                throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
-            }
-            var httpClientFactory = serviceProvider.GetService(httpClientFactoryType);
-            if (httpClientFactory == null)
-            {
-                throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
-            }
-            var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", new[] { typeof(string) });
-            var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, new object[] { nameof(ITranslaasClient) })!;
-#else
-            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-            var httpClient = httpClientFactory.CreateClient(nameof(ITranslaasClient));
-#endif
-            var optionsMonitor = serviceProvider.GetRequiredService<IOptions<TranslaasOptions>>();
-            var translaasOptions = optionsMonitor.Value;
-
-            // Convert TranslaasOptions to TranslaasClientOptions
-            var clientOptions = new TranslaasClientOptions
-            {
-                ApiKey = translaasOptions.ApiKey,
-                BaseUrl = translaasOptions.BaseUrl,
-                Timeout = translaasOptions.Timeout
-            };
-
-            return new TranslaasClient(httpClient, clientOptions);
-        });
-
-        // Register ITranslaasService as scoped (convenience wrapper)
-        services.AddScoped<ITranslaasService>(serviceProvider =>
-        {
-            var client = serviceProvider.GetRequiredService<ITranslaasClient>();
-            return new TranslaasService(client);
-        });
-
         // Register caching services if caching is enabled
         var tempOptions = new TranslaasOptions();
         configure(tempOptions);
@@ -159,6 +116,20 @@ public static class ServiceCollectionExtensions
         // Register offline caching services if enabled
         if (tempOptions.OfflineCache.Enabled)
         {
+            // Validate offline cache configuration
+            var defaultProjectId = tempOptions.OfflineCache.DefaultProjectId
+                ?? (tempOptions.OfflineCache.Projects.Count > 0 ? tempOptions.OfflineCache.Projects[0] : null);
+
+            if (string.IsNullOrWhiteSpace(defaultProjectId))
+            {
+                throw new InvalidOperationException(
+                    "Offline cache is enabled but no DefaultProjectId or Projects are configured. " +
+                    "Set OfflineCache.DefaultProjectId or add at least one project to OfflineCache.Projects.");
+            }
+
+            // Update the options with the resolved default project ID
+            tempOptions.OfflineCache.DefaultProjectId = defaultProjectId;
+
             // Register OfflineCacheOptions as singleton
             services.AddSingleton(tempOptions.OfflineCache);
 
@@ -168,18 +139,84 @@ public static class ServiceCollectionExtensions
                 var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
                 return new FileCacheProvider(offlineOptions);
             });
+        }
 
-            // Register IOfflineCacheSyncService as singleton
-            services.AddSingleton<IOfflineCacheSyncService>(serviceProvider =>
+        // Register ITranslaasClient as scoped
+        services.AddScoped<ITranslaasClient>(serviceProvider =>
+        {
+            // Create the inner HTTP client
+            var innerClient = CreateInnerClient(serviceProvider);
+
+            // If offline caching is enabled, wrap with CachingTranslaasClient
+            var optionsMonitor = serviceProvider.GetRequiredService<IOptions<TranslaasOptions>>();
+            var translaasOptions = optionsMonitor.Value;
+
+            if (translaasOptions.OfflineCache.Enabled)
             {
-                var client = serviceProvider.GetRequiredService<ITranslaasClient>();
                 var cacheProvider = serviceProvider.GetRequiredService<IOfflineCacheProvider>();
                 var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
-                return new OfflineCacheSyncService(client, cacheProvider, offlineOptions);
+                return new CachingTranslaasClient(innerClient, cacheProvider, offlineOptions, offlineOptions.DefaultProjectId!);
+            }
+
+            return innerClient;
+        });
+
+        // Register ITranslaasService as scoped (convenience wrapper)
+        services.AddScoped<ITranslaasService>(serviceProvider =>
+        {
+            var client = serviceProvider.GetRequiredService<ITranslaasClient>();
+            return new TranslaasService(client);
+        });
+
+        // Register IOfflineCacheSyncService if offline caching is enabled
+        if (tempOptions.OfflineCache.Enabled)
+        {
+            services.AddSingleton<IOfflineCacheSyncService>(serviceProvider =>
+            {
+                // For sync service, we need the inner client without caching wrapper
+                var innerClient = CreateInnerClient(serviceProvider);
+                var cacheProvider = serviceProvider.GetRequiredService<IOfflineCacheProvider>();
+                var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
+                return new OfflineCacheSyncService(innerClient, cacheProvider, offlineOptions);
             });
         }
 
         return services;
+    }
+
+    private static TranslaasClient CreateInnerClient(IServiceProvider serviceProvider)
+    {
+#if NETSTANDARD2_0
+        // For netstandard2.0, IHttpClientFactory might not be available
+        // Use dynamic resolution
+        var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http");
+        if (httpClientFactoryType == null)
+        {
+            throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
+        }
+        var httpClientFactory = serviceProvider.GetService(httpClientFactoryType);
+        if (httpClientFactory == null)
+        {
+            throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
+        }
+        var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", new[] { typeof(string) });
+        var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, new object[] { nameof(ITranslaasClient) })!;
+#else
+        var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+        var httpClient = httpClientFactory.CreateClient(nameof(ITranslaasClient));
+#endif
+        var optionsMonitor = serviceProvider.GetRequiredService<IOptions<TranslaasOptions>>();
+        var translaasOptions = optionsMonitor.Value;
+
+        // Convert TranslaasOptions to TranslaasClientOptions
+        var clientOptions = new TranslaasClientOptions
+        {
+            ApiKey = translaasOptions.ApiKey,
+            BaseUrl = translaasOptions.BaseUrl,
+            Timeout = translaasOptions.Timeout
+        };
+
+        return new TranslaasClient(httpClient, clientOptions);
     }
 
     /// <summary>
