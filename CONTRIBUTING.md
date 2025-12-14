@@ -35,7 +35,10 @@ This repo includes an **opt-in** pre-commit hook that will:
 - Run `dotnet format` on **staged `*.cs` files**
 - Remove unused `using` directives
 - Normalize whitespace (including trimming trailing whitespace and ensuring a final newline)
+- Remove extra blank lines at end-of-file (ensures exactly one final newline)
 - Re-stage formatted files so your commit stays consistent
+
+Note: Running `dotnet format` against the entire repo/solution can occasionally fail due to upstream workspace/linking issues. The pre-commit hook runs `dotnet format` **per-project** (only for projects that contain staged files) to avoid those solution-wide problems.
 
 Enable it once per clone:
 
