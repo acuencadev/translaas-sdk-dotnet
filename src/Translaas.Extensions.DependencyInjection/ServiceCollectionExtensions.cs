@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net.Http;
 
 using Translaas.Caching;
+using Translaas.Caching.File;
 using Translaas.Client;
 using Translaas.Extensions.Http;
 
@@ -152,6 +153,29 @@ public static class ServiceCollectionExtensions
             {
                 var memoryCache = serviceProvider.GetRequiredService<IMemoryCache>();
                 return new MemoryCacheProvider(memoryCache);
+            });
+        }
+
+        // Register offline caching services if enabled
+        if (tempOptions.OfflineCache.Enabled)
+        {
+            // Register OfflineCacheOptions as singleton
+            services.AddSingleton(tempOptions.OfflineCache);
+
+            // Register IOfflineCacheProvider as singleton
+            services.AddSingleton<IOfflineCacheProvider>(serviceProvider =>
+            {
+                var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
+                return new FileCacheProvider(offlineOptions);
+            });
+
+            // Register IOfflineCacheSyncService as singleton
+            services.AddSingleton<IOfflineCacheSyncService>(serviceProvider =>
+            {
+                var client = serviceProvider.GetRequiredService<ITranslaasClient>();
+                var cacheProvider = serviceProvider.GetRequiredService<IOfflineCacheProvider>();
+                var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
+                return new OfflineCacheSyncService(client, cacheProvider, offlineOptions);
             });
         }
 

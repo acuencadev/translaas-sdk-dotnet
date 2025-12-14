@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 
 using Translaas.Caching;
+using Translaas.Caching.File;
 
 namespace Translaas.Extensions.DependencyInjection;
 
@@ -66,4 +67,13 @@ public class TranslaasOptions
     /// Only used when <see cref="CacheMode"/> is not <see cref="CacheMode.None"/>.
     /// </remarks>
     public TimeSpan? CacheSlidingExpiration { get; set; }
+
+    /// <summary>
+    /// Gets or sets the offline caching options.
+    /// </summary>
+    /// <remarks>
+    /// Configure this to enable file-based offline caching for translation data.
+    /// When enabled, translations are cached locally in JSON files for offline use.
+    /// </remarks>
+    public OfflineCacheOptions OfflineCache { get; set; } = new();
 }
