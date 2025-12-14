@@ -88,4 +88,13 @@ public class OfflineCacheOptions
     /// Should be set to the first project in <see cref="Projects"/> if not explicitly specified.
     /// </remarks>
     public string? DefaultProjectId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the hybrid caching options.
+    /// </summary>
+    /// <remarks>
+    /// Hybrid caching combines in-memory caching (L1) with file caching (L2)
+    /// for optimal performance and persistence.
+    /// </remarks>
+    public HybridCacheOptions HybridCache { get; set; } = new();
 }

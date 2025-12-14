@@ -133,12 +133,37 @@ public static class ServiceCollectionExtensions
             // Register OfflineCacheOptions as singleton
             services.AddSingleton(tempOptions.OfflineCache);
 
+            // Register HybridCacheOptions as singleton
+            services.AddSingleton(tempOptions.OfflineCache.HybridCache);
+
             // Register IOfflineCacheProvider as singleton
-            services.AddSingleton<IOfflineCacheProvider>(serviceProvider =>
+            // Use HybridCacheProvider if hybrid caching is enabled, otherwise use FileCacheProvider
+            if (tempOptions.OfflineCache.HybridCache.Enabled)
             {
-                var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
-                return new FileCacheProvider(offlineOptions);
-            });
+                // Register file cache provider for internal use
+                services.AddSingleton<FileCacheProvider>(serviceProvider =>
+                {
+                    var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
+                    return new FileCacheProvider(offlineOptions);
+                });
+
+                // Register hybrid cache provider as IOfflineCacheProvider
+                services.AddSingleton<IOfflineCacheProvider>(serviceProvider =>
+                {
+                    var fileCache = serviceProvider.GetRequiredService<FileCacheProvider>();
+                    var hybridOptions = serviceProvider.GetRequiredService<HybridCacheOptions>();
+                    return new HybridCacheProvider(fileCache, hybridOptions);
+                });
+            }
+            else
+            {
+                // Use file cache only
+                services.AddSingleton<IOfflineCacheProvider>(serviceProvider =>
+                {
+                    var offlineOptions = serviceProvider.GetRequiredService<OfflineCacheOptions>();
+                    return new FileCacheProvider(offlineOptions);
+                });
+            }
         }
 
         // Register ITranslaasClient as scoped
