@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+# Only format staged C# files.
+mapfile -t staged_cs_files < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.cs$' || true)
+
+if [[ "${#staged_cs_files[@]}" -eq 0 ]]; then
+  exit 0
+fi
+
+if [[ -f ".config/dotnet-tools.json" ]]; then
+  dotnet tool restore >/dev/null
+fi
+
+# Apply whitespace formatting (includes trailing whitespace + final newline).
+dotnet format whitespace --include "${staged_cs_files[@]}"
+
+# Apply style fixes (unused usings, using order, etc.). IDE0005 is set to warning in .editorconfig.
+dotnet format style --severity warn --include "${staged_cs_files[@]}"
+
+# Re-stage any files changed by the formatter.
+git add -- "${staged_cs_files[@]}"

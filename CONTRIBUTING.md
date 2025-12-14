@@ -28,6 +28,27 @@ We welcome contributions to the Translaas SDK! This document provides guidelines
 - Keep methods focused and single-purpose
 - Use `async`/`await` for asynchronous operations
 
+### Optional: Auto-format on commit (pre-commit hook)
+
+This repo includes an **opt-in** pre-commit hook that will:
+
+- Run `dotnet format` on **staged `*.cs` files**
+- Remove unused `using` directives
+- Normalize whitespace (including trimming trailing whitespace and ensuring a final newline)
+- Re-stage formatted files so your commit stays consistent
+
+Enable it once per clone:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/setup-githooks.ps1
+```
+
+Or (bash):
+
+```bash
+./scripts/setup-githooks.sh
+```
+
 ### Project Structure
 
 - Keep code organized within the appropriate project:
