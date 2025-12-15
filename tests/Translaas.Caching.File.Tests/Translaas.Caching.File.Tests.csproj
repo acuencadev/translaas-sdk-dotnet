@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
@@ -9,10 +9,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
@@ -27,11 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Translaas.Caching\Translaas.Caching.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Caching.File\Translaas.Caching.File.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Client\Translaas.Client.csproj" />
-    <ProjectReference Include="..\..\src\Translaas.Extensions.DependencyInjection\Translaas.Extensions.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Models\Translaas.Models.csproj" />
   </ItemGroup>
 
 </Project>
+

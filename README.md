@@ -11,6 +11,8 @@ A strongly-typed, performant, and modular .NET SDK for consuming the **Translaas
 - ✅ **Razor View Support** - Tag Helpers and HTML Helpers for easy translation in `.cshtml` files
 - ✅ **Dependency Injection Ready** - Seamless integration with `IServiceCollection`
 - ✅ **Flexible Caching** - Built-in memory caching with configurable cache modes
+- ✅ **Offline Caching** - File-based caching for offline mode with automatic sync
+- ✅ **Hybrid Caching** - Two-level caching (memory L1 + file L2) for optimal performance
 - ✅ **Multiple Framework Support** - Compatible with .NET Standard 2.0, .NET 6, .NET 8, and .NET 10
 - ✅ **Retry & Resilience** - Configurable retry policies and timeouts
 - ✅ **Modular Design** - Use only what you need with separate NuGet packages
@@ -42,7 +44,8 @@ If you prefer to use individual packages:
 
 - `Translaas.Client` - Core HTTP client
 - `Translaas.Models` - Data transfer objects
-- `Translaas.Caching` - Caching layer
+- `Translaas.Caching` - In-memory caching layer
+- `Translaas.Caching.File` - File-based offline caching with hybrid caching support
 - `Translaas.Extensions.Http` - HttpClientFactory integration
 - `Translaas.Extensions.DependencyInjection` - Full DI integration (recommended)
 - `Translaas.Extensions.Mvc` - Razor Tag Helpers and HTML Helpers for ASP.NET Core MVC
@@ -382,6 +385,122 @@ services.AddTranslaas(options =>
 ```csharp
 services.AddSingleton<ITranslaasCacheProvider, MyCustomCacheProvider>();
 services.AddTranslaas(options => { /* ... */ });
+```
+
+## Offline Caching
+
+The SDK supports file-based offline caching, allowing your application to work without network connectivity by caching translations locally in JSON files.
+
+### Enabling Offline Cache
+
+```csharp
+services.AddTranslaas(options =>
+{
+    options.ApiKey = "your-api-key";
+    options.BaseUrl = "https://api.translaas.com";
+    
+    // Enable offline caching
+    options.OfflineCache.Enabled = true;
+    options.OfflineCache.CacheDirectory = ".translaas-cache";
+    options.OfflineCache.FallbackMode = OfflineFallbackMode.CacheFirst;
+    
+    // Configure which projects and languages to cache
+    options.OfflineCache.Projects.Add("my-project");
+    options.OfflineCache.Languages.AddRange(new[] { "en", "es", "fr" });
+    
+    // Enable automatic sync
+    options.OfflineCache.AutoSync = true;
+    options.OfflineCache.AutoSyncInterval = TimeSpan.FromHours(1);
+});
+```
+
+### Fallback Modes
+
+- `OfflineFallbackMode.CacheFirst` - Try cache first, fall back to API (default)
+- `OfflineFallbackMode.ApiFirst` - Try API first, fall back to cache
+- `OfflineFallbackMode.CacheOnly` - Only use cache, never call API
+- `OfflineFallbackMode.ApiOnlyWithBackup` - Always call API, update cache as backup
+
+### Configuration from appsettings.json
+
+```json
+{
+  "Translaas": {
+    "ApiKey": "your-api-key",
+    "BaseUrl": "https://api.translaas.com",
+    "OfflineCache": {
+      "Enabled": true,
+      "CacheDirectory": ".translaas-cache",
+      "FallbackMode": "CacheFirst",
+      "AutoSync": true,
+      "AutoSyncInterval": "01:00:00",
+      "Projects": ["my-project"],
+      "Languages": ["en", "es", "fr"],
+      "DefaultProjectId": "my-project"
+    }
+  }
+}
+```
+
+### Background Sync Service
+
+For ASP.NET Core applications, you can enable automatic background synchronization:
+
+```csharp
+using Translaas.Caching.File;
+
+// In Program.cs
+services.AddTranslaas(options => { /* ... */ });
+services.AddTranslaasOfflineCacheSyncHostedService();
+```
+
+This registers an `IHostedService` that will periodically sync your offline cache with the Translaas API.
+
+### Hybrid Caching (Memory L1 + File L2)
+
+For optimal performance, you can enable hybrid caching which combines fast in-memory access with persistent file storage:
+
+```csharp
+services.AddTranslaas(options =>
+{
+    options.ApiKey = "your-api-key";
+    
+    // Enable offline cache with hybrid mode
+    options.OfflineCache.Enabled = true;
+    options.OfflineCache.HybridCache.Enabled = true;
+    options.OfflineCache.HybridCache.MemoryCacheExpiration = TimeSpan.FromMinutes(30);
+    options.OfflineCache.HybridCache.MaxMemoryCacheEntries = 1000;
+    options.OfflineCache.HybridCache.WarmupOnStartup = true;
+});
+```
+
+With hybrid caching:
+- **L1 (Memory)**: Fast access for frequently used translations
+- **L2 (File)**: Persistent storage that survives application restarts
+
+When a cache miss occurs in L1, the translation is automatically loaded from L2 and promoted to L1.
+
+### Hybrid Cache Configuration from appsettings.json
+
+```json
+{
+  "Translaas": {
+    "ApiKey": "your-api-key",
+    "OfflineCache": {
+      "Enabled": true,
+      "CacheDirectory": ".translaas-cache",
+      "FallbackMode": "CacheFirst",
+      "Projects": ["my-project"],
+      "Languages": ["en", "es", "fr"],
+      "HybridCache": {
+        "Enabled": true,
+        "MemoryCacheExpiration": "00:30:00",
+        "MaxMemoryCacheEntries": 1000,
+        "WarmupOnStartup": true
+      }
+    }
+  }
+}
 ```
 
 ## API Reference

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+# Finds the nearest .csproj for a file by walking up directories.
+find_csproj_for_file() {
+  local file="$1"
+  local dir
+  dir="$(dirname "$file")"
+
+  while [[ "$dir" != "." && "$dir" != "/" ]]; do
+    local csproj
+    csproj="$(ls "$dir"/*.csproj 2>/dev/null | head -n 1 || true)"
+    if [[ -n "$csproj" ]]; then
+      echo "$csproj"
+      return 0
+    fi
+    dir="$(dirname "$dir")"
+  done
+
+  return 1
+}
+
+# Removes trailing blank lines and ensures the file ends with exactly one final newline.
+# (This is separate from dotnet-format; .editorconfig can't enforce "no extra blank lines at EOF".)
+normalize_eof() {
+  local file="$1"
+  local tmp
+  tmp="$(mktemp)"
+
+  awk '
+    {
+      lines[NR]=$0
+      if ($0 ~ /[^[:space:]]/) last=NR
+    }
+    END {
+      if (last == 0) {
+        print ""
+        exit
+      }
+      for (i=1; i<=last; i++) print lines[i]
+    }' "$file" > "$tmp"
+
+  mv "$tmp" "$file"
+}
+
+# Only format staged C# files.
+mapfile -t staged_cs_files < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.cs$' || true)
+
+if [[ "${#staged_cs_files[@]}" -eq 0 ]]; then
+  exit 0
+fi
+
+if [[ -f ".config/dotnet-tools.json" ]]; then
+  dotnet tool restore >/dev/null
+fi
+
+# Group files by project and format per-project to avoid solution-wide linked-file merge issues.
+declare -A files_by_csproj
+for file in "${staged_cs_files[@]}"; do
+  csproj="$(find_csproj_for_file "$file" || true)"
+  if [[ -z "${csproj:-}" ]]; then
+    # If we can't map it to a project, skip formatting rather than fail the commit.
+    continue
+  fi
+  files_by_csproj["$csproj"]+="$file"$'\n'
+done
+
+for csproj in "${!files_by_csproj[@]}"; do
+  # Build the include list for this project
+  mapfile -t includes < <(printf "%s" "${files_by_csproj[$csproj]}" | sed '/^\s*$/d')
+
+  # Apply whitespace formatting (includes trailing whitespace + final newline).
+  dotnet format "$csproj" whitespace --include "${includes[@]}"
+
+  # Apply style fixes (unused usings, using order, etc.). IDE0005 is set to warning in .editorconfig.
+  dotnet format "$csproj" style --severity warn --include "${includes[@]}"
+done
+
+# Remove extra blank lines at end-of-file for all staged C# files.
+for file in "${staged_cs_files[@]}"; do
+  # Only touch files that still exist in the working tree.
+  if [[ -f "$file" ]]; then
+    normalize_eof "$file"
+  fi
+done
+
+# Re-stage any files changed by the formatter.
+git add -- "${staged_cs_files[@]}"

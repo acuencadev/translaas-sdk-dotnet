@@ -1,0 +1,21 @@
+root = true
+
+# Global defaults (applies to all text files)
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# formatting + imports
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# Ensure consistent using ordering/cleanup when formatters run
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+dotnet_remove_unnecessary_usings = true
+
+# Make sure dotnet-format actually fixes unused usings (IDE0005)
+dotnet_diagnostic.IDE0005.severity = warning

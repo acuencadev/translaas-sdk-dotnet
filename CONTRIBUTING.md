@@ -28,12 +28,37 @@ We welcome contributions to the Translaas SDK! This document provides guidelines
 - Keep methods focused and single-purpose
 - Use `async`/`await` for asynchronous operations
 
+### Optional: Auto-format on commit (pre-commit hook)
+
+This repo includes an **opt-in** pre-commit hook that will:
+
+- Run `dotnet format` on **staged `*.cs` files**
+- Remove unused `using` directives
+- Normalize whitespace (including trimming trailing whitespace and ensuring a final newline)
+- Remove extra blank lines at end-of-file (ensures exactly one final newline)
+- Re-stage formatted files so your commit stays consistent
+
+Note: Running `dotnet format` against the entire repo/solution can occasionally fail due to upstream workspace/linking issues. The pre-commit hook runs `dotnet format` **per-project** (only for projects that contain staged files) to avoid those solution-wide problems.
+
+Enable it once per clone:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/setup-githooks.ps1
+```
+
+Or (bash):
+
+```bash
+./scripts/setup-githooks.sh
+```
+
 ### Project Structure
 
 - Keep code organized within the appropriate project:
   - `Translaas.Models` - Data transfer objects only
   - `Translaas.Client` - Core HTTP client implementation
-  - `Translaas.Caching` - Caching layer
+  - `Translaas.Caching` - In-memory caching layer
+  - `Translaas.Caching.File` - File-based offline caching with hybrid caching support
   - `Translaas.Extensions.*` - Extension methods and DI integration
 
 #### Test Project Structure
@@ -45,6 +70,7 @@ tests/
 ├── Translaas.Models.Tests/
 ├── Translaas.Client.Tests/
 ├── Translaas.Caching.Tests/
+├── Translaas.Caching.File.Tests/
 ├── Translaas.Extensions.Http.Tests/
 └── Translaas.Extensions.DependencyInjection.Tests/
 ```
@@ -424,7 +450,8 @@ This is the initial pre-release of the Translaas SDK for .NET. This version is s
 
 - **Translaas.Models** (0.1.0) - Data transfer objects (DTOs) for the Translaas Translation Delivery API
 - **Translaas.Client** (0.1.0) - Core HTTP client implementation with caching support
-- **Translaas.Caching** (0.1.0) - Caching abstractions and implementations
+- **Translaas.Caching** (0.1.0) - In-memory caching abstractions and implementations
+- **Translaas.Caching.File** (0.1.0) - File-based offline caching with hybrid caching support
 - **Translaas.Extensions.Http** (0.1.0) - HttpClientFactory integration extensions
 - **Translaas.Extensions.DependencyInjection** (0.1.0) - Full dependency injection integration
 - **Translaas.Extensions.Mvc** (0.1.0) - ASP.NET Core MVC/Razor integration with Tag Helpers
@@ -436,6 +463,8 @@ This is the initial pre-release of the Translaas SDK for .NET. This version is s
 - ✅ Razor View Support with Tag Helpers and static helpers
 - ✅ Dependency Injection ready with seamless `IServiceCollection` integration
 - ✅ Flexible caching with configurable cache modes (None, Entry, Group, Project)
+- ✅ Offline caching with file-based storage for offline mode
+- ✅ Hybrid caching (memory L1 + file L2) for optimal performance
 - ✅ Multiple framework support (.NET Standard 2.0, .NET 8, .NET 10)
 - ✅ Fully asynchronous API for optimal performance
 - ✅ Modular design - use only what you need
@@ -456,6 +485,7 @@ dotnet add package Translaas.Extensions.DependencyInjection
 dotnet add package Translaas.Client
 dotnet add package Translaas.Models
 dotnet add package Translaas.Caching
+dotnet add package Translaas.Caching.File
 dotnet add package Translaas.Extensions.Http
 dotnet add package Translaas.Extensions.Mvc
 ```
