@@ -13,7 +13,7 @@ public class OfflineCacheSyncHostedServiceTests : IDisposable
 {
     private readonly Mock<IOfflineCacheSyncService> _mockSyncService;
     private readonly Mock<ILogger<OfflineCacheSyncHostedService>> _mockLogger;
-    private OfflineCacheOptions _options;
+    private readonly OfflineCacheOptions _options;
     private OfflineCacheSyncHostedService? _service;
 
     public OfflineCacheSyncHostedServiceTests()

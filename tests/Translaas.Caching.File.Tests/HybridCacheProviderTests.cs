@@ -228,7 +228,7 @@ public class HybridCacheProviderTests
         await _provider.SaveProjectAsync("test-project", "en", project);
 
         // Assert - Groups should be cached in L1
-        var group = await _provider.GetGroupAsync("test-project", "common", "en");
+        await _provider.GetGroupAsync("test-project", "common", "en");
 
         // File cache GetGroupAsync should not be called if group was cached from SaveProjectAsync
         _mockFileCache.Verify(c => c.GetGroupAsync("test-project", "common", "en", It.IsAny<CancellationToken>()), Times.Never);

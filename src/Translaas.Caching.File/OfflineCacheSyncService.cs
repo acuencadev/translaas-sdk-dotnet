@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -268,16 +269,7 @@ public class OfflineCacheSyncService : IOfflineCacheSyncService, IDisposable
 
     private static List<string> FilterLanguages(List<string> availableLanguages, List<string> requestedLanguages)
     {
-        var result = new List<string>();
-        foreach (var lang in requestedLanguages)
-        {
-            if (availableLanguages.Contains(lang))
-            {
-                result.Add(lang);
-            }
-        }
-
-        return result;
+        return requestedLanguages.Where(availableLanguages.Contains).ToList();
     }
 
     /// <summary>
