@@ -12,8 +12,8 @@ namespace Translaas.Extensions.DependencyInjection;
 /// with a simplified method signature for common translation lookups.
 /// </para>
 /// <para>
-/// The <see cref="T(string, string, string, int?)"/> method is a shorthand for 
-/// <see cref="Client.ITranslaasClient.GetEntryAsync(string, string, string, int?, CancellationToken)"/>.
+/// The <c>T</c> method is a shorthand for 
+/// <see cref="Client.ITranslaasClient.GetEntryAsync(string, string, string, decimal?, System.Threading.CancellationToken)"/>.
 /// </para>
 /// </remarks>
 public interface ITranslaasService
@@ -24,7 +24,7 @@ public interface ITranslaasService
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
@@ -32,12 +32,13 @@ public interface ITranslaasService
     /// <code>
     /// var translation = await _translaas.T("common", "welcome", "en");
     /// var plural = await _translaas.T("messages", "item", "en", 5);
+    /// var fractional = await _translaas.T("messages", "item", "en", 1.31m);
     /// </code>
     /// </example>
     Task<string> T(
         string group,
         string entry,
         string lang,
-        int? number = null,
+        decimal? number = null,
         CancellationToken cancellationToken = default);
 }

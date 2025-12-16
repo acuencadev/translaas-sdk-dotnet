@@ -14,7 +14,7 @@ public class ITranslaasClientTests
         method.Should().NotBeNull();
         method!.ReturnType.Should().Be(typeof(Task<string>));
         method.GetParameters().Should().HaveCount(5); // group, entry, lang, number, cancellationToken
-        method.GetParameters()[3].ParameterType.Should().Be(typeof(int?)); // number is nullable
+        method.GetParameters()[3].ParameterType.Should().Be(typeof(decimal?)); // number is nullable
     }
 
     [Fact]

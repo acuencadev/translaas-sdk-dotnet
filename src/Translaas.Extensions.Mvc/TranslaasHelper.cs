@@ -41,7 +41,7 @@ public static class Translaas
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>An HTML-encoded string containing the translation.</returns>
     /// <exception cref="System.ArgumentNullException">Thrown when htmlHelper is null.</exception>
     /// <exception cref="System.InvalidOperationException">Thrown when ITranslaasService is not registered.</exception>
@@ -49,6 +49,7 @@ public static class Translaas
     /// <code>
     /// @Translaas.T(Html, "common", "welcome", "en")
     /// @Translaas.T(Html, "messages", "item", "en", 5)
+    /// @Translaas.T(Html, "messages", "item", "en", 1.31m)
     /// </code>
     /// </example>
     public static IHtmlContent T(
@@ -56,7 +57,7 @@ public static class Translaas
         string group,
         string entry,
         string lang,
-        int? number = null)
+        decimal? number = null)
     {
         if (htmlHelper == null)
         {

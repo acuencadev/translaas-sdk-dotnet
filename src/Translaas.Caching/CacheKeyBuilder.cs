@@ -16,10 +16,10 @@ public static class CacheKeyBuilder
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code.</param>
-    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers.</param>
     /// <returns>A cache key in the format: "entry:group:entry:lang[:number]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>
-    public static string BuildEntryKey(string group, string entry, string lang, int? number = null)
+    public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null)
     {
         if (group == null)
         {
@@ -47,7 +47,8 @@ public static class CacheKeyBuilder
         if (number.HasValue)
         {
             keyBuilder.Append(KeySeparator);
-            keyBuilder.Append(number.Value);
+            // Use invariant culture to ensure consistent formatting across locales
+            keyBuilder.Append(number.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         return keyBuilder.ToString();

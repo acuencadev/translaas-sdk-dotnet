@@ -16,7 +16,7 @@ public interface ITranslaasClient
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
@@ -24,7 +24,7 @@ public interface ITranslaasClient
         string group,
         string entry,
         string lang,
-        int? number = null,
+        decimal? number = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
