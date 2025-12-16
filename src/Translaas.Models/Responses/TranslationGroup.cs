@@ -61,20 +61,18 @@ public class TranslationGroup
         // If the element is an object, it's a plural form dictionary
         if (element.ValueKind == JsonValueKind.Object)
         {
-            var pluralForms = new Dictionary<PluralCategory, string>();
-
-            foreach (var property in element.EnumerateObject())
-            {
-                // Parse the plural category from the property name
-                if (Enum.TryParse<PluralCategory>(property.Name, ignoreCase: true, out var category))
+            var pluralForms = element.EnumerateObject()
+                .Select(p =>
                 {
-                    var value = property.Value.GetString();
-                    if (value != null)
+                    if (Enum.TryParse<PluralCategory>(p.Name, ignoreCase: true, out var category))
                     {
-                        pluralForms[category] = value;
+                        var value = p.Value.GetString();
+                        return value != null ? new { Category = category, Value = value } : null;
                     }
-                }
-            }
+                    return null;
+                })
+                .Where(p => p != null)
+                .ToDictionary(p => p!.Category, p => p!.Value);
 
             return pluralForms.Count > 0 ? pluralForms : null;
         }
