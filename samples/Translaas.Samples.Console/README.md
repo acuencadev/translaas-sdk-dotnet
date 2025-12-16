@@ -1,146 +1,150 @@
 # Translaas SDK Console Sample
 
-This sample demonstrates how to use the Translaas SDK in a simple console application with dependency injection.
-
-## Overview
-
-This console application shows:
-- How to configure Translaas services using dependency injection
-- How to use `ITranslaasService` for simple translation lookups
-- How to use `ITranslaasClient` for full API access
-- How to configure caching
-- How to handle pluralization
-- How to retrieve translation groups and project locales
-
-## Prerequisites
-
-- .NET 8.0 SDK or later
-- A valid Translaas API key
-- Access to a Translaas API endpoint
+This sample demonstrates how to use the Translaas SDK in a console application with dependency injection and configuration.
 
 ## Configuration
 
-### Environment Variables
+Configuration is loaded from multiple sources in order of precedence (later sources override earlier ones):
 
-The application can be configured using environment variables:
+1. `appsettings.json` - Base configuration
+2. `appsettings.{Environment}.json` - Environment-specific configuration (e.g., `appsettings.Development.json`)
+3. User secrets - For sensitive values like API keys (development only)
+4. Environment variables - For production deployments
 
-- `TRANSLAAS_API_KEY`: Your Translaas API key (required)
-- `TRANSLAAS_BASE_URL`: The base URL for the Translaas API (defaults to `https://sdk-api.translaas.local`)
-  - **Note**: Do NOT include `/api` in the BaseUrl - the client adds `/api/` to all endpoints automatically
+Sensitive values like the API key should be stored in user secrets (development) or environment variables (production).
 
-### Code Configuration
+### Best Practices for Secrets in Console Apps
 
-Alternatively, you can modify the configuration directly in `Program.cs`:
+For .NET console applications, there are several options for storing secrets:
 
-```csharp
-services.AddTranslaas(options =>
-{
-    options.ApiKey = "your-api-key-here";
-    options.BaseUrl = "https://sdk-api.translaas.local";
-    
-    // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
-    options.CacheMode = CacheMode.Group;
-    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
-    options.Timeout = TimeSpan.FromSeconds(30);
-});
-```
+1. **User Secrets (Recommended for Development)**
+   - Stored in your user profile, never committed to source control
+   - Perfect for local development
+   - See setup instructions below
 
-## Running the Sample
+2. **Environment Variables (Recommended for Production)**
+   - Set via system environment variables or launch settings
+   - Works well in containers and CI/CD pipelines
+   - Example: `set TRANSLAAS__APIKEY=your-key` (Windows) or `export TRANSLAAS__APIKEY=your-key` (Linux/Mac)
+   - Note: Use double underscore `__` instead of colon `:` for nested configuration
 
-1. Set your environment variables:
+3. **appsettings.json (Not Recommended for Secrets)**
+   - Can be used for non-sensitive configuration
+   - Should be gitignored if it contains secrets (not recommended)
+
+### Setting up User Secrets (Development)
+
+1. User secrets are already initialized (UserSecretsId is set in the .csproj file)
+
+2. Set your API key:
    ```bash
-   # Windows PowerShell
-   $env:TRANSLAAS_API_KEY = "your-api-key"
-   $env:TRANSLAAS_BASE_URL = "https://sdk-api.translaas.local"  # Do NOT include /api
-
-   # Linux/macOS
-   export TRANSLAAS_API_KEY="your-api-key"
-   export TRANSLAAS_BASE_URL="https://sdk-api.translaas.local"  # Do NOT include /api
+   dotnet user-secrets set "Translaas:ApiKey" "your-api-key-here" --project samples/Translaas.Samples.Console
    ```
 
-2. Run the application:
+3. Optionally set a custom base URL:
    ```bash
-   dotnet run --project samples/Translaas.Samples.Console
+   dotnet user-secrets set "Translaas:BaseUrl" "https://your-api-url.com" --project samples/Translaas.Samples.Console
    ```
 
-## Features Demonstrated
+4. Verify your secrets are set:
+   ```bash
+   dotnet user-secrets list --project samples/Translaas.Samples.Console
+   ```
 
-### 1. Using ITranslaasService
+**Note:** User secrets are stored in your user profile and never committed to source control. They're perfect for local development.
 
-The `ITranslaasService` provides a convenient `T()` method for simple translation lookups:
+### Using Environment Variables (Production)
 
-```csharp
-var translation = await translaasService.T("common", "welcome", "en");
+For production deployments, use environment variables instead:
+
+**Windows:**
+```cmd
+set TRANSLAAS__APIKEY=your-api-key-here
+set TRANSLAAS__BASEURL=https://your-api-url.com
 ```
 
-### 2. Using ITranslaasClient
-
-The `ITranslaasClient` provides full API access:
-
-```csharp
-var translation = await translaasClient.GetEntryAsync("common", "welcome", "en");
+**Linux/Mac:**
+```bash
+export TRANSLAAS__APIKEY=your-api-key-here
+export TRANSLAAS__BASEURL=https://your-api-url.com
 ```
 
-### 3. Pluralization
-
-Support for plural forms using the `number` parameter:
-
-```csharp
-var singular = await translaasService.T("messages", "item", "en", 1);
-var plural = await translaasService.T("messages", "item", "en", 5);
+**PowerShell:**
+```powershell
+$env:TRANSLAAS__APIKEY = "your-api-key-here"
+$env:TRANSLAAS__BASEURL = "https://your-api-url.com"
 ```
 
-### 4. Translation Groups
+**Important:** Use double underscore `__` instead of colon `:` for nested configuration keys in environment variables.
 
-Retrieve all translations for a group:
+### Configuration Files
 
-```csharp
-var group = await translaasClient.GetGroupAsync("my-project", "common", "en");
-foreach (var entry in group.Entries)
+**appsettings.json** - Base configuration (committed to source control):
+```json
 {
-    Console.WriteLine($"{entry.Key}: {entry.Value}");
+  "Translaas": {
+    "BaseUrl": "https://sdk-api.translaas.local",
+    "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
+    "Timeout": "00:00:30"
+  }
 }
 ```
 
-### 5. Project Locales
-
-Get available locales for a project:
-
-```csharp
-var locales = await translaasClient.GetProjectLocalesAsync("my-project");
-Console.WriteLine($"Available locales: {string.Join(", ", locales.Locales)}");
+**appsettings.Development.json** - Development-specific overrides (committed to source control):
+```json
+{
+  "Translaas": {
+    "BaseUrl": "https://sdk-api.translaas.local"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug"
+    }
+  }
+}
 ```
 
-### 6. Caching
+**User Secrets** - Sensitive values (NOT committed to source control):
+- `Translaas:ApiKey` - Your API key (required)
 
-The sample demonstrates caching configuration and its performance benefits:
+### Setting the Environment
 
-```csharp
-options.CacheMode = CacheMode.Group; // Cache at group level
-options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+To use `appsettings.Development.json`, set the environment variable:
+
+**Windows (Command Prompt):**
+```cmd
+set ASPNETCORE_ENVIRONMENT=Development
 ```
 
-## Caching Modes
+**Windows (PowerShell):**
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+```
 
-- `CacheMode.None`: No caching (default)
-- `CacheMode.Entry`: Cache individual entries
-- `CacheMode.Group`: Cache entire translation groups (recommended)
-- `CacheMode.Project`: Cache entire projects
+**Linux/Mac:**
+```bash
+export ASPNETCORE_ENVIRONMENT=Development
+```
 
-## Error Handling
+Or run with the environment variable:
+```bash
+ASPNETCORE_ENVIRONMENT=Development dotnet run --project samples/Translaas.Samples.Console
+```
 
-The sample includes basic error handling. In production applications, you should:
+### Running the Sample
 
-- Handle `TranslaasApiException` for API errors
-- Handle `HttpRequestException` for network errors
-- Handle `TranslaasConfigurationException` for configuration errors
-- Implement retry logic for transient failures
-- Log errors appropriately
+```bash
+dotnet run --project samples/Translaas.Samples.Console
+```
 
-## Next Steps
+## Examples
 
-- Explore the [Web API sample](../Translaas.Samples.WebApi/README.md) for ASP.NET Core Web API usage
-- Explore the [WebApp sample](../Translaas.Samples.WebApp/README.md) for Razor views and tag helpers
-- Explore the [Blazor sample](../Translaas.Samples.Blazor/README.md) for Blazor component usage
+The sample demonstrates:
+1. Using `ITranslaasService.T()` for simple translations
+2. Using `ITranslaasClient.GetEntryAsync()` for direct API access
+3. Pluralization support
+4. Bulk operations with `GetGroupAsync()`
+5. Getting available locales
+6. Caching demonstration

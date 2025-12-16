@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,7 +19,20 @@ class Program
     static async Task Main(string[] args)
     {
         // Build the host with dependency injection
+        // Host.CreateDefaultBuilder automatically loads:
+        // - appsettings.json
+        // - appsettings.{Environment}.json (e.g., appsettings.Development.json)
+        // - User secrets (when environment is Development or explicitly added)
+        // - Environment variables
         var host = Host.CreateDefaultBuilder(args)
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                // Explicitly add user secrets for console apps
+                // This ensures user secrets are loaded regardless of environment
+                // User secrets are stored in: %APPDATA%\Microsoft\UserSecrets\{UserSecretsId}\secrets.json (Windows)
+                // or ~/.microsoft/usersecrets/{UserSecretsId}/secrets.json (Linux/Mac)
+                config.AddUserSecrets(System.Reflection.Assembly.GetExecutingAssembly());
+            })
             .ConfigureLogging(logging =>
             {
                 // Suppress HTTP client logging for cleaner console output
@@ -30,25 +44,61 @@ class Program
                 // Add HttpClient support (required for Translaas)
                 services.AddHttpClient();
 
-                // Configure Translaas with options
+                // Configure Translaas with options from appsettings.json
+                // API key should be stored in user secrets (secrets.json)
+                var configuration = context.Configuration;
+                
+                // Debug: Check if configuration is loading correctly
+                var apiKey = configuration["Translaas:ApiKey"];
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    // Provide helpful error message with troubleshooting steps
+                    var errorMessage = "Translaas:ApiKey must be configured in appsettings.json or user secrets.\n" +
+                        "To set user secrets, run:\n" +
+                        "  dotnet user-secrets set \"Translaas:ApiKey\" \"your-api-key\" --project samples/Translaas.Samples.Console\n" +
+                        "\nCurrent configuration sources: " + string.Join(", ", configuration.GetChildren().Select(c => c.Key));
+                    throw new InvalidOperationException(errorMessage);
+                }
+                
                 services.AddTranslaas(options =>
                 {
-                    // Required: Set your API key
-                    options.ApiKey = Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
-                        ?? "your-api-key-here";
+                    // Required: Set your API key (from user secrets or appsettings.json)
+                    options.ApiKey = apiKey;
 
                     // Required: Set the base URL
                     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
-                    options.BaseUrl = Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
+                    options.BaseUrl = configuration["Translaas:BaseUrl"] 
                         ?? "https://sdk-api.translaas.local";
 
                     // Optional: Configure caching
-                    options.CacheMode = CacheMode.Group; // Cache at group level
-                    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-                    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+                    options.CacheMode = configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
+                    if (TimeSpan.TryParse(configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration))
+                    {
+                        options.CacheAbsoluteExpiration = absoluteExpiration;
+                    }
+                    else
+                    {
+                        options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+                    }
+                    
+                    if (TimeSpan.TryParse(configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration))
+                    {
+                        options.CacheSlidingExpiration = slidingExpiration;
+                    }
+                    else
+                    {
+                        options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+                    }
 
                     // Optional: Configure timeout
-                    options.Timeout = TimeSpan.FromSeconds(30);
+                    if (TimeSpan.TryParse(configuration["Translaas:Timeout"], out var timeout))
+                    {
+                        options.Timeout = timeout;
+                    }
+                    else
+                    {
+                        options.Timeout = TimeSpan.FromSeconds(30);
+                    }
                 });
             })
             .Build();
