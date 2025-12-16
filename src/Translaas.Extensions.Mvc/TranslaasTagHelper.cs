@@ -55,10 +55,10 @@ public class TranslaasTagHelper : TagHelper
     public string Lang { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the optional number for pluralization.
+    /// Gets or sets the optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).
     /// </summary>
     [HtmlAttributeName("number")]
-    public int? Number { get; set; }
+    public decimal? Number { get; set; }
 
     /// <inheritdoc />
     public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)

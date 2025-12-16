@@ -44,7 +44,7 @@ public class CachingTranslaasClient : ITranslaasClient
         string group,
         string entry,
         string lang,
-        int? number = null,
+        decimal? number = null,
         CancellationToken cancellationToken = default)
     {
         return _options.FallbackMode switch
@@ -113,7 +113,7 @@ public class CachingTranslaasClient : ITranslaasClient
         string group,
         string entry,
         string lang,
-        int? number,
+        decimal? number,
         CancellationToken cancellationToken)
     {
         // Try cache first
@@ -145,7 +145,7 @@ public class CachingTranslaasClient : ITranslaasClient
         string group,
         string entry,
         string lang,
-        int? number,
+        decimal? number,
         CancellationToken cancellationToken)
     {
         try
@@ -193,7 +193,7 @@ public class CachingTranslaasClient : ITranslaasClient
         string group,
         string entry,
         string lang,
-        int? number,
+        decimal? number,
         CancellationToken cancellationToken)
     {
         var result = await _innerClient.GetEntryAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false);

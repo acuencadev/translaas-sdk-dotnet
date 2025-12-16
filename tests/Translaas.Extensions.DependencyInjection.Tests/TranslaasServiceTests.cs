@@ -60,7 +60,7 @@ public class TranslaasServiceTests
         // Arrange
         var mockClient = new Mock<ITranslaasClient>();
         var expectedResult = "5 items";
-        int? number = 5;
+        decimal? number = 5;
         
         mockClient
             .Setup(c => c.GetEntryAsync("messages", "item", "en", number, It.IsAny<CancellationToken>()))
@@ -86,7 +86,7 @@ public class TranslaasServiceTests
         var cancellationToken = new CancellationToken();
         
         mockClient
-            .Setup(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>(), cancellationToken))
+            .Setup(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), cancellationToken))
             .ReturnsAsync("test");
 
         var service = new TranslaasService(mockClient.Object);
@@ -108,7 +108,7 @@ public class TranslaasServiceTests
         var expectedException = new Models.Errors.TranslaasApiException("API Error", System.Net.HttpStatusCode.BadRequest);
         
         mockClient
-            .Setup(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         var service = new TranslaasService(mockClient.Object);
