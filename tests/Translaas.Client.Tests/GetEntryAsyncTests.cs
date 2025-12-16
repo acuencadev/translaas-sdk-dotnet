@@ -99,6 +99,33 @@ public class GetEntryAsyncTests
     }
 
     [Fact]
+    public async Task GetEntryAsync_ShouldIncludeDecimalNumber_WhenDecimalNumberIsProvided()
+    {
+        // Arrange
+        var expectedText = "1.31 items";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var result = await client.GetEntryAsync("ui", "items", "en", number: 1.31m);
+
+        // Assert
+        result.Should().Be(expectedText);
+        VerifyHttpRequest(handlerMock, "/api/translations/text");
+        
+        // Verify decimal number is included in request body
+        handlerMock.Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(req => 
+                    req.Content != null && 
+                    req.Content.ReadAsStringAsync().Result.Contains("\"n\":1.31")),
+                ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
     public async Task GetEntryAsync_ShouldThrowTranslaasApiException_WhenApiReturns404()
     {
         // Arrange

@@ -35,14 +35,14 @@ public class TranslationController : ControllerBase
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>The translated text.</returns>
     [HttpGet("entry")]
     public async Task<ActionResult<string>> GetEntry(
         [FromQuery] string group,
         [FromQuery] string entry,
         [FromQuery] string lang,
-        [FromQuery] int? number = null)
+        [FromQuery] decimal? number = null)
     {
         try
         {
@@ -62,14 +62,14 @@ public class TranslationController : ControllerBase
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>The translated text.</returns>
     [HttpGet("entry/client")]
     public async Task<ActionResult<string>> GetEntryUsingClient(
         [FromQuery] string group,
         [FromQuery] string entry,
         [FromQuery] string lang,
-        [FromQuery] int? number = null)
+        [FromQuery] decimal? number = null)
     {
         try
         {

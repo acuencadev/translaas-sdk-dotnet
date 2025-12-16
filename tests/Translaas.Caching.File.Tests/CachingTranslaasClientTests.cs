@@ -102,7 +102,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello World");
-        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello from Cache");
-        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

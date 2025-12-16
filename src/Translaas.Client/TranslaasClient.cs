@@ -57,7 +57,7 @@ public class TranslaasClient : ITranslaasClient
         string group,
         string entry,
         string lang,
-        int? number = null,
+        decimal? number = null,
         CancellationToken cancellationToken = default)
     {
         // Parameter validation

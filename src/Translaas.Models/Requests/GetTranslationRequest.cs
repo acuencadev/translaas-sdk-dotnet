@@ -27,7 +27,8 @@ public class GetTranslationRequest
 
     /// <summary>
     /// Gets or sets the optional number for pluralization.
+    /// Supports both integer and decimal/fractional numbers (e.g., 1.31).
     /// </summary>
     [JsonPropertyName("n")]
-    public int? Number { get; set; }
+    public decimal? Number { get; set; }
 }

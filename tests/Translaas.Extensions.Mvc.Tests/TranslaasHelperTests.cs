@@ -139,7 +139,7 @@ public class TranslaasHelperTests
         // Arrange
         var mockService = new Mock<ITranslaasService>();
         mockService
-            .Setup(s => s.T(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.T(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("test");
 
         var services = new ServiceCollection();
