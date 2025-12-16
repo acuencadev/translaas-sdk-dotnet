@@ -72,33 +72,18 @@ class Program
 
                     // Optional: Configure caching
                     options.CacheMode = configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
-                    if (TimeSpan.TryParse(configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration))
-                    {
-                        options.CacheAbsoluteExpiration = absoluteExpiration;
-                    }
-                    else
-                    {
-                        options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-                    }
+                    options.CacheAbsoluteExpiration = TimeSpan.TryParse(configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration)
+                        ? absoluteExpiration
+                        : TimeSpan.FromHours(1);
                     
-                    if (TimeSpan.TryParse(configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration))
-                    {
-                        options.CacheSlidingExpiration = slidingExpiration;
-                    }
-                    else
-                    {
-                        options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
-                    }
+                    options.CacheSlidingExpiration = TimeSpan.TryParse(configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration)
+                        ? slidingExpiration
+                        : TimeSpan.FromMinutes(30);
 
                     // Optional: Configure timeout
-                    if (TimeSpan.TryParse(configuration["Translaas:Timeout"], out var timeout))
-                    {
-                        options.Timeout = timeout;
-                    }
-                    else
-                    {
-                        options.Timeout = TimeSpan.FromSeconds(30);
-                    }
+                    options.Timeout = TimeSpan.TryParse(configuration["Translaas:Timeout"], out var timeout)
+                        ? timeout
+                        : TimeSpan.FromSeconds(30);
                 });
             })
             .Build();
