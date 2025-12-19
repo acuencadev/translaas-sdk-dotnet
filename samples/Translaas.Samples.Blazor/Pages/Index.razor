@@ -53,13 +53,13 @@
                 <h3>3b. Named Parameters</h3>
             </div>
             <div class="card-body">
-                <p>Using named parameters with <code>ITranslaasClient.GetEntryAsync()</code>:</p>
+                <p>Using named parameters with <code>ITranslaasService.T()</code>:</p>
                 <pre><code>var parameters = new Dictionary&lt;string, string&gt;
 {
     { "userName", "John" },
     { "itemCount", "5" }
 };
-@@await TranslaasClient.GetEntryAsync("messages", "greeting", "en", parameters: parameters)</code></pre>
+@@await Translaas.T("messages", "greeting", "en", parameters: parameters)</code></pre>
                 <p>Translation with parameters: @greetingWithParams</p>
             </div>
         </div>
@@ -74,7 +74,7 @@
 {
     { "userName", "John" }
 };
-@@await TranslaasClient.GetEntryAsync("messages", "items", "en", number: 5, parameters: parameters)</code></pre>
+@@await Translaas.T("messages", "items", "en", number: 5, parameters: parameters)</code></pre>
                 <p>Translation with number and parameters: @itemsWithParams</p>
             </div>
         </div>
@@ -173,14 +173,14 @@
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            greetingWithParams = await TranslaasClient.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
+            greetingWithParams = await Translaas.T("messages", "greeting", "en", parameters: parameters);
             
             // Combining number and named parameters
             var userNameParams = new Dictionary<string, string>
             {
                 { "userName", "John" }
             };
-            itemsWithParams = await TranslaasClient.GetEntryAsync("messages", "items", "en", number: 5, parameters: userNameParams);
+            itemsWithParams = await Translaas.T("messages", "items", "en", number: 5, parameters: userNameParams);
             
             // Load translation group
             translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", "en");

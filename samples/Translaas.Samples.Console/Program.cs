@@ -123,12 +123,12 @@ class Program
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            var translation3c = await translaasClient.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
+            var translation3c = await translaasService.T("messages", "greeting", "en", parameters: parameters);
             System.Console.WriteLine($"Translation with parameters: {translation3c}\n");
 
             // Example 3c: Combining Number and Named Parameters
             System.Console.WriteLine("Example 3c: Combining Number and Named Parameters");
-            var translation3d = await translaasClient.GetEntryAsync("messages", "items", "en", number: 5, parameters: parameters);
+            var translation3d = await translaasService.T("messages", "items", "en", number: 5, parameters: parameters);
             System.Console.WriteLine($"Translation with number and parameters: {translation3d}\n");
 
             // Example 4: Get multiple entries using .T() helper
