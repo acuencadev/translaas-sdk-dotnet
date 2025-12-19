@@ -1,3 +1,4 @@
+@using Translaas.Models
 @inject ITranslaasService Translaas
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -36,7 +37,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        appName = await Translaas.T("common", "app.name", "en");
-        homeText = await Translaas.T("navigation", "home", "en");
+        appName = await Translaas.T("common", "app.name", LanguageCodes.English);
+        homeText = await Translaas.T("navigation", "home", LanguageCodes.English);
     }
 }

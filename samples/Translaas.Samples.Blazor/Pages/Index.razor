@@ -28,18 +28,7 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>2. Using ITranslaasClient</h3>
-            </div>
-            <div class="card-body">
-                <p>Using injected <code>ITranslaasClient</code>:</p>
-                <pre><code>@@await TranslaasClient.GetEntryAsync("common", "welcome", LanguageCodes.English)</code></pre>
-                <p>Result: @welcome</p>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <div class="card-header">
-                <h3>3. Pluralization</h3>
+                <h3>2. Pluralization</h3>
             </div>
             <div class="card-body">
                 <p>Using pluralization with the <code>number</code> parameter:</p>
@@ -52,7 +41,7 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>3b. Named Parameters</h3>
+                <h3>3. Named Parameters</h3>
             </div>
             <div class="card-body">
                 <p>Using named parameters with <code>ITranslaasService.T()</code>:</p>
@@ -68,7 +57,7 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>3c. Combining Number and Named Parameters</h3>
+                <h3>4. Combining Number and Named Parameters</h3>
             </div>
             <div class="card-body">
                 <p>Combining <code>number</code> and named parameters:</p>
@@ -83,7 +72,7 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>4. Multiple Languages</h3>
+                <h3>5. Multiple Languages</h3>
             </div>
             <div class="card-body">
                 <p>Switching languages:</p>
@@ -97,7 +86,7 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>5. Dynamic Translation</h3>
+                <h3>6. Dynamic Translation</h3>
             </div>
             <div class="card-body">
                 <p>Dynamic translation based on component state:</p>
@@ -109,10 +98,10 @@
 
         <div class="card mb-3">
             <div class="card-header">
-                <h3>6. Translation Group (Bulk Operation)</h3>
+                <h3>7. Translation Group (Bulk Operation)</h3>
             </div>
             <div class="card-body">
-                <p><strong>Note:</strong> <code>GetGroupAsync()</code> retrieves all entries in a group at once. For single entries, prefer using <code>Translaas.T()</code>.</p>
+                <p><strong>Note:</strong> <code>GetGroupAsync()</code> is only available on <code>ITranslaasClient</code>, not <code>ITranslaasService</code>. For single entries, always use <code>Translaas.T()</code>.</p>
                 @if (translationGroup != null)
                 {
                     // Filter out metadata fields and only show actual translation entries

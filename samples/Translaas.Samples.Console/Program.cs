@@ -92,6 +92,8 @@ class Program
 
         // Get the service from DI container
         var translaasService = host.Services.GetRequiredService<ITranslaasService>();
+        // Note: ITranslaasClient is only needed for bulk operations (GetGroupAsync, GetProjectAsync, GetProjectLocalesAsync)
+        // For single-entry lookups, always use ITranslaasService.T()
         var translaasClient = host.Services.GetRequiredService<ITranslaasClient>();
 
         System.Console.WriteLine("=== Translaas SDK Console Sample ===\n");
@@ -100,37 +102,32 @@ class Program
         {
             const string projectId = "translaas-sdk-samples";
 
-            // Example 1: Using ITranslaasService (convenience wrapper)
+            // Example 1: Using ITranslaasService (recommended approach)
             System.Console.WriteLine("Example 1: Using ITranslaasService.T()");
             var translation1 = await translaasService.T("common", "welcome", LanguageCodes.English);
             System.Console.WriteLine($"Translation: {translation1}\n");
 
-            // Example 2: Using ITranslaasClient.GetEntryAsync (full API)
-            System.Console.WriteLine("Example 2: Using ITranslaasClient.GetEntryAsync()");
-            var translation2 = await translaasClient.GetEntryAsync("common", "welcome", LanguageCodes.English);
-            System.Console.WriteLine($"Translation: {translation2}\n");
+            // Example 2: Pluralization
+            System.Console.WriteLine("Example 2: Pluralization");
+            var translation2a = await translaasService.T("messages", "item", LanguageCodes.English, 1);
+            var translation2b = await translaasService.T("messages", "item", LanguageCodes.English, 5);
+            System.Console.WriteLine($"1 item: {translation2a}");
+            System.Console.WriteLine($"5 items: {translation2b}\n");
 
-            // Example 3: Pluralization
-            System.Console.WriteLine("Example 3: Pluralization");
-            var translation3a = await translaasService.T("messages", "item", LanguageCodes.English, 1);
-            var translation3b = await translaasService.T("messages", "item", LanguageCodes.English, 5);
-            System.Console.WriteLine($"1 item: {translation3a}");
-            System.Console.WriteLine($"5 items: {translation3b}\n");
-
-            // Example 3b: Named Parameters
-            System.Console.WriteLine("Example 3b: Named Parameters");
+            // Example 3: Named Parameters
+            System.Console.WriteLine("Example 3: Named Parameters");
             var parameters = new Dictionary<string, string>
             {
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            var translation3c = await translaasService.T("messages", "greeting", LanguageCodes.English, parameters: parameters);
-            System.Console.WriteLine($"Translation with parameters: {translation3c}\n");
+            var translation3 = await translaasService.T("messages", "greeting", LanguageCodes.English, parameters: parameters);
+            System.Console.WriteLine($"Translation with parameters: {translation3}\n");
 
-            // Example 3c: Combining Number and Named Parameters
-            System.Console.WriteLine("Example 3c: Combining Number and Named Parameters");
-            var translation3d = await translaasService.T("messages", "items", LanguageCodes.English, number: 5, parameters: parameters);
-            System.Console.WriteLine($"Translation with number and parameters: {translation3d}\n");
+            // Example 4: Combining Number and Named Parameters
+            System.Console.WriteLine("Example 4: Combining Number and Named Parameters");
+            var translation4 = await translaasService.T("messages", "items", LanguageCodes.English, number: 5, parameters: parameters);
+            System.Console.WriteLine($"Translation with number and parameters: {translation4}\n");
 
             // Example 4: Get multiple entries using .T() helper
             System.Console.WriteLine("Example 4: Get multiple entries using .T() helper");
