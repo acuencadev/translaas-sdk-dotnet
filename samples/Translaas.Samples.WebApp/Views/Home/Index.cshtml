@@ -13,10 +13,10 @@
 
 <div class="text-center">
     <h1 class="display-4">
-        <translaas group="common" entry="welcome" lang="en" />
+        <translaas group="common" entry="welcome" lang="@LanguageCodes.English" />
     </h1>
     <p>
-        <translaas group="common" entry="welcome.message" lang="en" />
+        <translaas group="common" entry="welcome.message" lang="@LanguageCodes.English" />
     </p>
     <p class="text-muted">
         <small>All samples use the same Translaas project (<code>translaas-sdk-samples</code>) to demonstrate cross-platform translation sharing.</small>
@@ -33,8 +33,8 @@
             </div>
             <div class="card-body">
                 <p>Using the <code>&lt;translaas&gt;</code> tag helper:</p>
-                <pre><code>&lt;translaas group="common" entry="welcome" lang="en" /&gt;</code></pre>
-                <p>Result: <translaas group="common" entry="welcome" lang="en" /></p>
+                <pre><code>&lt;translaas group="common" entry="welcome" lang="@LanguageCodes.English" /&gt;</code></pre>
+                <p>Result: <translaas group="common" entry="welcome" lang="@LanguageCodes.English" /></p>
             </div>
         </div>
 
@@ -44,8 +44,8 @@
             </div>
             <div class="card-body">
                 <p>Using the <code>Translaas.T()</code> static helper:</p>
-                <pre><code>@Translaas.T(Html, "common", "welcome", "en")</code></pre>
-                <p>Result: @Translaas.T(Html, "common", "welcome", "en")</p>
+                <pre><code>@Translaas.T(Html, "common", "welcome", LanguageCodes.English)</code></pre>
+                <p>Result: @Translaas.T(Html, "common", "welcome", LanguageCodes.English)</p>
             </div>
         </div>
 
@@ -55,8 +55,8 @@
             </div>
             <div class="card-body">
                 <p>Using injected <code>ITranslaasService</code> (already injected in _ViewImports.cshtml):</p>
-                <pre><code>@await TranslaasService.T("common", "welcome", "en")</code></pre>
-                <p>Result: @await TranslaasService.T("common", "welcome", "en")</p>
+                <pre><code>@await TranslaasService.T("common", "welcome", LanguageCodes.English)</code></pre>
+                <p>Result: @await TranslaasService.T("common", "welcome", LanguageCodes.English)</p>
             </div>
         </div>
 
@@ -66,10 +66,10 @@
             </div>
             <div class="card-body">
                 <p>Using pluralization with the <code>number</code> attribute:</p>
-                <pre><code>&lt;translaas group="messages" entry="item" lang="en" number="1" /&gt;
-&lt;translaas group="messages" entry="item" lang="en" number="5" /&gt;</code></pre>
-                <p>1 item: <translaas group="messages" entry="item" lang="en" number="1" /></p>
-                <p>5 items: <translaas group="messages" entry="item" lang="en" number="5" /></p>
+                <pre><code>&lt;translaas group="messages" entry="item" lang="@LanguageCodes.English" number="1" /&gt;
+&lt;translaas group="messages" entry="item" lang="@LanguageCodes.English" number="5" /&gt;</code></pre>
+                <p>1 item: <translaas group="messages" entry="item" lang="@LanguageCodes.English" number="1" /></p>
+                <p>5 items: <translaas group="messages" entry="item" lang="@LanguageCodes.English" number="5" /></p>
             </div>
         </div>
 
@@ -80,9 +80,9 @@
             <div class="card-body">
                 <p>Switching languages:</p>
                 <ul>
-                    <li>English: <translaas group="common" entry="welcome" lang="en" /></li>
-                    <li>French: <translaas group="common" entry="welcome" lang="fr" /></li>
-                    <li>Spanish: <translaas group="common" entry="welcome" lang="es" /></li>
+                    <li>English (@LanguageCodes.English): <translaas group="common" entry="welcome" lang="@LanguageCodes.English" /></li>
+                    <li>French (@LanguageCodes.French): <translaas group="common" entry="welcome" lang="@LanguageCodes.French" /></li>
+                    <li>Spanish (@LanguageCodes.Spanish): <translaas group="common" entry="welcome" lang="@LanguageCodes.Spanish" /></li>
                 </ul>
             </div>
         </div>
@@ -98,8 +98,8 @@
     { "userName", "John" },
     { "itemCount", "5" }
 };
-await TranslaasService.T("messages", "greeting", "en", parameters: parameters)</code></pre>
-                <p>Translation with parameters: @await TranslaasService.T("messages", "greeting", "en", parameters: greetingParams)</p>
+await TranslaasService.T("messages", "greeting", LanguageCodes.English, parameters: parameters)</code></pre>
+                <p>Translation with parameters: @await TranslaasService.T("messages", "greeting", LanguageCodes.English, parameters: greetingParams)</p>
             </div>
         </div>
 
@@ -113,8 +113,8 @@ await TranslaasService.T("messages", "greeting", "en", parameters: parameters)</
 {
     { "userName", "John" }
 };
-await TranslaasService.T("messages", "items", "en", number: 5, parameters: parameters)</code></pre>
-                <p>Translation with number and parameters: @await TranslaasService.T("messages", "items", "en", number: 5, parameters: itemsParams)</p>
+await TranslaasService.T("messages", "items", LanguageCodes.English, number: 5, parameters: parameters)</code></pre>
+                <p>Translation with number and parameters: @await TranslaasService.T("messages", "items", LanguageCodes.English, number: 5, parameters: itemsParams)</p>
             </div>
         </div>
     </div>

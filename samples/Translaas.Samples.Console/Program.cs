@@ -9,6 +9,7 @@ using System.Text.Json;
 using Translaas.Caching;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
+using Translaas.Models;
 
 namespace Translaas.Samples.Console;
 
@@ -101,18 +102,18 @@ class Program
 
             // Example 1: Using ITranslaasService (convenience wrapper)
             System.Console.WriteLine("Example 1: Using ITranslaasService.T()");
-            var translation1 = await translaasService.T("common", "welcome", "en");
+            var translation1 = await translaasService.T("common", "welcome", LanguageCodes.English);
             System.Console.WriteLine($"Translation: {translation1}\n");
 
             // Example 2: Using ITranslaasClient.GetEntryAsync (full API)
             System.Console.WriteLine("Example 2: Using ITranslaasClient.GetEntryAsync()");
-            var translation2 = await translaasClient.GetEntryAsync("common", "welcome", "en");
+            var translation2 = await translaasClient.GetEntryAsync("common", "welcome", LanguageCodes.English);
             System.Console.WriteLine($"Translation: {translation2}\n");
 
             // Example 3: Pluralization
             System.Console.WriteLine("Example 3: Pluralization");
-            var translation3a = await translaasService.T("messages", "item", "en", 1);
-            var translation3b = await translaasService.T("messages", "item", "en", 5);
+            var translation3a = await translaasService.T("messages", "item", LanguageCodes.English, 1);
+            var translation3b = await translaasService.T("messages", "item", LanguageCodes.English, 5);
             System.Console.WriteLine($"1 item: {translation3a}");
             System.Console.WriteLine($"5 items: {translation3b}\n");
 
@@ -123,19 +124,19 @@ class Program
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            var translation3c = await translaasService.T("messages", "greeting", "en", parameters: parameters);
+            var translation3c = await translaasService.T("messages", "greeting", LanguageCodes.English, parameters: parameters);
             System.Console.WriteLine($"Translation with parameters: {translation3c}\n");
 
             // Example 3c: Combining Number and Named Parameters
             System.Console.WriteLine("Example 3c: Combining Number and Named Parameters");
-            var translation3d = await translaasService.T("messages", "items", "en", number: 5, parameters: parameters);
+            var translation3d = await translaasService.T("messages", "items", LanguageCodes.English, number: 5, parameters: parameters);
             System.Console.WriteLine($"Translation with number and parameters: {translation3d}\n");
 
             // Example 4: Get multiple entries using .T() helper
             System.Console.WriteLine("Example 4: Get multiple entries using .T() helper");
-            var appName = await translaasService.T("common", "app.name", "en");
-            var welcome = await translaasService.T("common", "welcome", "en");
-            var welcomeMessage = await translaasService.T("common", "welcome.message", "en");
+            var appName = await translaasService.T("common", "app.name", LanguageCodes.English);
+            var welcome = await translaasService.T("common", "welcome", LanguageCodes.English);
+            var welcomeMessage = await translaasService.T("common", "welcome.message", LanguageCodes.English);
             System.Console.WriteLine($"App Name: {appName}");
             System.Console.WriteLine($"Welcome: {welcome}");
             System.Console.WriteLine($"Message: {welcomeMessage}\n");
@@ -145,7 +146,7 @@ class Program
             System.Console.WriteLine("Note: GetGroupAsync() retrieves all entries in a group at once.");
             System.Console.WriteLine("Use this when you need multiple entries, or use .T() for individual entries.\n");
             const string groupName = "common";
-            var group = await translaasClient.GetGroupAsync(projectId, groupName, "en");
+            var group = await translaasClient.GetGroupAsync(projectId, groupName, LanguageCodes.English);
             
             // Filter out metadata fields and only show actual translation entries
             var translationEntries = group.Entries
@@ -168,13 +169,13 @@ class Program
             System.Console.WriteLine("Example 7: Caching demonstration");
             System.Console.WriteLine("First call (cache miss):");
             var start1 = DateTime.UtcNow;
-            await translaasService.T("common", "welcome", "en");
+            await translaasService.T("common", "welcome", LanguageCodes.English);
             var duration1 = DateTime.UtcNow - start1;
             System.Console.WriteLine($"Duration: {duration1.TotalMilliseconds:F2}ms");
 
             System.Console.WriteLine("Second call (cache hit):");
             var start2 = DateTime.UtcNow;
-            await translaasService.T("common", "welcome", "en");
+            await translaasService.T("common", "welcome", LanguageCodes.English);
             var duration2 = DateTime.UtcNow - start2;
             System.Console.WriteLine($"Duration: {duration2.TotalMilliseconds:F2}ms");
             var speedup = duration1.TotalMilliseconds / duration2.TotalMilliseconds;
