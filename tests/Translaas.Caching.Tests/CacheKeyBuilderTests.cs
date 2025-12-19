@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using FluentAssertions;
 
@@ -296,5 +297,123 @@ public class CacheKeyBuilderTests
 
         // Assert
         key.Should().Be(expectedKey);
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldIncludeParameters_WhenParametersProvided()
+    {
+        // Arrange
+        var group = "messages";
+        var entry = "greeting";
+        var lang = "en";
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "count", "5" }
+        };
+
+        // Act
+        var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters);
+
+        // Assert
+        key.Should().Be("entry:messages:greeting:en:count=5:userName=John");
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldIncludeNumberAndParameters_WhenBothProvided()
+    {
+        // Arrange
+        var group = "messages";
+        var entry = "greeting";
+        var lang = "en";
+        var number = 5m;
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" }
+        };
+
+        // Act
+        var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number, parameters);
+
+        // Assert
+        key.Should().Be("entry:messages:greeting:en:5:userName=John");
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldSortParameters_ForConsistentKeys()
+    {
+        // Arrange
+        var group = "messages";
+        var entry = "greeting";
+        var lang = "en";
+        var parameters1 = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "count", "5" }
+        };
+        var parameters2 = new Dictionary<string, string>
+        {
+            { "count", "5" },
+            { "userName", "John" }
+        };
+
+        // Act
+        var key1 = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters1);
+        var key2 = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters2);
+
+        // Assert
+        key1.Should().Be(key2);
+        key1.Should().Be("entry:messages:greeting:en:count=5:userName=John");
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldNotIncludeParameters_WhenParametersIsNull()
+    {
+        // Arrange
+        var group = "ui";
+        var entry = "button.save";
+        var lang = "en";
+
+        // Act
+        var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, null);
+
+        // Assert
+        key.Should().Be("entry:ui:button.save:en");
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldNotIncludeParameters_WhenParametersIsEmpty()
+    {
+        // Arrange
+        var group = "ui";
+        var entry = "button.save";
+        var lang = "en";
+        var parameters = new Dictionary<string, string>();
+
+        // Act
+        var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters);
+
+        // Assert
+        key.Should().Be("entry:ui:button.save:en");
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldHandleSpecialCharacters_InParameterValues()
+    {
+        // Arrange
+        var group = "messages";
+        var entry = "greeting";
+        var lang = "en";
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John Doe" },
+            { "message", "Hello & Welcome" }
+        };
+
+        // Act
+        var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters);
+
+        // Assert
+        key.Should().Be("entry:messages:greeting:en:message=Hello & Welcome:userName=John Doe");
     }
 }
