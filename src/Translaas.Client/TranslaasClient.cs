@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -685,15 +686,12 @@ public class TranslaasClient : ITranslaasClient
         }
 
         var queryParts = new List<string>(parameters.Count);
-        foreach (var kvp in parameters)
+        foreach (var kvp in parameters.Where(kvp => kvp.Key != null && kvp.Value != null))
         {
-            if (kvp.Key != null && kvp.Value != null)
-            {
-                // URL encode both key and value
-                var encodedKey = Uri.EscapeDataString(kvp.Key);
-                var encodedValue = Uri.EscapeDataString(kvp.Value);
-                queryParts.Add($"{encodedKey}={encodedValue}");
-            }
+            // URL encode both key and value
+            var encodedKey = Uri.EscapeDataString(kvp.Key);
+            var encodedValue = Uri.EscapeDataString(kvp.Value);
+            queryParts.Add($"{encodedKey}={encodedValue}");
         }
 
         return string.Join("&", queryParts);

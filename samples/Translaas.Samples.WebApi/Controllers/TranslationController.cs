@@ -85,13 +85,10 @@ public class TranslationController : ControllerBase
                 "group", "entry", "lang", "number", "n" 
             };
 
-            foreach (var kvp in Request.Query)
+            foreach (var kvp in Request.Query.Where(kvp => !knownParams.Contains(kvp.Key) && kvp.Value.Count > 0))
             {
-                if (!knownParams.Contains(kvp.Key) && kvp.Value.Count > 0)
-                {
-                    // Take the first value if multiple values are provided
-                    parameters[kvp.Key] = kvp.Value[0] ?? string.Empty;
-                }
+                // Take the first value if multiple values are provided
+                parameters[kvp.Key] = kvp.Value[0] ?? string.Empty;
             }
 
             var translation = await _translaasService.T(

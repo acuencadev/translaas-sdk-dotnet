@@ -58,16 +58,16 @@ public static class CacheKeyBuilder
         // Sort parameters by key to ensure consistent cache key generation
         if (parameters != null && parameters.Count > 0)
         {
-            var sortedParameters = parameters.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
+            var sortedParameters = parameters
+                .Where(kvp => kvp.Key != null && kvp.Value != null)
+                .OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
+            
             foreach (var kvp in sortedParameters)
             {
-                if (kvp.Key != null && kvp.Value != null)
-                {
-                    keyBuilder.Append(KeySeparator);
-                    keyBuilder.Append(kvp.Key);
-                    keyBuilder.Append("=");
-                    keyBuilder.Append(kvp.Value);
-                }
+                keyBuilder.Append(KeySeparator);
+                keyBuilder.Append(kvp.Key);
+                keyBuilder.Append("=");
+                keyBuilder.Append(kvp.Value);
             }
         }
 
