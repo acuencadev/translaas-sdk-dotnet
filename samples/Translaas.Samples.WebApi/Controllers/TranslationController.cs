@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
@@ -52,6 +53,58 @@ public class TranslationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving translation entry");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Gets a single translation entry with named parameters using ITranslaasClient.
+    /// Named parameters are passed as query string parameters and can be used in translation placeholders like {userName}, {count}, etc.
+    /// Example: GET /api/translation/entry-with-params?group=messages&entry=greeting&lang=en&userName=John&count=5
+    /// Note: All query string parameters except 'group', 'entry', 'lang', and 'number' are treated as named parameters.
+    /// </summary>
+    /// <param name="group">The translation group name.</param>
+    /// <param name="entry">The translation entry key.</param>
+    /// <param name="lang">The language code (e.g., "en", "fr").</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
+    /// <returns>The translated text.</returns>
+    [HttpGet("entry-with-params")]
+    public async Task<ActionResult<string>> GetEntryWithParams(
+        [FromQuery] string group,
+        [FromQuery] string entry,
+        [FromQuery] string lang,
+        [FromQuery] decimal? number = null)
+    {
+        try
+        {
+            // Extract named parameters from query string (exclude known parameters)
+            var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var knownParams = new HashSet<string>(StringComparer.OrdinalIgnoreCase) 
+            { 
+                "group", "entry", "lang", "number", "n" 
+            };
+
+            foreach (var kvp in Request.Query)
+            {
+                if (!knownParams.Contains(kvp.Key) && kvp.Value.Count > 0)
+                {
+                    // Take the first value if multiple values are provided
+                    parameters[kvp.Key] = kvp.Value[0] ?? string.Empty;
+                }
+            }
+
+            var translation = await _translaasClient.GetEntryAsync(
+                group, 
+                entry, 
+                lang, 
+                number, 
+                parameters.Count > 0 ? parameters : null);
+            
+            return Ok(translation);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving translation entry with parameters");
             return StatusCode(500, new { error = ex.Message });
         }
     }

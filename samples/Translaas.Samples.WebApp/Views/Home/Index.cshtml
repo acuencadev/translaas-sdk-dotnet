@@ -1,5 +1,14 @@
 @{
     ViewData["Title"] = "Home Page";
+    var greetingParams = new Dictionary<string, string>
+    {
+        { "userName", "John" },
+        { "itemCount", "5" }
+    };
+    var itemsParams = new Dictionary<string, string>
+    {
+        { "userName", "John" }
+    };
 }
 
 <div class="text-center">
@@ -75,6 +84,37 @@
                     <li>French: <translaas group="common" entry="welcome" lang="fr" /></li>
                     <li>Spanish: <translaas group="common" entry="welcome" lang="es" /></li>
                 </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>6. Named Parameters (Using ITranslaasClient)</h3>
+            </div>
+            <div class="card-body">
+                <p>Using named parameters with <code>ITranslaasClient.GetEntryAsync()</code>:</p>
+                <pre><code>var parameters = new Dictionary&lt;string, string&gt;
+{
+    { "userName", "John" },
+    { "itemCount", "5" }
+};
+await TranslaasClient.GetEntryAsync("messages", "greeting", "en", parameters: parameters)</code></pre>
+                <p>Translation with parameters: @await TranslaasClient.GetEntryAsync("messages", "greeting", "en", parameters: greetingParams)</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>7. Combining Number and Named Parameters</h3>
+            </div>
+            <div class="card-body">
+                <p>Combining <code>number</code> and named parameters:</p>
+                <pre><code>var parameters = new Dictionary&lt;string, string&gt;
+{
+    { "userName", "John" }
+};
+await TranslaasClient.GetEntryAsync("messages", "items", "en", number: 5, parameters: parameters)</code></pre>
+                <p>Translation with number and parameters: @await TranslaasClient.GetEntryAsync("messages", "items", "en", number: 5, parameters: itemsParams)</p>
             </div>
         </div>
     </div>

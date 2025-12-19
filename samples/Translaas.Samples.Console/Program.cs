@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using System.Collections.Generic;
 using System.Text.Json;
 
 using Translaas.Caching;
@@ -114,6 +115,21 @@ class Program
             var translation3b = await translaasService.T("messages", "item", "en", 5);
             System.Console.WriteLine($"1 item: {translation3a}");
             System.Console.WriteLine($"5 items: {translation3b}\n");
+
+            // Example 3b: Named Parameters
+            System.Console.WriteLine("Example 3b: Named Parameters");
+            var parameters = new Dictionary<string, string>
+            {
+                { "userName", "John" },
+                { "itemCount", "5" }
+            };
+            var translation3c = await translaasClient.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
+            System.Console.WriteLine($"Translation with parameters: {translation3c}\n");
+
+            // Example 3c: Combining Number and Named Parameters
+            System.Console.WriteLine("Example 3c: Combining Number and Named Parameters");
+            var translation3d = await translaasClient.GetEntryAsync("messages", "items", "en", number: 5, parameters: parameters);
+            System.Console.WriteLine($"Translation with number and parameters: {translation3d}\n");
 
             // Example 4: Get multiple entries using .T() helper
             System.Console.WriteLine("Example 4: Get multiple entries using .T() helper");
