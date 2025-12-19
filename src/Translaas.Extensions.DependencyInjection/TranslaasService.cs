@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,8 +33,9 @@ public class TranslaasService : ITranslaasService
         string entry,
         string lang,
         decimal? number = null,
+        Dictionary<string, string>? parameters = null,
         CancellationToken cancellationToken = default)
     {
-        return _client.GetEntryAsync(group, entry, lang, number, null, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken);
     }
 }
