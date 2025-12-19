@@ -45,15 +45,16 @@ public class CachingTranslaasClient : ITranslaasClient
         string entry,
         string lang,
         decimal? number = null,
+        System.Collections.Generic.Dictionary<string, string>? parameters = null,
         CancellationToken cancellationToken = default)
     {
         return _options.FallbackMode switch
         {
-            OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetEntryWithApiOnlyBackupAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false),
-            _ => await _innerClient.GetEntryAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false)
+            OfflineFallbackMode.ApiOnlyWithBackup => await GetEntryWithApiOnlyBackupAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
+            _ => await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false)
         };
     }
 
@@ -114,6 +115,7 @@ public class CachingTranslaasClient : ITranslaasClient
         string entry,
         string lang,
         decimal? number,
+        System.Collections.Generic.Dictionary<string, string>? parameters,
         CancellationToken cancellationToken)
     {
         // Try cache first
@@ -128,7 +130,7 @@ public class CachingTranslaasClient : ITranslaasClient
         // Cache miss, try API
         try
         {
-            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
             // Update cache in background (fire and forget)
             _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
@@ -146,11 +148,12 @@ public class CachingTranslaasClient : ITranslaasClient
         string entry,
         string lang,
         decimal? number,
+        System.Collections.Generic.Dictionary<string, string>? parameters,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
             // Update cache in background
             _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
@@ -194,9 +197,10 @@ public class CachingTranslaasClient : ITranslaasClient
         string entry,
         string lang,
         decimal? number,
+        System.Collections.Generic.Dictionary<string, string>? parameters,
         CancellationToken cancellationToken)
     {
-        var result = await _innerClient.GetEntryAsync(group, entry, lang, number, cancellationToken).ConfigureAwait(false);
+        var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
         // Update cache in background
         _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);

@@ -19,20 +19,6 @@ public static class CacheKeyBuilder
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code.</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers.</param>
-    /// <returns>A cache key in the format: "entry:group:entry:lang[:number]".</returns>
-    /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>
-    public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null)
-    {
-        return BuildEntryKey(group, entry, lang, number, null);
-    }
-
-    /// <summary>
-    /// Builds a cache key for a single translation entry with named parameters.
-    /// </summary>
-    /// <param name="group">The translation group name.</param>
-    /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code.</param>
-    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers.</param>
     /// <param name="parameters">Optional dictionary of named parameters. Parameters are sorted by key for consistent cache key generation.</param>
     /// <returns>A cache key in the format: "entry:group:entry:lang[:number][:param1=value1:param2=value2...]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>

@@ -59,16 +59,15 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(expectedText);
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
         
-        // Verify number is included in request body
+        // Verify number is included in query string
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
-                    req.Content != null && 
-                    req.Content.ReadAsStringAsync().Result.Contains("\"n\":5")),
+                    req.RequestUri != null && 
+                    req.RequestUri.Query.Contains("N=5")),
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -113,16 +112,15 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(expectedText);
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
         
-        // Verify decimal number is included in request body
+        // Verify decimal number is included in query string
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
-                    req.Content != null && 
-                    req.Content.ReadAsStringAsync().Result.Contains("\"n\":1.31")),
+                    req.RequestUri != null && 
+                    req.RequestUri.Query.Contains("N=1.31")),
                 ItExpr.IsAny<CancellationToken>());
     }
 

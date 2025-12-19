@@ -34,6 +34,6 @@ public class TranslaasService : ITranslaasService
         decimal? number = null,
         CancellationToken cancellationToken = default)
     {
-        return _client.GetEntryAsync(group, entry, lang, number, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, number, null, cancellationToken);
     }
 }
