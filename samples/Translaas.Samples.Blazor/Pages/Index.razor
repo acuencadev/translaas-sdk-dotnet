@@ -2,6 +2,7 @@
 @using System.Collections.Generic
 @using Translaas.Models
 @using Translaas.Models.Responses
+@using static Translaas.Models.Translaas
 @inject ITranslaasService Translaas
 @inject ITranslaasClient TranslaasClient
 
@@ -21,7 +22,7 @@
             </div>
             <div class="card-body">
                 <p>Using injected <code>ITranslaasService</code>:</p>
-                <pre><code>@@await Translaas.T("common", "welcome", LanguageCodes.English)</code></pre>
+                <pre><code>@@await Translaas.T("common", "welcome", L.English)</code></pre>
                 <p>Result: @welcome</p>
             </div>
         </div>
@@ -32,8 +33,8 @@
             </div>
             <div class="card-body">
                 <p>Using pluralization with the <code>number</code> parameter:</p>
-                <pre><code>@@await Translaas.T("messages", "item", LanguageCodes.English, 1)
-@@await Translaas.T("messages", "item", LanguageCodes.English, 5)</code></pre>
+                <pre><code>@@await Translaas.T("messages", "item", L.English, 1)
+@@await Translaas.T("messages", "item", L.English, 5)</code></pre>
                 <p>1 item: @itemSingular</p>
                 <p>5 items: @itemPlural</p>
             </div>
@@ -50,7 +51,7 @@
     { "userName", "John" },
     { "itemCount", "5" }
 };
-@@await Translaas.T("messages", "greeting", LanguageCodes.English, parameters: parameters)</code></pre>
+@@await Translaas.T("messages", "greeting", L.English, parameters: parameters)</code></pre>
                 <p>Translation with parameters: @greetingWithParams</p>
             </div>
         </div>
@@ -65,7 +66,7 @@
 {
     { "userName", "John" }
 };
-@@await Translaas.T("messages", "items", LanguageCodes.English, number: 5, parameters: parameters)</code></pre>
+@@await Translaas.T("messages", "items", L.English, number: 5, parameters: parameters)</code></pre>
                 <p>Translation with number and parameters: @itemsWithParams</p>
             </div>
         </div>
@@ -77,9 +78,9 @@
             <div class="card-body">
                 <p>Switching languages:</p>
                 <ul>
-                    <li>English (@LanguageCodes.English): @welcomeEn</li>
-                    <li>French (@LanguageCodes.French): @welcomeFr</li>
-                    <li>Spanish (@LanguageCodes.Spanish): @welcomeEs</li>
+                    <li>English (@L.English): @welcomeEn</li>
+                    <li>French (@L.French): @welcomeFr</li>
+                    <li>Spanish (@L.Spanish): @welcomeEs</li>
                 </ul>
             </div>
         </div>
@@ -127,7 +128,7 @@
 </div>
 
 @code {
-    private string currentLang = LanguageCodes.English;
+    private string currentLang = L.English;
     private TranslationGroup? translationGroup;
     
     // Translation strings loaded in OnInitializedAsync
@@ -149,13 +150,13 @@
             const string projectId = "translaas-sdk-samples";
             
             // Load all translations upfront
-            welcome = await Translaas.T("common", "welcome", LanguageCodes.English);
-            welcomeMessage = await Translaas.T("common", "welcome.message", LanguageCodes.English);
-            welcomeEn = await Translaas.T("common", "welcome", LanguageCodes.English);
-            welcomeFr = await Translaas.T("common", "welcome", LanguageCodes.French);
-            welcomeEs = await Translaas.T("common", "welcome", LanguageCodes.Spanish);
-            itemSingular = await Translaas.T("messages", "item", LanguageCodes.English, 1);
-            itemPlural = await Translaas.T("messages", "item", LanguageCodes.English, 5);
+            welcome = await Translaas.T("common", "welcome", L.English);
+            welcomeMessage = await Translaas.T("common", "welcome.message", L.English);
+            welcomeEn = await Translaas.T("common", "welcome", L.English);
+            welcomeFr = await Translaas.T("common", "welcome", L.French);
+            welcomeEs = await Translaas.T("common", "welcome", L.Spanish);
+            itemSingular = await Translaas.T("messages", "item", L.English, 1);
+            itemPlural = await Translaas.T("messages", "item", L.English, 5);
             currentWelcome = await Translaas.T("common", "welcome", currentLang);
             
             // Named parameters example
@@ -164,17 +165,17 @@
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            greetingWithParams = await Translaas.T("messages", "greeting", LanguageCodes.English, parameters: parameters);
+            greetingWithParams = await Translaas.T("messages", "greeting", L.English, parameters: parameters);
             
             // Combining number and named parameters
             var userNameParams = new Dictionary<string, string>
             {
                 { "userName", "John" }
             };
-            itemsWithParams = await Translaas.T("messages", "items", LanguageCodes.English, number: 5, parameters: userNameParams);
+            itemsWithParams = await Translaas.T("messages", "items", L.English, number: 5, parameters: userNameParams);
             
             // Load translation group
-            translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", LanguageCodes.English);
+            translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", L.English);
         }
         catch (Exception ex)
         {
@@ -185,7 +186,7 @@
 
     private async Task ToggleLanguage()
     {
-        currentLang = currentLang == LanguageCodes.English ? LanguageCodes.French : LanguageCodes.English;
+        currentLang = currentLang == L.English ? L.French : L.English;
         currentWelcome = await Translaas.T("common", "welcome", currentLang);
         StateHasChanged();
     }
