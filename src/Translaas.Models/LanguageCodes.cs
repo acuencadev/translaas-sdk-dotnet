@@ -15,8 +15,13 @@ namespace Translaas.Models;
 /// <para>
 /// Example usage:
 /// <code>
+/// // Direct usage
 /// var translation = await client.GetEntryAsync("common", "welcome", LanguageCodes.English);
 /// var french = await client.GetEntryAsync("common", "welcome", LanguageCodes.French);
+/// 
+/// // With using alias for shorter syntax
+/// using L = Translaas.Models.LanguageCodes;
+/// var translation = await client.GetEntryAsync("common", "welcome", L.English);
 /// </code>
 /// </para>
 /// </remarks>

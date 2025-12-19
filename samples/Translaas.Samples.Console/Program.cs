@@ -10,7 +10,7 @@ using Translaas.Caching;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Models;
-using static Translaas.Models.Translaas;
+using L = Translaas.Models.LanguageCodes;
 
 namespace Translaas.Samples.Console;
 
