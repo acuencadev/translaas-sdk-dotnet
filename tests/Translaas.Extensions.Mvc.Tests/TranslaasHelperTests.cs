@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -66,7 +67,7 @@ public class TranslaasHelperTests
         var expectedTranslation = "Hello, World!";
         
         mockService
-            .Setup(s => s.T("common", "welcome", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(s => s.T("common", "welcome", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
         var services = new ServiceCollection();
@@ -92,7 +93,7 @@ public class TranslaasHelperTests
         result.ToString().Should().Be(expectedTranslation);
         
         mockService.Verify(
-            s => s.T("common", "welcome", "en", null, It.IsAny<CancellationToken>()),
+            s => s.T("common", "welcome", "en", null, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -104,7 +105,7 @@ public class TranslaasHelperTests
         var expectedTranslation = "5 items";
         
         mockService
-            .Setup(s => s.T("messages", "item", "en", 5, It.IsAny<CancellationToken>()))
+            .Setup(s => s.T("messages", "item", "en", 5, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
         var services = new ServiceCollection();
@@ -129,7 +130,7 @@ public class TranslaasHelperTests
         result.ToString().Should().Be(expectedTranslation);
         
         mockService.Verify(
-            s => s.T("messages", "item", "en", 5, It.IsAny<CancellationToken>()),
+            s => s.T("messages", "item", "en", 5, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -139,7 +140,7 @@ public class TranslaasHelperTests
         // Arrange
         var mockService = new Mock<ITranslaasService>();
         mockService
-            .Setup(s => s.T(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.T(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("test");
 
         var services = new ServiceCollection();
@@ -161,7 +162,7 @@ public class TranslaasHelperTests
 
         // Assert
         mockService.Verify(
-            s => s.T("test-group", "test-entry", "fr", 10, It.IsAny<CancellationToken>()),
+            s => s.T("test-group", "test-entry", "fr", 10, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }
