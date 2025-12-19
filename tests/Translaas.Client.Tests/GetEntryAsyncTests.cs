@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -305,6 +306,183 @@ public class GetEntryAsyncTests
             });
 
         return handlerMock;
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldAppendQueryStringParameters_WhenParametersProvided()
+    {
+        // Arrange
+        var expectedText = "Hello John, you have 5 items";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "N", "5" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
+
+        // Assert
+        result.Should().Be(expectedText);
+        handlerMock.Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(req =>
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("userName=John") &&
+                    req.RequestUri.Query.Contains("N=5")),
+                ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldMapNumberToN_WhenNumberProvided()
+    {
+        // Arrange
+        var expectedText = "5 items";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "items", "en", number: 5);
+
+        // Assert
+        result.Should().Be(expectedText);
+        handlerMock.Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(req =>
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("N=5")),
+                ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldMapNumberToN_WhenBothNumberAndParametersProvided()
+    {
+        // Arrange
+        var expectedText = "Hello John, you have 5 items";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", number: 5, parameters: parameters);
+
+        // Assert
+        result.Should().Be(expectedText);
+        handlerMock.Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(req =>
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("userName=John") &&
+                    req.RequestUri.Query.Contains("N=5")),
+                ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldPreferNFromParameters_WhenBothNumberAndNInParameters()
+    {
+        // Arrange
+        var expectedText = "Hello John, you have 10 items";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "N", "10" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", number: 5, parameters: parameters);
+
+        // Assert
+        result.Should().Be(expectedText);
+        handlerMock.Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(req =>
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("userName=John") &&
+                    req.RequestUri.Query.Contains("N=10") &&
+                    !req.RequestUri.Query.Contains("N=5")),
+                ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldUrlEncodeParameterValues()
+    {
+        // Arrange
+        var expectedText = "Hello John Doe";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John Doe" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
+
+        // Assert
+        result.Should().Be(expectedText);
+        handlerMock.Protected()
+            .Verify(
+                "SendAsync",
+                Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(req =>
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("userName=John%20Doe")),
+                ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldWorkWithoutParameters_WhenParametersIsNull()
+    {
+        // Arrange
+        var expectedText = "Hello, World!";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var result = await client.GetEntryAsync("ui", "greeting", "en", parameters: null);
+
+        // Assert
+        result.Should().Be(expectedText);
+        VerifyHttpRequest(handlerMock, "/api/translations/text");
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldWorkWithEmptyParameters()
+    {
+        // Arrange
+        var expectedText = "Hello, World!";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, expectedText);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+        var parameters = new Dictionary<string, string>();
+
+        // Act
+        var result = await client.GetEntryAsync("ui", "greeting", "en", parameters: parameters);
+
+        // Assert
+        result.Should().Be(expectedText);
+        VerifyHttpRequest(handlerMock, "/api/translations/text");
     }
 
     private void VerifyHttpRequest(

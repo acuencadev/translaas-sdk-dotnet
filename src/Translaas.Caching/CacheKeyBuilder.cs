@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Translaas.Caching;
@@ -20,6 +22,21 @@ public static class CacheKeyBuilder
     /// <returns>A cache key in the format: "entry:group:entry:lang[:number]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>
     public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null)
+    {
+        return BuildEntryKey(group, entry, lang, number, null);
+    }
+
+    /// <summary>
+    /// Builds a cache key for a single translation entry with named parameters.
+    /// </summary>
+    /// <param name="group">The translation group name.</param>
+    /// <param name="entry">The translation entry key.</param>
+    /// <param name="lang">The language code.</param>
+    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers.</param>
+    /// <param name="parameters">Optional dictionary of named parameters. Parameters are sorted by key for consistent cache key generation.</param>
+    /// <returns>A cache key in the format: "entry:group:entry:lang[:number][:param1=value1:param2=value2...]".</returns>
+    /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>
+    public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null, Dictionary<string, string>? parameters = null)
     {
         if (group == null)
         {
@@ -49,6 +66,23 @@ public static class CacheKeyBuilder
             keyBuilder.Append(KeySeparator);
             // Use invariant culture to ensure consistent formatting across locales
             keyBuilder.Append(number.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        // Append parameters if provided
+        // Sort parameters by key to ensure consistent cache key generation
+        if (parameters != null && parameters.Count > 0)
+        {
+            var sortedParameters = parameters.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in sortedParameters)
+            {
+                if (kvp.Key != null && kvp.Value != null)
+                {
+                    keyBuilder.Append(KeySeparator);
+                    keyBuilder.Append(kvp.Key);
+                    keyBuilder.Append("=");
+                    keyBuilder.Append(kvp.Value);
+                }
+            }
         }
 
         return keyBuilder.ToString();
