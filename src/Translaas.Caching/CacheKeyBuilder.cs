@@ -56,6 +56,7 @@ public static class CacheKeyBuilder
 
         // Append parameters if provided
         // Sort parameters by key to ensure consistent cache key generation
+        // Normalize keys to lowercase to ensure case-insensitive parameter matching produces consistent cache keys
         if (parameters != null && parameters.Count > 0)
         {
             var sortedParameters = parameters
@@ -65,7 +66,8 @@ public static class CacheKeyBuilder
             foreach (var kvp in sortedParameters)
             {
                 keyBuilder.Append(KeySeparator);
-                keyBuilder.Append(kvp.Key);
+                // Use lowercase key to ensure consistent cache keys for case-insensitive parameter matching
+                keyBuilder.Append(kvp.Key!.ToLowerInvariant());
                 keyBuilder.Append("=");
                 keyBuilder.Append(kvp.Value);
             }

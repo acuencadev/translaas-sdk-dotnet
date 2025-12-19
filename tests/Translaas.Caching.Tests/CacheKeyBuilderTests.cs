@@ -316,7 +316,8 @@ public class CacheKeyBuilderTests
         var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters);
 
         // Assert
-        key.Should().Be("entry:messages:greeting:en:count=5:userName=John");
+        // Keys are normalized to lowercase for consistent cache keys with case-insensitive parameter matching
+        key.Should().Be("entry:messages:greeting:en:count=5:username=John");
     }
 
     [Fact]
@@ -336,7 +337,8 @@ public class CacheKeyBuilderTests
         var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number, parameters);
 
         // Assert
-        key.Should().Be("entry:messages:greeting:en:5:userName=John");
+        // Keys are normalized to lowercase for consistent cache keys with case-insensitive parameter matching
+        key.Should().Be("entry:messages:greeting:en:5:username=John");
     }
 
     [Fact]
@@ -363,7 +365,8 @@ public class CacheKeyBuilderTests
 
         // Assert
         key1.Should().Be(key2);
-        key1.Should().Be("entry:messages:greeting:en:count=5:userName=John");
+        // Keys are normalized to lowercase for consistent cache keys with case-insensitive parameter matching
+        key1.Should().Be("entry:messages:greeting:en:count=5:username=John");
     }
 
     [Fact]
@@ -414,6 +417,37 @@ public class CacheKeyBuilderTests
         var key = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters);
 
         // Assert
-        key.Should().Be("entry:messages:greeting:en:message=Hello & Welcome:userName=John Doe");
+        // Keys are normalized to lowercase for consistent cache keys with case-insensitive parameter matching
+        key.Should().Be("entry:messages:greeting:en:message=Hello & Welcome:username=John Doe");
+    }
+
+    [Fact]
+    public void BuildEntryKey_ShouldProduceSameCacheKey_ForCaseInsensitiveParameterKeys()
+    {
+        // Arrange
+        var group = "messages";
+        var entry = "greeting";
+        var lang = "en";
+        var parameters1 = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "count", "5" }
+        };
+        var parameters2 = new Dictionary<string, string>
+        {
+            { "USERNAME", "John" },
+            { "COUNT", "5" }
+        };
+
+        // Act
+        var key1 = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters1);
+        var key2 = CacheKeyBuilder.BuildEntryKey(group, entry, lang, null, parameters2);
+
+        // Assert
+        // Both should produce the same cache key since parameter keys are normalized to lowercase
+        // This ensures case-insensitive parameter matching (as used in MergeNumberIntoParameters) 
+        // produces consistent cache keys
+        key1.Should().Be(key2);
+        key1.Should().Be("entry:messages:greeting:en:count=5:username=John");
     }
 }
