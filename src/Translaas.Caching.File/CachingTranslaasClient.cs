@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -52,7 +55,7 @@ public class CachingTranslaasClient : ITranslaasClient
         {
             OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiOnlyWithBackup => await GetEntryWithApiOnlyBackupAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false)
         };
@@ -124,7 +127,8 @@ public class CachingTranslaasClient : ITranslaasClient
 
         if (cachedValue != null)
         {
-            return cachedValue;
+            // Perform parameter substitution on cached template
+            return SubstituteParameters(cachedValue, number, parameters);
         }
 
         // Cache miss, try API
@@ -168,7 +172,8 @@ public class CachingTranslaasClient : ITranslaasClient
 
             if (cachedValue != null)
             {
-                return cachedValue;
+                // Perform parameter substitution on cached template
+                return SubstituteParameters(cachedValue, number, parameters);
             }
 
             throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
@@ -179,6 +184,8 @@ public class CachingTranslaasClient : ITranslaasClient
         string group,
         string entry,
         string lang,
+        decimal? number,
+        System.Collections.Generic.Dictionary<string, string>? parameters,
         CancellationToken cancellationToken)
     {
         var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
@@ -186,7 +193,8 @@ public class CachingTranslaasClient : ITranslaasClient
 
         if (cachedValue != null)
         {
-            return cachedValue;
+            // Perform parameter substitution on cached template
+            return SubstituteParameters(cachedValue, number, parameters);
         }
 
         throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
@@ -490,6 +498,85 @@ public class CachingTranslaasClient : ITranslaasClient
     #endregion
 
     #region Helper Methods
+
+    /// <summary>
+    /// Substitutes parameters in a translation template string.
+    /// Replaces placeholders like {userName} with values from the parameters dictionary.
+    /// </summary>
+    /// <param name="template">The template string containing placeholders (e.g., "Hello {userName}").</param>
+    /// <param name="number">Optional number for pluralization (populates {N} placeholder).</param>
+    /// <param name="parameters">Optional dictionary of named parameters for substitution.</param>
+    /// <returns>The template with placeholders replaced by parameter values.</returns>
+    private static string SubstituteParameters(
+        string template,
+        decimal? number,
+        Dictionary<string, string>? parameters)
+    {
+        if (string.IsNullOrEmpty(template))
+        {
+            return template ?? string.Empty;
+        }
+
+        // Merge number into parameters if provided
+        var mergedParameters = MergeNumberIntoParameters(number, parameters);
+
+        // If no parameters, return template as-is
+        if (mergedParameters == null || mergedParameters.Count == 0)
+        {
+            return template;
+        }
+
+        // Use regex to find all placeholders in the format {parameterName}
+        // Match {parameterName} where parameterName can contain letters, numbers, and underscores
+        var result = Regex.Replace(
+            template,
+            @"\{([a-zA-Z0-9_]+)\}",
+            match =>
+            {
+                var placeholderName = match.Groups[1].Value;
+
+                // Case-insensitive lookup
+                if (mergedParameters.TryGetValue(placeholderName, out var value))
+                {
+                    return value;
+                }
+
+                // If parameter not found, return the placeholder as-is
+                return match.Value;
+            },
+            RegexOptions.None);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Merges the number parameter into the parameters dictionary, creating a case-insensitive dictionary.
+    /// </summary>
+    /// <param name="number">The number parameter (for pluralization).</param>
+    /// <param name="parameters">The existing parameters dictionary (may be null).</param>
+    /// <returns>A new dictionary with number merged in, or null if both number and parameters are null/empty.</returns>
+    private static Dictionary<string, string>? MergeNumberIntoParameters(decimal? number, Dictionary<string, string>? parameters)
+    {
+        // If no number and no parameters, return null
+        if (!number.HasValue && (parameters == null || parameters.Count == 0))
+        {
+            return null;
+        }
+
+        // Create a new dictionary to avoid modifying the input
+        var merged = parameters == null
+            ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase);
+
+        // Only add N if it doesn't already exist (case-insensitive check)
+        if (number.HasValue && !merged.ContainsKey("N"))
+        {
+            // Format number using invariant culture to ensure consistent formatting
+            merged["N"] = number.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return merged.Count > 0 ? merged : null;
+    }
 
     private async Task UpdateProjectCacheAsync(string project, string lang, CancellationToken cancellationToken)
     {

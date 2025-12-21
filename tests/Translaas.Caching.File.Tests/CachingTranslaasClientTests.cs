@@ -228,6 +228,124 @@ public class CachingTranslaasClientTests
             () => client.GetEntryAsync("common", "hello", "en"));
     }
 
+    [Fact]
+    public async Task GetEntryAsync_CacheOnly_PerformsParameterSubstitution_WhenParametersProvided()
+    {
+        // Arrange
+        var client = CreateClient(OfflineFallbackMode.CacheOnly);
+        var cachedGroup = CreateTranslationGroup("greeting", "Hello {userName}, you have {count} items");
+
+        _mockCacheProvider
+            .Setup(c => c.GetGroupAsync(DefaultProjectId, "messages", "en", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedGroup);
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "count", "5" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", null, parameters);
+
+        // Assert
+        result.Should().Be("Hello John, you have 5 items");
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_CacheOnly_PerformsNumberSubstitution_WhenNumberProvided()
+    {
+        // Arrange
+        var client = CreateClient(OfflineFallbackMode.CacheOnly);
+        var cachedGroup = CreateTranslationGroup("items", "You have {N} items");
+
+        _mockCacheProvider
+            .Setup(c => c.GetGroupAsync(DefaultProjectId, "messages", "en", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedGroup);
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "items", "en", 5m);
+
+        // Assert
+        result.Should().Be("You have 5 items");
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_CacheOnly_PerformsSubstitution_WithNumberAndParameters()
+    {
+        // Arrange
+        var client = CreateClient(OfflineFallbackMode.CacheOnly);
+        var cachedGroup = CreateTranslationGroup("greeting", "Hello {userName}, you have {N} items and {pending} pending");
+
+        _mockCacheProvider
+            .Setup(c => c.GetGroupAsync(DefaultProjectId, "messages", "en", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedGroup);
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" },
+            { "pending", "3" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", 5m, parameters);
+
+        // Assert
+        result.Should().Be("Hello John, you have 5 items and 3 pending");
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_CacheFirst_PerformsParameterSubstitution_WhenReturningCachedValue()
+    {
+        // Arrange
+        var client = CreateClient(OfflineFallbackMode.CacheFirst);
+        var cachedGroup = CreateTranslationGroup("greeting", "Hello {userName}");
+
+        _mockCacheProvider
+            .Setup(c => c.GetGroupAsync(DefaultProjectId, "messages", "en", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedGroup);
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", null, parameters);
+
+        // Assert
+        result.Should().Be("Hello John");
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ApiFirst_PerformsParameterSubstitution_WhenFallingBackToCache()
+    {
+        // Arrange
+        var client = CreateClient(OfflineFallbackMode.ApiFirst);
+        var cachedGroup = CreateTranslationGroup("greeting", "Hello {userName}");
+
+        _mockCacheProvider
+            .Setup(c => c.GetGroupAsync(DefaultProjectId, "messages", "en", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedGroup);
+
+        _mockInnerClient
+            .Setup(c => c.GetEntryAsync("messages", "greeting", "en", It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new System.Net.Http.HttpRequestException("Network error"));
+
+        var parameters = new Dictionary<string, string>
+        {
+            { "userName", "John" }
+        };
+
+        // Act
+        var result = await client.GetEntryAsync("messages", "greeting", "en", null, parameters);
+
+        // Assert
+        result.Should().Be("Hello John");
+    }
+
     #endregion
 
     #region GetEntryAsync - ApiOnlyWithBackup Tests
