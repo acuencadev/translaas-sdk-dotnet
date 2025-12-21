@@ -18,6 +18,13 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.9.0" />
     <PackageVersion Include="System.Text.Json" Version="10.0.0" />
+    <!-- MAUI Dependencies -->
+    <!-- Note: CommunityToolkit.Maui not yet compatible with .NET 10 MAUI as of Dec 2024 -->
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
     <!-- Test Dependencies -->
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="FluentAssertions" Version="8.8.0" />
