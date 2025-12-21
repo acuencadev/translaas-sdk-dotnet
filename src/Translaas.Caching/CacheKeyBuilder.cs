@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Translaas.Caching;
@@ -17,9 +19,10 @@ public static class CacheKeyBuilder
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code.</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers.</param>
-    /// <returns>A cache key in the format: "entry:group:entry:lang[:number]".</returns>
+    /// <param name="parameters">Optional dictionary of named parameters. Parameters are sorted by key for consistent cache key generation.</param>
+    /// <returns>A cache key in the format: "entry:group:entry:lang[:number][:param1=value1:param2=value2...]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>
-    public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null)
+    public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null, Dictionary<string, string>? parameters = null)
     {
         if (group == null)
         {
@@ -49,6 +52,25 @@ public static class CacheKeyBuilder
             keyBuilder.Append(KeySeparator);
             // Use invariant culture to ensure consistent formatting across locales
             keyBuilder.Append(number.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        // Append parameters if provided
+        // Sort parameters by key to ensure consistent cache key generation
+        // Normalize keys to lowercase to ensure case-insensitive parameter matching produces consistent cache keys
+        if (parameters != null && parameters.Count > 0)
+        {
+            var sortedParameters = parameters
+                .Where(kvp => kvp.Key != null && kvp.Value != null)
+                .OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
+            
+            foreach (var kvp in sortedParameters)
+            {
+                keyBuilder.Append(KeySeparator);
+                // Use lowercase key to ensure consistent cache keys for case-insensitive parameter matching
+                keyBuilder.Append(kvp.Key!.ToLowerInvariant());
+                keyBuilder.Append("=");
+                keyBuilder.Append(kvp.Value);
+            }
         }
 
         return keyBuilder.ToString();

@@ -1,5 +1,7 @@
 @namespace Translaas.Samples.Blazor.Shared
 @inherits LayoutComponentBase
+@using Translaas.Models
+@using L = Translaas.Models.LanguageCodes
 @inject ITranslaasService Translaas
 
 <div class="page">
@@ -23,6 +25,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        appName = await Translaas.T("common", "app.name", "en");
+        appName = await Translaas.T("common", "app.name", L.English);
     }
 }
