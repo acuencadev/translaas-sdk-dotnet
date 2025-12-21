@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -58,6 +59,7 @@ public class TranslaasClient : ITranslaasClient
         string entry,
         string lang,
         decimal? number = null,
+        Dictionary<string, string>? parameters = null,
         CancellationToken cancellationToken = default)
     {
         // Parameter validation
@@ -76,10 +78,14 @@ public class TranslaasClient : ITranslaasClient
             throw new ArgumentNullException(nameof(lang));
         }
 
+        // Merge number parameter into parameters dictionary
+        // If N already exists in parameters, it takes precedence
+        var mergedParameters = MergeNumberIntoParameters(number, parameters);
+
         // Check cache if caching is enabled for entries
         if (_cacheProvider != null && _options.CacheMode == CacheMode.Entry)
         {
-            var cacheKey = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number);
+            var cacheKey = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number, mergedParameters);
             if (_cacheProvider.TryGetValue<string>(cacheKey, out var cachedValue))
             {
                 if (cachedValue != null)
@@ -99,8 +105,8 @@ public class TranslaasClient : ITranslaasClient
             Number = number
         };
 
-        // Create HTTP request
-        var request = BuildGetRequest("/api/translations/text", requestModel);
+        // Create HTTP request with parameters
+        var request = BuildGetRequest("/api/translations/text", requestModel, mergedParameters);
 
         try
         {
@@ -126,7 +132,7 @@ public class TranslaasClient : ITranslaasClient
             // Store in cache if caching is enabled for entries
             if (_cacheProvider != null && _options.CacheMode == CacheMode.Entry)
             {
-                var cacheKey = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number);
+                var cacheKey = CacheKeyBuilder.BuildEntryKey(group, entry, lang, number, mergedParameters);
                 _cacheProvider.Set(cacheKey, result, _options.CacheAbsoluteExpiration, _options.CacheSlidingExpiration);
             }
 
@@ -579,6 +585,36 @@ public class TranslaasClient : ITranslaasClient
     }
 
     /// <summary>
+    /// Merges the number parameter into the parameters dictionary as "N".
+    /// If "N" already exists in parameters, it takes precedence.
+    /// </summary>
+    /// <param name="number">The number parameter (for pluralization).</param>
+    /// <param name="parameters">The existing parameters dictionary (may be null).</param>
+    /// <returns>A new dictionary with number merged in, or null if both number and parameters are null/empty.</returns>
+    private Dictionary<string, string>? MergeNumberIntoParameters(decimal? number, Dictionary<string, string>? parameters)
+    {
+        // If no number and no parameters, return null
+        if (!number.HasValue && (parameters == null || parameters.Count == 0))
+        {
+            return null;
+        }
+
+        // Create a new dictionary to avoid modifying the input
+        var merged = parameters == null 
+            ? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, string>(parameters, StringComparer.OrdinalIgnoreCase);
+
+        // Only add N if it doesn't already exist (case-insensitive check)
+        if (number.HasValue && !merged.ContainsKey("N"))
+        {
+            // Format number using invariant culture to ensure consistent formatting
+            merged["N"] = number.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        return merged.Count > 0 ? merged : null;
+    }
+
+    /// <summary>
     /// Builds an HTTP GET request message with JSON body and API key header.
     /// </summary>
     /// <typeparam name="T">The type of the request model.</typeparam>
@@ -587,6 +623,20 @@ public class TranslaasClient : ITranslaasClient
     /// <returns>An HttpRequestMessage configured for the API.</returns>
     /// <exception cref="ArgumentNullException">Thrown when endpoint or requestModel is null.</exception>
     internal HttpRequestMessage BuildGetRequest<T>(string endpoint, T requestModel) where T : class
+    {
+        return BuildGetRequest(endpoint, requestModel, null);
+    }
+
+    /// <summary>
+    /// Builds an HTTP GET request message with JSON body, API key header, and optional query string parameters.
+    /// </summary>
+    /// <typeparam name="T">The type of the request model.</typeparam>
+    /// <param name="endpoint">The endpoint path.</param>
+    /// <param name="requestModel">The request model to serialize as JSON.</param>
+    /// <param name="parameters">Optional dictionary of named parameters to append as query string parameters.</param>
+    /// <returns>An HttpRequestMessage configured for the API.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when endpoint or requestModel is null.</exception>
+    internal HttpRequestMessage BuildGetRequest<T>(string endpoint, T requestModel, Dictionary<string, string>? parameters) where T : class
     {
         if (endpoint == null)
         {
@@ -599,6 +649,17 @@ public class TranslaasClient : ITranslaasClient
         }
 
         var url = BuildEndpointUrl(endpoint);
+        
+        // Append query string parameters if provided
+        if (parameters != null && parameters.Count > 0)
+        {
+            var queryString = BuildQueryString(parameters);
+            if (!string.IsNullOrEmpty(queryString))
+            {
+                url += "?" + queryString;
+            }
+        }
+
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         // Set API key header
@@ -610,5 +671,29 @@ public class TranslaasClient : ITranslaasClient
         request.Content = content;
 
         return request;
+    }
+
+    /// <summary>
+    /// Builds a query string from a dictionary of parameters, URL-encoding both keys and values.
+    /// </summary>
+    /// <param name="parameters">The parameters dictionary.</param>
+    /// <returns>A URL-encoded query string (without the leading "?").</returns>
+    private string BuildQueryString(Dictionary<string, string> parameters)
+    {
+        if (parameters == null || parameters.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var queryParts = new List<string>(parameters.Count);
+        foreach (var kvp in parameters.Where(kvp => kvp.Key != null && kvp.Value != null))
+        {
+            // URL encode both key and value
+            var encodedKey = Uri.EscapeDataString(kvp.Key);
+            var encodedValue = Uri.EscapeDataString(kvp.Value);
+            queryParts.Add($"{encodedKey}={encodedValue}");
+        }
+
+        return string.Join("&", queryParts);
     }
 }

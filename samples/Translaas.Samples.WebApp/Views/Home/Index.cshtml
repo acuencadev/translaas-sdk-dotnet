@@ -1,13 +1,22 @@
 @{
     ViewData["Title"] = "Home Page";
+    var greetingParams = new Dictionary<string, string>
+    {
+        { "userName", "John" },
+        { "itemCount", "5" }
+    };
+    var itemsParams = new Dictionary<string, string>
+    {
+        { "userName", "John" }
+    };
 }
 
 <div class="text-center">
     <h1 class="display-4">
-        <translaas group="common" entry="welcome" lang="en" />
+        <translaas group="common" entry="welcome" lang="@L.English" />
     </h1>
     <p>
-        <translaas group="common" entry="welcome.message" lang="en" />
+        <translaas group="common" entry="welcome.message" lang="@L.English" />
     </p>
     <p class="text-muted">
         <small>All samples use the same Translaas project (<code>translaas-sdk-samples</code>) to demonstrate cross-platform translation sharing.</small>
@@ -24,8 +33,8 @@
             </div>
             <div class="card-body">
                 <p>Using the <code>&lt;translaas&gt;</code> tag helper:</p>
-                <pre><code>&lt;translaas group="common" entry="welcome" lang="en" /&gt;</code></pre>
-                <p>Result: <translaas group="common" entry="welcome" lang="en" /></p>
+                <pre><code>&lt;translaas group="common" entry="welcome" lang="@L.English" /&gt;</code></pre>
+                <p>Result: <translaas group="common" entry="welcome" lang="@L.English" /></p>
             </div>
         </div>
 
@@ -35,8 +44,8 @@
             </div>
             <div class="card-body">
                 <p>Using the <code>Translaas.T()</code> static helper:</p>
-                <pre><code>@Translaas.T(Html, "common", "welcome", "en")</code></pre>
-                <p>Result: @Translaas.T(Html, "common", "welcome", "en")</p>
+                <pre><code>@TranslaasMvc.T(Html, "common", "welcome", L.English)</code></pre>
+                <p>Result: @TranslaasMvc.T(Html, "common", "welcome", L.English)</p>
             </div>
         </div>
 
@@ -46,8 +55,8 @@
             </div>
             <div class="card-body">
                 <p>Using injected <code>ITranslaasService</code> (already injected in _ViewImports.cshtml):</p>
-                <pre><code>@await TranslaasService.T("common", "welcome", "en")</code></pre>
-                <p>Result: @await TranslaasService.T("common", "welcome", "en")</p>
+                <pre><code>@await TranslaasService.T("common", "welcome", L.English)</code></pre>
+                <p>Result: @await TranslaasService.T("common", "welcome", L.English)</p>
             </div>
         </div>
 
@@ -57,10 +66,10 @@
             </div>
             <div class="card-body">
                 <p>Using pluralization with the <code>number</code> attribute:</p>
-                <pre><code>&lt;translaas group="messages" entry="item" lang="en" number="1" /&gt;
-&lt;translaas group="messages" entry="item" lang="en" number="5" /&gt;</code></pre>
-                <p>1 item: <translaas group="messages" entry="item" lang="en" number="1" /></p>
-                <p>5 items: <translaas group="messages" entry="item" lang="en" number="5" /></p>
+                <pre><code>&lt;translaas group="messages" entry="item" lang="@L.English" number="1" /&gt;
+&lt;translaas group="messages" entry="item" lang="@L.English" number="5" /&gt;</code></pre>
+                <p>1 item: <translaas group="messages" entry="item" lang="@L.English" number="1" /></p>
+                <p>5 items: <translaas group="messages" entry="item" lang="@L.English" number="5" /></p>
             </div>
         </div>
 
@@ -71,10 +80,41 @@
             <div class="card-body">
                 <p>Switching languages:</p>
                 <ul>
-                    <li>English: <translaas group="common" entry="welcome" lang="en" /></li>
-                    <li>French: <translaas group="common" entry="welcome" lang="fr" /></li>
-                    <li>Spanish: <translaas group="common" entry="welcome" lang="es" /></li>
+                    <li>English (@L.English): <translaas group="common" entry="welcome" lang="@L.English" /></li>
+                    <li>French (@L.French): <translaas group="common" entry="welcome" lang="@L.French" /></li>
+                    <li>Spanish (@L.Spanish): <translaas group="common" entry="welcome" lang="@L.Spanish" /></li>
                 </ul>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>6. Named Parameters</h3>
+            </div>
+            <div class="card-body">
+                <p>Using named parameters with <code>ITranslaasService.T()</code>:</p>
+                <pre><code>var parameters = new Dictionary&lt;string, string&gt;
+{
+    { "userName", "John" },
+    { "itemCount", "5" }
+};
+await TranslaasService.T("messages", "greeting", L.English, parameters: parameters)</code></pre>
+                <p>Translation with parameters: @await TranslaasService.T("messages", "greeting", L.English, parameters: greetingParams)</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>7. Combining Number and Named Parameters</h3>
+            </div>
+            <div class="card-body">
+                <p>Combining <code>number</code> and named parameters:</p>
+                <pre><code>var parameters = new Dictionary&lt;string, string&gt;
+{
+    { "userName", "John" }
+};
+await TranslaasService.T("messages", "items", L.English, number: 5, parameters: parameters)</code></pre>
+                <p>Translation with number and parameters: @await TranslaasService.T("messages", "items", L.English, number: 5, parameters: itemsParams)</p>
             </div>
         </div>
     </div>

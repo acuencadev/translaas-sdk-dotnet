@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,6 +26,7 @@ public interface ITranslaasService
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
+    /// <param name="parameters">Optional dictionary of named parameters to use in translation placeholders (e.g., {userName}, {count}).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
@@ -33,6 +35,7 @@ public interface ITranslaasService
     /// var translation = await _translaas.T("common", "welcome", "en");
     /// var plural = await _translaas.T("messages", "item", "en", 5);
     /// var fractional = await _translaas.T("messages", "item", "en", 1.31m);
+    /// var withParams = await _translaas.T("messages", "greeting", "en", parameters: new Dictionary&lt;string, string&gt; { { "userName", "John" } });
     /// </code>
     /// </example>
     Task<string> T(
@@ -40,5 +43,6 @@ public interface ITranslaasService
         string entry,
         string lang,
         decimal? number = null,
+        Dictionary<string, string>? parameters = null,
         CancellationToken cancellationToken = default);
 }

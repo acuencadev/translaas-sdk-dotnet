@@ -13,7 +13,7 @@ public class ITranslaasClientTests
         // Assert
         method.Should().NotBeNull();
         method!.ReturnType.Should().Be(typeof(Task<string>));
-        method.GetParameters().Should().HaveCount(5); // group, entry, lang, number, cancellationToken
+        method.GetParameters().Should().HaveCount(6); // group, entry, lang, number, parameters, cancellationToken
         method.GetParameters()[3].ParameterType.Should().Be(typeof(decimal?)); // number is nullable
     }
 
