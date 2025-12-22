@@ -116,6 +116,46 @@ Then navigate to `https://localhost:5001` to see the application.
 
 ---
 
+### 5. [.NET MAUI Application](./Translaas.Samples.Maui/)
+
+A cross-platform mobile and desktop application demonstrating Translaas SDK usage in .NET MAUI.
+
+**Key Features:**
+- MVVM pattern with CommunityToolkit.Mvvm
+- Dependency injection in ViewModels
+- XAML data binding for translations
+- Dynamic language switching UI
+- Caching optimized for mobile scenarios
+- Pluralization support
+- Translation group retrieval
+- Connection testing and diagnostics
+- Shell-based navigation
+
+**Best For:**
+- Cross-platform mobile applications (iOS, Android)
+- Desktop applications (Windows, macOS)
+- Native UI with translation support
+- Offline-capable applications
+- Apps requiring MVVM architecture
+
+**Platforms:**
+- Windows 10+ (net8.0-windows10.0.19041.0)
+- Android (net8.0-android, API 21+)
+- iOS (net8.0-ios, iOS 11+)
+- macOS (net8.0-maccatalyst)
+
+**Run (Windows):**
+```bash
+dotnet run --project samples/Translaas.Samples.Maui -f net10.0-windows10.0.19041.0 -r win-x64 --no-self-contained
+```
+
+**Run (Android):**
+```bash
+dotnet run --project samples/Translaas.Samples.Maui -f net10.0-android
+```
+
+---
+
 ## Common Configuration
 
 All samples require configuration of the Translaas API key and base URL. This can be done in several ways:

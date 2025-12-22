@@ -35,10 +35,17 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
     
     - name: Restore dependencies
-      run: dotnet restore -p:TargetFrameworks=${{ matrix.target-framework }}
+      run: dotnet restore -p:TargetFrameworks=${{ matrix.target-framework }} --ignore-failed-sources
+      continue-on-error: false
     
-    - name: Build
-      run: dotnet build --no-restore --configuration Release -f ${{ matrix.target-framework }}
+    - name: Build (excluding MAUI)
+      run: |
+        # Temporarily remove MAUI project from solution (MAUI requires platform-specific workloads not available in CI)
+        # MAUI projects can only build for platform-specific frameworks (e.g., net10.0-android), not net8.0
+        dotnet sln remove samples/Translaas.Samples.Maui/Translaas.Samples.Maui.csproj || true
+        dotnet build --no-restore --configuration Release -f ${{ matrix.target-framework }} Translaas.SDK.slnx
+        # Restore MAUI project to solution (in case it was removed)
+        dotnet sln add samples/Translaas.Samples.Maui/Translaas.Samples.Maui.csproj || true
     
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory:"${{ github.workspace }}/TestResults" -f ${{ matrix.target-framework }}

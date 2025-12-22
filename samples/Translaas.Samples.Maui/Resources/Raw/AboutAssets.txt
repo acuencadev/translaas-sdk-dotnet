@@ -1,0 +1,8 @@
+Any raw assets you want to be deployed with your application can be placed in
+this directory (and child directories). Deployment of the asset to your application
+is handled automatically by the following MSBuild targets:
+'_MauiAssetsToRawAssets', and '_CopyMauiAssetsToRawAssets'.
+
+These files will be deployed with your package and will be accessible using Essentials:
+
+    string fileContents = await FileSystem.Current.OpenAppPackageFileAsync("AboutAssets.txt").ReadToEndAsync();
