@@ -94,14 +94,15 @@ class Program
                 {
                     // Configure language resolution for console apps
                     // Note: Console apps don't have HTTP context, so we only use:
-                    // 1. DefaultLanguageProvider - uses TranslaasOptions.DefaultLanguage (from appsettings.json)
-                    // 2. CultureLanguageProvider - uses CultureInfo.CurrentUICulture (as fallback)
+                    // 1. CultureLanguageProvider - uses CultureInfo.CurrentUICulture (first priority)
+                    // 2. DefaultLanguageProvider - uses TranslaasOptions.DefaultLanguage (final fallback)
                     // 
-                    // For console apps, we prioritize the configured default language over thread culture
-                    // to ensure consistent behavior based on configuration.
+                    // Language resolution order:
+                    // - Thread culture (CultureInfo.CurrentUICulture) is checked first
+                    // - If no culture is available, falls back to DefaultLanguage from appsettings.json
                     language
-                        .UseDefault()  // Primary: Uses DefaultLanguage from options (appsettings.json)
-                        .UseCulture(); // Fallback: Uses thread culture (CultureInfo.CurrentUICulture)
+                        .UseCulture()  // First: Uses thread culture (CultureInfo.CurrentUICulture)
+                        .UseDefault(); // Final fallback: Uses DefaultLanguage from options (appsettings.json)
                 });
             })
             .Build();
@@ -230,30 +231,36 @@ class Program
 
             // Example 8: Automatic Language Resolution
             System.Console.WriteLine("Example 8: Automatic Language Resolution");
-            System.Console.WriteLine("Console apps use Culture and DefaultLanguage providers (no HTTP context).\n");
+            System.Console.WriteLine("Console apps use Culture (first) and DefaultLanguage (fallback) providers.\n");
+            System.Console.WriteLine("Resolution order: Thread Culture → Default Language (from appsettings.json)\n");
             
-            System.Console.WriteLine("8a. Using default language from appsettings.json:");
-            var defaultLangTranslation = await translaasService.T("common", "welcome"); // Uses default language
-            System.Console.WriteLine($"  Default language: {defaultLanguage}");
-            System.Console.WriteLine($"  Translation: {defaultLangTranslation}\n");
+            System.Console.WriteLine("8a. Current thread culture (checked first):");
+            System.Console.WriteLine($"  Current thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
+            var cultureLang = await translaasService.T("common", "welcome"); // Uses thread culture first
+            System.Console.WriteLine($"  Translation (from culture): {cultureLang}\n");
 
             System.Console.WriteLine("8b. Override with explicit language:");
             var explicitLang = await translaasService.T("common", "welcome", L.English); // Explicit override
             System.Console.WriteLine($"  Override language: {L.English}");
             System.Console.WriteLine($"  Translation: {explicitLang}\n");
 
-            System.Console.WriteLine("8c. Using automatic resolution (from thread culture):");
-            System.Console.WriteLine($"  Current thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
-            var autoLang = await translaasService.T("common", "welcome"); // lang omitted, uses culture or default
-            System.Console.WriteLine($"  Translation: {autoLang}\n");
-
-            System.Console.WriteLine("8d. Changing thread culture to French (overrides default):");
+            System.Console.WriteLine("8c. Changing thread culture to French (takes priority over default):");
             var originalCulture = System.Globalization.CultureInfo.CurrentUICulture;
             System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("fr-FR");
             var frenchLang = await translaasService.T("common", "welcome"); // lang omitted, uses thread culture
             System.Console.WriteLine($"  Thread culture: fr-FR");
-            System.Console.WriteLine($"  Translation: {frenchLang}");
+            System.Console.WriteLine($"  Translation (from culture): {frenchLang}");
             System.Threading.Thread.CurrentThread.CurrentUICulture = originalCulture; // Restore
+            System.Console.WriteLine();
+
+            System.Console.WriteLine("8d. Testing fallback to default language (when culture is invariant):");
+            var originalCulture2 = System.Globalization.CultureInfo.CurrentUICulture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+            var defaultLangTranslation = await translaasService.T("common", "welcome"); // Falls back to default
+            System.Console.WriteLine($"  Thread culture: InvariantCulture (no language)");
+            System.Console.WriteLine($"  Default language (from appsettings.json): {defaultLanguage}");
+            System.Console.WriteLine($"  Translation (from default): {defaultLangTranslation}");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = originalCulture2; // Restore
             System.Console.WriteLine();
         }
         catch (Exception ex)
