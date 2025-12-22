@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Translaas.Caching;
 using Translaas.Client;
@@ -14,7 +15,7 @@ builder.Services.AddSwaggerGen();
 // Add HttpClient support (required for Translaas)
 builder.Services.AddHttpClient();
 
-// Configure Translaas with options
+// Configure Translaas with options and language resolution
 builder.Services.AddTranslaas(options =>
 {
     // Required: Set your API key
@@ -36,6 +37,27 @@ builder.Services.AddTranslaas(options =>
 
     // Optional: Configure timeout
     options.Timeout = TimeSpan.FromSeconds(30);
+
+    // Optional: Set default language fallback
+    options.DefaultLanguage = L.English;
+}, language =>
+{
+    // Configure language resolution providers (checked in order)
+    // Web APIs can use HTTP request sources since they have HTTP context
+    language
+        .UseRequest(request =>
+        {
+            // Check HTTP request sources (route, query string, header, cookie)
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,      // e.g., /api/translation/en/entry
+                RequestLanguageSource.QueryString, // e.g., ?lang=en
+                RequestLanguageSource.Header,     // e.g., X-Language: en
+                RequestLanguageSource.Cookie      // e.g., lang=en cookie
+            };
+        })
+        .UseCulture()  // Fallback to thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Final fallback to DefaultLanguage from options
 });
 
 // Add Translaas MVC services (for tag helpers and view helpers)

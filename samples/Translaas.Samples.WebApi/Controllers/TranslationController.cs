@@ -36,20 +36,31 @@ public class TranslationController : ControllerBase
     /// </summary>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
+    /// <param name="lang">Optional language code (e.g., "en", "fr"). If omitted, language is resolved from HTTP request (query string, header, cookie) or thread culture.</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>The translated text.</returns>
+    /// <remarks>
+    /// Language resolution order:
+    /// 1. Explicit lang parameter (if provided)
+    /// 2. HTTP request sources (query string ?lang=en, header X-Language: en, cookie lang=en)
+    /// 3. Thread culture (CultureInfo.CurrentUICulture)
+    /// 4. Default language (from TranslaasOptions.DefaultLanguage)
+    /// 
+    /// Examples:
+    /// - GET /api/translation/entry?group=common&entry=welcome&lang=en (explicit)
+    /// - GET /api/translation/entry?group=common&entry=welcome (automatic from ?lang=en or header/cookie)
+    /// </remarks>
     [HttpGet("entry")]
     public async Task<ActionResult<string>> GetEntry(
         [FromQuery] string group,
         [FromQuery] string entry,
-        [FromQuery] string lang,
+        [FromQuery] string? lang = null,
         [FromQuery] decimal? number = null)
     {
         try
         {
             var translation = await _translaasService.T(group, entry, lang, number);
-            return Ok(translation);
+            return Ok(new { translation, resolvedLanguage = lang ?? "auto" });
         }
         catch (Exception ex)
         {
@@ -66,14 +77,14 @@ public class TranslationController : ControllerBase
     /// </summary>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
+    /// <param name="lang">Optional language code (e.g., "en", "fr"). If omitted, language is resolved automatically.</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>The translated text.</returns>
     [HttpGet("entry-with-params")]
     public async Task<ActionResult<string>> GetEntryWithParams(
         [FromQuery] string group,
         [FromQuery] string entry,
-        [FromQuery] string lang,
+        [FromQuery] string? lang = null,
         [FromQuery] decimal? number = null)
     {
         try
@@ -98,7 +109,7 @@ public class TranslationController : ControllerBase
                 number, 
                 parameters.Count > 0 ? parameters : null);
             
-            return Ok(translation);
+            return Ok(new { translation, resolvedLanguage = lang ?? "auto", parameters });
         }
         catch (Exception ex)
         {
