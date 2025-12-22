@@ -94,11 +94,14 @@ class Program
                 {
                     // Configure language resolution for console apps
                     // Note: Console apps don't have HTTP context, so we only use:
-                    // 1. CultureLanguageProvider - uses CultureInfo.CurrentUICulture
-                    // 2. DefaultLanguageProvider - uses TranslaasOptions.DefaultLanguage
+                    // 1. DefaultLanguageProvider - uses TranslaasOptions.DefaultLanguage (from appsettings.json)
+                    // 2. CultureLanguageProvider - uses CultureInfo.CurrentUICulture (as fallback)
+                    // 
+                    // For console apps, we prioritize the configured default language over thread culture
+                    // to ensure consistent behavior based on configuration.
                     language
-                        .UseCulture()  // Uses thread culture (CultureInfo.CurrentUICulture)
-                        .UseDefault(); // Final fallback to DefaultLanguage from options
+                        .UseDefault()  // Primary: Uses DefaultLanguage from options (appsettings.json)
+                        .UseCulture(); // Fallback: Uses thread culture (CultureInfo.CurrentUICulture)
                 });
             })
             .Build();
@@ -132,8 +135,8 @@ class Program
 
             // Example 2: Pluralization with default language
             System.Console.WriteLine("Example 2: Pluralization with default language");
-            var translation2a = await translaasService.T("messages", "item", null, 1); // Uses default language
-            var translation2b = await translaasService.T("messages", "item", null, 5); // Uses default language
+            var translation2a = await translaasService.T("messages", "item", 1); // Uses default language
+            var translation2b = await translaasService.T("messages", "item", 5); // Uses default language
             System.Console.WriteLine($"1 item (default language '{defaultLanguage}'): {translation2a}");
             System.Console.WriteLine($"5 items (default language '{defaultLanguage}'): {translation2b}\n");
 
@@ -151,22 +154,22 @@ class Program
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            var translation3 = await translaasService.T("messages", "greeting", null, parameters: parameters); // Uses default language
+            var translation3 = await translaasService.T("messages", "greeting", parameters); // Uses default language
             System.Console.WriteLine($"Translation with parameters (default language '{defaultLanguage}'): {translation3}\n");
 
             // Example 3b: Named Parameters with override
             System.Console.WriteLine("Example 3b: Named Parameters with language override");
-            var translation3b = await translaasService.T("messages", "greeting", L.English, parameters: parameters); // Explicit override
+            var translation3b = await translaasService.T("messages", "greeting", L.English, parameters); // Explicit override
             System.Console.WriteLine($"Translation with parameters (override to '{L.English}'): {translation3b}\n");
 
             // Example 4: Combining Number and Named Parameters with default language
             System.Console.WriteLine("Example 4: Combining Number and Named Parameters with default language");
-            var translation4 = await translaasService.T("messages", "items", null, number: 5, parameters: parameters); // Uses default language
+            var translation4 = await translaasService.T("messages", "items", 5, parameters); // Uses default language
             System.Console.WriteLine($"Translation with number and parameters (default language '{defaultLanguage}'): {translation4}\n");
 
             // Example 4b: Combining Number and Named Parameters with override
             System.Console.WriteLine("Example 4b: Combining Number and Named Parameters with language override");
-            var translation4b = await translaasService.T("messages", "items", L.English, number: 5, parameters: parameters); // Explicit override
+            var translation4b = await translaasService.T("messages", "items", L.English, 5, parameters); // Explicit override
             System.Console.WriteLine($"Translation with number and parameters (override to '{L.English}'): {translation4b}\n");
 
             // Example 5: Get multiple entries using .T() helper with default language
