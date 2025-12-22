@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Translaas.Samples.Maui.ViewModels"
+             x:Class="Translaas.Samples.Maui.Views.SettingsPage"
+             x:DataType="viewmodels:SettingsViewModel"
+             Title="Settings &amp; Testing">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <!-- Header -->
+            <Frame BackgroundColor="{StaticResource Primary}" Padding="15" CornerRadius="10">
+                <VerticalStackLayout>
+                    <Label Text="Settings &amp; Testing"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                    <Label Text="Test your Translaas configuration"
+                           FontSize="14"
+                           TextColor="White"
+                           Opacity="0.8"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Connection Test -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Connection Status"
+                           FontSize="16"
+                           FontAttributes="Bold" />
+                    <Label Text="Test your connection to the Translaas API:" FontSize="12" TextColor="Gray" />
+                    
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#333333}" Padding="10" CornerRadius="5">
+                        <Label Text="{Binding ConnectionStatus}"
+                               FontSize="14"
+                               HorizontalOptions="Center" />
+                    </Frame>
+                    
+                    <Button Text="Test Connection"
+                            Command="{Binding TestConnectionCommand}"
+                            IsEnabled="{Binding IsTesting, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Translation Test -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Test Translation"
+                           FontSize="16"
+                           FontAttributes="Bold" />
+                    <Label Text="Test a specific translation entry:" FontSize="12" TextColor="Gray" />
+                    
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                        <Label Text="Group:" VerticalOptions="Center" Grid.Row="0" Grid.Column="0" />
+                        <Entry Text="{Binding TestGroup}" Placeholder="e.g., common" Grid.Row="0" Grid.Column="1" />
+                        
+                        <Label Text="Entry:" VerticalOptions="Center" Grid.Row="1" Grid.Column="0" />
+                        <Entry Text="{Binding TestEntry}" Placeholder="e.g., welcome" Grid.Row="1" Grid.Column="1" />
+                        
+                        <Label Text="Language:" VerticalOptions="Center" Grid.Row="2" Grid.Column="0" />
+                        <Entry Text="{Binding TestLanguage}" Placeholder="e.g., en" Grid.Row="2" Grid.Column="1" />
+                    </Grid>
+                    
+                    <Button Text="Test Translation"
+                            Command="{Binding TestTranslationCommand}"
+                            IsEnabled="{Binding IsTesting, Converter={StaticResource InvertedBoolConverter}}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="White" />
+                    
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#333333}" Padding="10" CornerRadius="5">
+                        <Label Text="{Binding TestResult}"
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               LineBreakMode="WordWrap" />
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Error Details -->
+            <Frame BackgroundColor="#FFCDD2"
+                   IsVisible="{Binding HasError}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout>
+                    <Label Text="Error Details"
+                           FontAttributes="Bold"
+                           TextColor="#B71C1C" />
+                    <Label Text="{Binding ErrorDetails}"
+                           TextColor="#B71C1C"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Supported Languages -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Supported Language Codes"
+                           FontSize="16"
+                           FontAttributes="Bold" />
+                    <Label Text="Reference list of common language codes:" FontSize="12" TextColor="Gray" />
+                    
+                    <FlexLayout Wrap="Wrap" JustifyContent="Start">
+                        <CollectionView ItemsSource="{Binding SupportedLanguages}"
+                                        ItemsLayout="HorizontalList"
+                                        HeightRequest="40">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Frame BackgroundColor="{StaticResource Primary}"
+                                           Padding="10,5"
+                                           Margin="5,0"
+                                           CornerRadius="15"
+                                           HasShadow="False">
+                                        <Label Text="{Binding}"
+                                               TextColor="White"
+                                               FontSize="12" />
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Configuration Info -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Configuration Tips"
+                           FontSize="16"
+                           FontAttributes="Bold" />
+                    
+                    <Label Text="• API Key: Store securely (not in source control)"
+                           FontSize="13" />
+                    <Label Text="• Cache Mode: 'Group' is recommended for mobile"
+                           FontSize="13" />
+                    <Label Text="• Timeout: 45s recommended for mobile networks"
+                           FontSize="13" />
+                    <Label Text="• Offline: Use file caching for offline support"
+                           FontSize="13" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsTesting}"
+                               IsVisible="{Binding IsTesting}"
+                               Color="{StaticResource Primary}"
+                               HeightRequest="40" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"
+                                              xmlns:converters="clr-namespace:Translaas.Samples.Maui.Converters" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+</ContentPage>

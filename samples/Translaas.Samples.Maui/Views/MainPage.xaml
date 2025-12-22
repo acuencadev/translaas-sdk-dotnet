@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:Translaas.Samples.Maui.ViewModels"
+             x:Class="Translaas.Samples.Maui.Views.MainPage"
+             x:DataType="viewmodels:MainViewModel"
+             Title="Translaas Demo">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <!-- Header -->
+            <Frame BackgroundColor="{StaticResource Primary}" Padding="15" CornerRadius="10">
+                <VerticalStackLayout>
+                    <Label Text="Translaas SDK - MAUI Sample"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                    <Label Text="Translation service demonstration"
+                           FontSize="14"
+                           TextColor="White"
+                           Opacity="0.8"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Language Selector -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Select Language"
+                           FontSize="16"
+                           FontAttributes="Bold" />
+                    <Picker Title="Choose Language"
+                            ItemsSource="{Binding AvailableLanguages}"
+                            SelectedItem="{Binding SelectedLanguage}"
+                            ItemDisplayBinding="{Binding DisplayName}" />
+                    <Button Text="Refresh Translations"
+                            Command="{Binding RefreshCommand}"
+                            BackgroundColor="{StaticResource Secondary}"
+                            TextColor="White" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource Primary}"
+                               HeightRequest="40" />
+
+            <!-- Error Display -->
+            <Frame BackgroundColor="#FFCDD2"
+                   IsVisible="{Binding HasError}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout>
+                    <Label Text="Error"
+                           FontAttributes="Bold"
+                           TextColor="#B71C1C" />
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="#B71C1C" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Translation Examples -->
+            <VerticalStackLayout Spacing="15" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+
+                <!-- Basic Translations -->
+                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="1. Basic Translations"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="Using ITranslaasService.T() method:" FontSize="12" TextColor="Gray" />
+                        
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="5">
+                            <Label Text="App Name:" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" />
+                            <Label Text="{Binding AppName}" Grid.Row="0" Grid.Column="1" />
+                            
+                            <Label Text="Welcome:" FontAttributes="Bold" Grid.Row="1" Grid.Column="0" />
+                            <Label Text="{Binding WelcomeText}" Grid.Row="1" Grid.Column="1" />
+                            
+                            <Label Text="Message:" FontAttributes="Bold" Grid.Row="2" Grid.Column="0" />
+                            <Label Text="{Binding WelcomeMessage}" Grid.Row="2" Grid.Column="1" LineBreakMode="WordWrap" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Pluralization -->
+                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="2. Pluralization"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="Automatic plural forms based on count:" FontSize="12" TextColor="Gray" />
+                        
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="5">
+                            <Label Text="1 item:" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" />
+                            <Label Text="{Binding ItemSingular}" Grid.Row="0" Grid.Column="1" />
+                            
+                            <Label Text="5 items:" FontAttributes="Bold" Grid.Row="1" Grid.Column="0" />
+                            <Label Text="{Binding ItemPlural}" Grid.Row="1" Grid.Column="1" />
+                        </Grid>
+
+                        <BoxView HeightRequest="1" Color="LightGray" Margin="0,10" />
+                        
+                        <Label Text="Test with custom number:" FontSize="12" TextColor="Gray" />
+                        <HorizontalStackLayout Spacing="10">
+                            <Entry Text="{Binding PluralCountText}"
+                                   Placeholder="Enter number"
+                                   Keyboard="Numeric"
+                                   WidthRequest="100" />
+                            <Button Text="Test"
+                                    Command="{Binding TestPluralCommand}"
+                                    BackgroundColor="{StaticResource Secondary}"
+                                    TextColor="White"
+                                    Padding="15,5" />
+                        </HorizontalStackLayout>
+                        <Label Text="{Binding PluralResult}"
+                               FontAttributes="Italic"
+                               TextColor="{StaticResource Primary}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Named Parameters -->
+                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="3. Named Parameters"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="Using placeholders like {userName}, {itemCount}:" FontSize="12" TextColor="Gray" />
+                        
+                        <Label Text="{Binding GreetingWithParams}"
+                               FontSize="14"
+                               TextColor="{StaticResource Primary}"
+                               LineBreakMode="WordWrap" />
+                        
+                        <Label Text="Combined number and parameters:"
+                               FontSize="12"
+                               TextColor="Gray"
+                               Margin="0,10,0,0" />
+                        <Label Text="{Binding ItemsWithParams}"
+                               FontSize="14"
+                               TextColor="{StaticResource Primary}"
+                               LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Translation Group -->
+                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="4. Translation Group (Bulk)"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="Using ITranslaasClient.GetGroupAsync():" FontSize="12" TextColor="Gray" />
+                        <Label Text="Note: For single entries, always use T() method."
+                               FontSize="11"
+                               TextColor="Gray"
+                               FontAttributes="Italic" />
+                        
+                        <Frame BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#333333}" Padding="10" CornerRadius="5">
+                            <Label Text="{Binding GroupEntries}"
+                                   FontSize="12"
+                                   FontFamily="Consolas"
+                                   LineBreakMode="WordWrap" />
+                        </Frame>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Available Locales -->
+                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="5. Available Locales"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="Languages configured for this project:" FontSize="12" TextColor="Gray" />
+                        <Label Text="{Binding AvailableLocales}"
+                               FontSize="14"
+                               TextColor="{StaticResource Primary}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Cache Performance -->
+                <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}"
+                       Padding="15"
+                       CornerRadius="10">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="6. Caching Performance"
+                               FontSize="16"
+                               FontAttributes="Bold" />
+                        <Label Text="Comparing cached vs uncached requests:" FontSize="12" TextColor="Gray" />
+                        <Label Text="{Binding CacheStatus}"
+                               FontSize="14"
+                               TextColor="{StaticResource Primary}"
+                               LineBreakMode="WordWrap" />
+                        <Label Text="Group-level caching is recommended for mobile apps."
+                               FontSize="11"
+                               TextColor="Gray"
+                               FontAttributes="Italic" />
+                    </VerticalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+
+            <!-- Footer -->
+            <Label Text="Translaas SDK for .NET"
+                   FontSize="12"
+                   TextColor="Gray"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,10" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"
+                                              xmlns:converters="clr-namespace:Translaas.Samples.Maui.Converters" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+</ContentPage>
