@@ -86,14 +86,20 @@ public class TranslaasTagHelperTests
     }
 
     [Fact]
-    public async Task ProcessAsync_ThrowsArgumentException_WhenLangIsNullOrWhiteSpace()
+    public async Task ProcessAsync_Works_WhenLangIsNull()
     {
         // Arrange
         var mockService = new Mock<ITranslaasService>();
+        var expectedTranslation = "Bonjour";
+        
+        mockService
+            .Setup(s => s.T("common", "welcome", null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedTranslation);
+
         var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "group";
-        tagHelper.Entry = "entry";
-        tagHelper.Lang = string.Empty;
+        tagHelper.Group = "common";
+        tagHelper.Entry = "welcome";
+        tagHelper.Lang = null; // Optional when providers are configured
 
         var context = new TagHelperContext(
             "translaas",
@@ -107,11 +113,50 @@ public class TranslaasTagHelperTests
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
-        var act = async () => await tagHelper.ProcessAsync(context, output);
+        await tagHelper.ProcessAsync(context, output);
 
         // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
-            .WithParameterName("Lang");
+        output.TagName.Should().BeNull();
+        output.Content.GetContent().Should().Be(expectedTranslation);
+        
+        mockService.Verify(
+            s => s.T("common", "welcome", null, null, null, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_Works_WhenLangIsEmptyString()
+    {
+        // Arrange
+        var mockService = new Mock<ITranslaasService>();
+        var expectedTranslation = "Bonjour";
+        
+        mockService
+            .Setup(s => s.T("common", "welcome", "", null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedTranslation);
+
+        var tagHelper = new TranslaasTagHelper(mockService.Object);
+        tagHelper.Group = "common";
+        tagHelper.Entry = "welcome";
+        tagHelper.Lang = ""; // Empty string is treated as null by service
+
+        var context = new TagHelperContext(
+            "translaas",
+            new TagHelperAttributeList(),
+            new Dictionary<object, object>(),
+            Guid.NewGuid().ToString());
+
+        var output = new TagHelperOutput(
+            "translaas",
+            new TagHelperAttributeList(),
+            (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
+
+        // Act
+        await tagHelper.ProcessAsync(context, output);
+
+        // Assert
+        output.TagName.Should().BeNull();
+        output.Content.GetContent().Should().Be(expectedTranslation);
     }
 
     [Fact]
