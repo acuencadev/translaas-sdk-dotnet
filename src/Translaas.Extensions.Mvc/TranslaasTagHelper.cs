@@ -50,9 +50,10 @@ public class TranslaasTagHelper : TagHelper
 
     /// <summary>
     /// Gets or sets the language code (e.g., "en", "fr").
+    /// Optional when language providers are configured.
     /// </summary>
     [HtmlAttributeName("lang")]
-    public string Lang { get; set; } = string.Empty;
+    public string? Lang { get; set; }
 
     /// <summary>
     /// Gets or sets the optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).
@@ -73,11 +74,6 @@ public class TranslaasTagHelper : TagHelper
             throw new System.ArgumentException("Entry is required.", nameof(Entry));
         }
 
-        if (string.IsNullOrWhiteSpace(Lang))
-        {
-            throw new System.ArgumentException("Lang is required.", nameof(Lang));
-        }
-
         if (output == null)
         {
             throw new System.ArgumentNullException(nameof(output));
@@ -86,7 +82,7 @@ public class TranslaasTagHelper : TagHelper
         // Suppress the original tag
         output.TagName = null;
 
-        // Get the translation
+        // Get the translation (lang is optional when providers are configured)
         var translation = await _translaasService.T(Group, Entry, Lang, Number).ConfigureAwait(false);
 
         // Set the output content

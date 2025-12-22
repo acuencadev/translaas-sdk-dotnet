@@ -40,14 +40,22 @@ public static class Translaas
     /// <param name="htmlHelper">The HTML helper instance (available as <c>Html</c> in Razor views by default).</param>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
+    /// <param name="lang">
+    /// Optional language code (e.g., "en", "fr"). 
+    /// When null, language is resolved from registered providers.
+    /// </param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>An HTML-encoded string containing the translation.</returns>
     /// <exception cref="System.ArgumentNullException">Thrown when htmlHelper is null.</exception>
-    /// <exception cref="System.InvalidOperationException">Thrown when ITranslaasService is not registered.</exception>
+    /// <exception cref="System.InvalidOperationException">Thrown when ITranslaasService is not registered or no language can be resolved.</exception>
     /// <example>
     /// <code>
+    /// // With explicit language
     /// @Translaas.T(Html, "common", "welcome", "en")
+    /// 
+    /// // With language resolution (requires providers configured)
+    /// @Translaas.T(Html, "common", "welcome")
+    /// 
     /// @Translaas.T(Html, "messages", "item", "en", 5)
     /// @Translaas.T(Html, "messages", "item", "en", 1.31m)
     /// </code>
@@ -56,7 +64,7 @@ public static class Translaas
         IHtmlHelper htmlHelper,
         string group,
         string entry,
-        string lang,
+        string? lang = null,
         decimal? number = null)
     {
         if (htmlHelper == null)

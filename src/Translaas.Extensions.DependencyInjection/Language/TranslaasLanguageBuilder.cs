@@ -14,6 +14,14 @@ internal class TranslaasLanguageBuilder : ITranslaasLanguageBuilder
     private readonly List<ServiceDescriptor> _providerDescriptors = new();
 
     /// <summary>
+    /// Gets the service collection for registering providers.
+    /// </summary>
+    /// <remarks>
+    /// Internal access for extension methods in other packages.
+    /// </remarks>
+    internal IServiceCollection Services => _services;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TranslaasLanguageBuilder"/> class.
     /// </summary>
     /// <param name="services">The service collection to register providers with.</param>
