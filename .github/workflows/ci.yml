@@ -40,15 +40,12 @@ jobs:
     
     - name: Build (excluding MAUI)
       run: |
-        # Build all projects except MAUI (MAUI requires platform-specific workloads not available in CI)
+        # Temporarily remove MAUI project from solution (MAUI requires platform-specific workloads not available in CI)
         # MAUI projects can only build for platform-specific frameworks (e.g., net10.0-android), not net8.0
-        dotnet build --no-restore --configuration Release -f ${{ matrix.target-framework }} \
-          src/**/*.csproj \
-          tests/**/*.csproj \
-          samples/Translaas.Samples.Blazor/Translaas.Samples.Blazor.csproj \
-          samples/Translaas.Samples.Console/Translaas.Samples.Console.csproj \
-          samples/Translaas.Samples.WebApi/Translaas.Samples.WebApi.csproj \
-          samples/Translaas.Samples.WebApp/Translaas.Samples.WebApp.csproj
+        dotnet sln remove samples/Translaas.Samples.Maui/Translaas.Samples.Maui.csproj || true
+        dotnet build --no-restore --configuration Release -f ${{ matrix.target-framework }} Translaas.SDK.slnx
+        # Restore MAUI project to solution (in case it was removed)
+        dotnet sln add samples/Translaas.Samples.Maui/Translaas.Samples.Maui.csproj || true
     
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory:"${{ github.workspace }}/TestResults" -f ${{ matrix.target-framework }}
