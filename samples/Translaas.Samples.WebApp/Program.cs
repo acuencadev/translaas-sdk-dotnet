@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Translaas.Caching;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Extensions.Mvc;
@@ -10,7 +11,7 @@ builder.Services.AddControllersWithViews();
 // Add HttpClient support (required for Translaas)
 builder.Services.AddHttpClient();
 
-// Configure Translaas with options
+// Configure Translaas with options and language resolution
 builder.Services.AddTranslaas(options =>
 {
     // Required: Set your API key
@@ -32,6 +33,26 @@ builder.Services.AddTranslaas(options =>
 
     // Optional: Configure timeout
     options.Timeout = TimeSpan.FromSeconds(30);
+
+    // Optional: Set default language fallback
+    options.DefaultLanguage = "en";
+}, language =>
+{
+    // Configure language resolution providers (checked in order)
+    language
+        .UseRequest(request =>
+        {
+            // Check HTTP request sources (route, query string, header, cookie)
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,      // e.g., /en/products
+                RequestLanguageSource.QueryString, // e.g., ?lang=en
+                RequestLanguageSource.Header,     // e.g., X-Language: en
+                RequestLanguageSource.Cookie      // e.g., lang=en cookie
+            };
+        })
+        .UseCulture()  // Fallback to thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Final fallback to DefaultLanguage from options
 });
 
 // Add Translaas MVC services (for tag helpers and view helpers)
@@ -50,6 +71,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
+// Add language route support (optional - for /en/Home/Index style URLs)
+app.MapControllerRoute(
+    name: "language",
+    pattern: "{lang}/{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

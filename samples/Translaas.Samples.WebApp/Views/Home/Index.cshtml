@@ -117,5 +117,31 @@ await TranslaasService.T("messages", "items", L.English, number: 5, parameters: 
                 <p>Translation with number and parameters: @await TranslaasService.T("messages", "items", L.English, number: 5, parameters: itemsParams)</p>
             </div>
         </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>8. Automatic Language Resolution (NEW!)</h3>
+            </div>
+            <div class="card-body">
+                <p>With language providers configured, you can omit the <code>lang</code> parameter:</p>
+                <ul>
+                    <li><strong>Tag Helper:</strong> <code>&lt;translaas group="common" entry="welcome" /&gt;</code></li>
+                    <li><strong>Static Helper:</strong> <code>@Translaas.T(Html, "common", "welcome")</code></li>
+                    <li><strong>Service:</strong> <code>await TranslaasService.T("common", "welcome")</code></li>
+                </ul>
+                <p>Language is resolved from (in order):</p>
+                <ol>
+                    <li>HTTP Request (route, query string, header, cookie)</li>
+                    <li>Thread Culture (<code>CultureInfo.CurrentUICulture</code>)</li>
+                    <li>Default Language (from <code>TranslaasOptions.DefaultLanguage</code>)</li>
+                </ol>
+                <p><strong>Examples:</strong></p>
+                <ul>
+                    <li>With explicit lang: <translaas group="common" entry="welcome" lang="@L.English" /></li>
+                    <li>Automatic resolution: <translaas group="common" entry="welcome" /></li>
+                </ul>
+                <p><small class="text-muted">Try adding <code>?lang=fr</code> to the URL to see automatic language resolution!</small></p>
+            </div>
+        </div>
     </div>
 </div>
