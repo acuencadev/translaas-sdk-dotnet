@@ -88,9 +88,19 @@ builder.Services.AddTranslaas(options =>
 }, language =>
 {
     // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
     language
         .UseRequest(request =>
         {
+            // Configure which HTTP request sources to check
             request.Sources = new List<RequestLanguageSource>
             {
                 RequestLanguageSource.Route,
@@ -99,8 +109,8 @@ builder.Services.AddTranslaas(options =>
                 RequestLanguageSource.Cookie
             };
         })
-        .UseCulture()
-        .UseDefault();
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
 });
 ```
 

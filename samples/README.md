@@ -220,10 +220,19 @@ services.AddTranslaas(options =>
 }, language =>
 {
     // Optional: Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
     language
         .UseRequest()  // For web apps - resolves from HTTP request
-        .UseCulture()   // Uses thread culture
-        .UseDefault();  // Falls back to DefaultLanguage
+        .UseCulture()   // Resolves from thread culture
+        .UseDefault();  // Resolves from DefaultLanguage option
 });
 ```
 

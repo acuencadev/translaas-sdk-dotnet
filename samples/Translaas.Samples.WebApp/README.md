@@ -89,9 +89,19 @@ builder.Services.AddTranslaas(options =>
 }, language =>
 {
     // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
     language
         .UseRequest(request =>
         {
+            // Configure which HTTP request sources to check
             request.Sources = new List<RequestLanguageSource>
             {
                 RequestLanguageSource.Route,
@@ -100,8 +110,8 @@ builder.Services.AddTranslaas(options =>
                 RequestLanguageSource.Cookie
             };
         })
-        .UseCulture()
-        .UseDefault();
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
 });
 
 builder.Services.AddTranslaasMvc();
@@ -224,18 +234,21 @@ Switch between languages by changing the `lang` attribute or using automatic res
 With language providers configured, you can omit the `lang` parameter:
 
 ```html
-<!-- Language resolved from HTTP request (query string, header, cookie, route) -->
+<!-- Language resolved from configured providers -->
 <translaas group="common" entry="welcome" />
 
 <!-- Or using static helper -->
 @Translaas.T(Html, "common", "welcome")
 ```
 
-Language is resolved in this order:
-1. Explicit `lang` parameter (if provided)
-2. HTTP request sources (route → query → header → cookie)
-3. Thread culture (`CultureInfo.CurrentUICulture`)
-4. Default language (`TranslaasOptions.DefaultLanguage`)
+**Language Resolution:**
+1. **Explicit `lang` parameter** (highest priority - always wins, bypasses all providers)
+2. **Configured providers** (checked in registration order):
+   - **RequestLanguageProvider** (for web apps): Route, query string, header, cookie
+   - **CultureLanguageProvider**: `CultureInfo.CurrentUICulture`
+   - **DefaultLanguageProvider**: `TranslaasOptions.DefaultLanguage`
+   
+   The first provider that returns a non-null language wins. You can configure the order and which providers to use.
 
 ### 7. Caching
 

@@ -45,11 +45,20 @@ builder.Services.AddTranslaas(options =>
     options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
 }, language =>
 {
-    // Configure language resolution providers (checked in order)
+    // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
     language
         .UseRequest(request =>
         {
-            // Check HTTP request sources (route, query string, header, cookie)
+            // Configure which HTTP request sources to check
             request.Sources = new List<RequestLanguageSource>
             {
                 RequestLanguageSource.Route,      // e.g., /en/products
@@ -58,8 +67,8 @@ builder.Services.AddTranslaas(options =>
                 RequestLanguageSource.Cookie      // e.g., lang=en cookie
             };
         })
-        .UseCulture()  // Fallback to thread culture (CultureInfo.CurrentUICulture)
-        .UseDefault(); // Final fallback to DefaultLanguage from options
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
 });
 
 // Add Translaas MVC services (for tag helpers and view helpers)
