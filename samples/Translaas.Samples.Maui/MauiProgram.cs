@@ -32,18 +32,29 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Configure embedded appsettings.json
+        // Configure embedded appsettings.json and user secrets
+        // Order matters: appsettings.json first (base values), then user secrets (overrides)
         var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("appsettings.json");
+        var configBuilder = new ConfigurationBuilder();
         
+        // Add embedded appsettings.json first (lower priority)
+        using var stream = assembly.GetManifestResourceStream("appsettings.json");
         if (stream != null)
         {
-            var config = new ConfigurationBuilder()
-                .AddJsonStream(stream)
-                .Build();
-            
-            builder.Configuration.AddConfiguration(config);
+            configBuilder.AddJsonStream(stream);
         }
+
+        // Add user secrets (higher priority - overrides appsettings.json)
+        // User secrets are stored in: %APPDATA%\Microsoft\UserSecrets\{UserSecretsId}\secrets.json (Windows)
+        // or ~/.microsoft/usersecrets/{UserSecretsId}/secrets.json (Linux/Mac)
+#if DEBUG
+        // Only load user secrets in DEBUG mode for security
+        configBuilder.AddUserSecrets(assembly);
+#endif
+
+        // Build configuration and add to builder
+        var config = configBuilder.Build();
+        builder.Configuration.AddConfiguration(config);
 
         // Add HttpClient support (required for Translaas)
         builder.Services.AddHttpClient();
