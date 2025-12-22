@@ -50,6 +50,10 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <param name="configure">A delegate to configure the <see cref="TranslaasOptions"/>.</param>
+    /// <param name="configureLanguage">
+    /// Optional configuration for language resolution.
+    /// When null or empty, explicit lang parameter is required on all calls.
+    /// </param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     /// <exception cref="ArgumentNullException">Thrown when services or configure is null.</exception>
     /// <example>
@@ -61,12 +65,16 @@ public static class ServiceCollectionExtensions
     ///     options.BaseUrl = "https://api.translaas.com";
     ///     options.CacheMode = CacheMode.Group;
     ///     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    /// });
+    ///     options.DefaultLanguage = LanguageCodes.English;
+    /// }, language => language
+    ///     .UseCulture()
+    ///     .UseDefault());
     /// </code>
     /// </example>
     public static IServiceCollection AddTranslaas(
         this IServiceCollection services,
-        Action<TranslaasOptions> configure)
+        Action<TranslaasOptions> configure,
+        Action<ITranslaasLanguageBuilder>? configureLanguage = null)
     {
         if (services == null)
         {
@@ -186,11 +194,28 @@ public static class ServiceCollectionExtensions
             return innerClient;
         });
 
+        // Configure language resolution if provided
+        if (configureLanguage != null)
+        {
+            var languageBuilder = new TranslaasLanguageBuilder(services);
+            configureLanguage(languageBuilder);
+
+            // Register ILanguageResolver as scoped (may contain scoped providers)
+            services.AddScoped<ILanguageResolver>(serviceProvider =>
+            {
+                var providers = serviceProvider.GetServices<ILanguageProvider>();
+                var loggerFactory = serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger(typeof(LanguageResolver));
+                return new LanguageResolver(providers, logger);
+            });
+        }
+
         // Register ITranslaasService as scoped (convenience wrapper)
         services.AddScoped<ITranslaasService>(serviceProvider =>
         {
             var client = serviceProvider.GetRequiredService<ITranslaasClient>();
-            return new TranslaasService(client);
+            var resolver = serviceProvider.GetService<ILanguageResolver>();
+            return new TranslaasService(client, resolver);
         });
 
         // Register IOfflineCacheSyncService if offline caching is enabled
@@ -250,6 +275,10 @@ public static class ServiceCollectionExtensions
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <param name="configuration">The <see cref="IConfiguration"/> instance.</param>
     /// <param name="sectionName">Optional configuration section name. Defaults to "Translaas".</param>
+    /// <param name="configureLanguage">
+    /// Optional configuration for language resolution.
+    /// When null or empty, explicit lang parameter is required on all calls.
+    /// </param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     /// <exception cref="ArgumentNullException">Thrown when services or configuration is null.</exception>
     /// <example>
@@ -260,18 +289,22 @@ public static class ServiceCollectionExtensions
     /// //     "ApiKey": "your-api-key",
     /// //     "BaseUrl": "https://api.translaas.com",
     /// //     "CacheMode": "Group",
-    /// //     "Timeout": "00:00:30"
+    /// //     "Timeout": "00:00:30",
+    /// //     "DefaultLanguage": "en"
     /// //   }
     /// // }
     /// 
     /// services.AddHttpClient();
-    /// services.AddTranslaas(configuration);
+    /// services.AddTranslaas(configuration, configureLanguage: language => language
+    ///     .UseCulture()
+    ///     .UseDefault());
     /// </code>
     /// </example>
     public static IServiceCollection AddTranslaas(
         this IServiceCollection services,
         IConfiguration configuration,
-        string sectionName = "Translaas")
+        string sectionName = "Translaas",
+        Action<ITranslaasLanguageBuilder>? configureLanguage = null)
     {
         if (services == null)
         {
@@ -312,6 +345,6 @@ public static class ServiceCollectionExtensions
                 throw new InvalidOperationException(
                     $"Translaas configuration is invalid: BaseUrl is required. Ensure '{sectionName}:BaseUrl' is set in configuration.");
             }
-        });
+        }, configureLanguage);
     }
 }
