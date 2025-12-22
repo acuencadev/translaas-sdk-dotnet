@@ -28,13 +28,19 @@ builder.Services.AddTranslaas(options =>
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") 
         ?? "https://sdk-api.translaas.local";
 
-    // Optional: Configure caching
-    options.CacheMode = CacheMode.Group; // Cache at group level
-    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+    // Optional: Configure caching (read from appsettings.json)
+    options.CacheMode = builder.Configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
+    options.CacheAbsoluteExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration)
+        ? absoluteExpiration
+        : TimeSpan.FromHours(1);
+    options.CacheSlidingExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration)
+        ? slidingExpiration
+        : TimeSpan.FromMinutes(30);
 
-    // Optional: Configure timeout
-    options.Timeout = TimeSpan.FromSeconds(30);
+    // Optional: Configure timeout (read from appsettings.json)
+    options.Timeout = TimeSpan.TryParse(builder.Configuration["Translaas:Timeout"], out var timeout)
+        ? timeout
+        : TimeSpan.FromSeconds(30);
 
     // Optional: Set default language fallback (read from appsettings.json, fallback to English)
     options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
