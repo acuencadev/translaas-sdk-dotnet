@@ -84,6 +84,7 @@ $env:TRANSLAAS__BASEURL = "https://your-api-url.com"
 {
   "Translaas": {
     "BaseUrl": "https://sdk-api.translaas.local",
+    "DefaultLanguage": "en",
     "CacheMode": "Group",
     "CacheAbsoluteExpiration": "01:00:00",
     "CacheSlidingExpiration": "00:30:00",
@@ -91,6 +92,8 @@ $env:TRANSLAAS__BASEURL = "https://your-api-url.com"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 **appsettings.Development.json** - Development-specific overrides (committed to source control):
 ```json
@@ -148,3 +151,4 @@ The sample demonstrates:
 4. Bulk operations with `GetGroupAsync()`
 5. Getting available locales
 6. Caching demonstration
+7. Automatic language resolution (from thread culture and default language)

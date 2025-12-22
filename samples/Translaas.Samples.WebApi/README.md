@@ -27,11 +27,17 @@ Configure Translaas in `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdk-api.translaas.local"
+    "BaseUrl": "https://sdk-api.translaas.local",
+    "DefaultLanguage": "en",
+    "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
+    "Timeout": "00:00:30"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 ### Environment Variables
 
@@ -46,8 +52,15 @@ Alternatively, use environment variables:
 The configuration is set up in `Program.cs`:
 
 ```csharp
+using System.Collections.Generic;
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc;
+using Translaas.Caching;
+using L = Translaas.Models.LanguageCodes;
+
 builder.Services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = builder.Configuration["Translaas:ApiKey"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
         ?? "your-api-key-here";
@@ -58,10 +71,36 @@ builder.Services.AddTranslaas(options =>
     
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     
-    options.CacheMode = CacheMode.Group;
-    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
-    options.Timeout = TimeSpan.FromSeconds(30);
+    // Optional: Default language fallback
+    options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
+    
+    // Optional: Cache settings (read from configuration)
+    options.CacheMode = builder.Configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
+    options.CacheAbsoluteExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration)
+        ? absoluteExpiration
+        : TimeSpan.FromHours(1);
+    options.CacheSlidingExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration)
+        ? slidingExpiration
+        : TimeSpan.FromMinutes(30);
+    options.Timeout = TimeSpan.TryParse(builder.Configuration["Translaas:Timeout"], out var timeout)
+        ? timeout
+        : TimeSpan.FromSeconds(30);
+}, language =>
+{
+    // Configure language resolution providers
+    language
+        .UseRequest(request =>
+        {
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,
+                RequestLanguageSource.QueryString,
+                RequestLanguageSource.Header,
+                RequestLanguageSource.Cookie
+            };
+        })
+        .UseCulture()
+        .UseDefault();
 });
 ```
 
@@ -92,7 +131,10 @@ builder.Services.AddTranslaas(options =>
 ```
 GET /api/translation/entry?group=common&entry=welcome&lang=en
 GET /api/translation/entry?group=messages&entry=item&lang=en&number=5
+GET /api/translation/entry?group=common&entry=welcome  # lang omitted - uses automatic resolution
 ```
+
+**Note:** The `lang` parameter is optional. If omitted, language is resolved from HTTP request (query string, header, cookie, route), thread culture, or default language.
 
 ### Get Translation Entry (using ITranslaasClient)
 

@@ -28,11 +28,17 @@ Configure Translaas in `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdk-api.translaas.local"
+    "BaseUrl": "https://sdk-api.translaas.local",
+    "DefaultLanguage": "en",
+    "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
+    "Timeout": "00:00:30"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 ### Environment Variables
 
@@ -47,8 +53,15 @@ Alternatively, use environment variables:
 The configuration is set up in `Program.cs`:
 
 ```csharp
+using System.Collections.Generic;
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc;
+using Translaas.Caching;
+using L = Translaas.Models.LanguageCodes;
+
 builder.Services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = builder.Configuration["Translaas:ApiKey"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
         ?? "your-api-key-here";
@@ -59,10 +72,36 @@ builder.Services.AddTranslaas(options =>
     
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     
-    options.CacheMode = CacheMode.Group;
-    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
-    options.Timeout = TimeSpan.FromSeconds(30);
+    // Optional: Default language fallback
+    options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
+    
+    // Optional: Cache settings (read from configuration)
+    options.CacheMode = builder.Configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
+    options.CacheAbsoluteExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration)
+        ? absoluteExpiration
+        : TimeSpan.FromHours(1);
+    options.CacheSlidingExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration)
+        ? slidingExpiration
+        : TimeSpan.FromMinutes(30);
+    options.Timeout = TimeSpan.TryParse(builder.Configuration["Translaas:Timeout"], out var timeout)
+        ? timeout
+        : TimeSpan.FromSeconds(30);
+}, language =>
+{
+    // Configure language resolution providers
+    language
+        .UseRequest(request =>
+        {
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,
+                RequestLanguageSource.QueryString,
+                RequestLanguageSource.Header,
+                RequestLanguageSource.Cookie
+            };
+        })
+        .UseCulture()
+        .UseDefault();
 });
 
 builder.Services.AddTranslaasMvc();
@@ -94,26 +133,36 @@ builder.Services.AddTranslaasMvc();
 
 Use the `<translaas>` tag helper directly in Razor views:
 
-```html
-<translaas group="common" entry="welcome" lang="en" />
-<translaas group="messages" entry="item" lang="en" number="5" />
+```razor
+@using L = Translaas.Models.LanguageCodes
+
+<translaas group="common" entry="welcome" lang="@L.English" />
+<translaas group="messages" entry="item" lang="@L.English" number="5" />
+
+<!-- Automatic language resolution -->
+<translaas group="common" entry="welcome" />
 ```
 
 **Required attributes:**
 - `group`: The translation group name
 - `entry`: The translation entry key
-- `lang`: The language code (e.g., "en", "fr")
 
 **Optional attributes:**
+- `lang`: The language code (e.g., "en", "fr"). If omitted, language is resolved from configured providers
 - `number`: Number for pluralization
 
 ### 2. Static Helper Usage
 
 Use the `Translaas.T()` static helper:
 
-```csharp
-@Translaas.T(Html, "common", "welcome", "en")
-@Translaas.T(Html, "messages", "item", "en", 5)
+```razor
+@using L = Translaas.Models.LanguageCodes
+
+@Translaas.T(Html, "common", "welcome", L.English)
+@Translaas.T(Html, "messages", "item", L.English, 5)
+
+<!-- Automatic language resolution -->
+@Translaas.T(Html, "common", "welcome")
 ```
 
 **Note:** `Html` is available by default in Razor views (no injection needed).
@@ -122,11 +171,15 @@ Use the `Translaas.T()` static helper:
 
 Inject `ITranslaasService` directly in views (already done in `_ViewImports.cshtml`):
 
-```csharp
+```razor
 @inject ITranslaasService Translaas
+@using L = Translaas.Models.LanguageCodes
 
-@await Translaas.T("common", "welcome", "en")
-@await Translaas.T("messages", "item", "en", 5)
+@await Translaas.T("common", "welcome", L.English)
+@await Translaas.T("messages", "item", L.English, 5)
+
+<!-- Automatic language resolution -->
+@await Translaas.T("common", "welcome")
 ```
 
 ### 4. View Imports Configuration
@@ -143,20 +196,46 @@ The `_ViewImports.cshtml` file configures tag helpers and service injection:
 
 Support for plural forms using the `number` attribute:
 
-```html
-<translaas group="messages" entry="item" lang="en" number="1" />
-<translaas group="messages" entry="item" lang="en" number="5" />
+```razor
+@using L = Translaas.Models.LanguageCodes
+
+<translaas group="messages" entry="item" lang="@L.English" number="1" />
+<translaas group="messages" entry="item" lang="@L.English" number="5" />
 ```
 
 ### 6. Multiple Languages
 
-Switch between languages by changing the `lang` attribute:
+Switch between languages by changing the `lang` attribute or using automatic resolution:
+
+```razor
+@using L = Translaas.Models.LanguageCodes
+
+<!-- Explicit language -->
+<translaas group="common" entry="welcome" lang="@L.English" />
+<translaas group="common" entry="welcome" lang="@L.French" />
+<translaas group="common" entry="welcome" lang="@L.Spanish" />
+
+<!-- Automatic language resolution (from HTTP request, culture, or default) -->
+<translaas group="common" entry="welcome" />
+```
+
+### 7. Automatic Language Resolution
+
+With language providers configured, you can omit the `lang` parameter:
 
 ```html
-<translaas group="common" entry="welcome" lang="en" />
-<translaas group="common" entry="welcome" lang="fr" />
-<translaas group="common" entry="welcome" lang="es" />
+<!-- Language resolved from HTTP request (query string, header, cookie, route) -->
+<translaas group="common" entry="welcome" />
+
+<!-- Or using static helper -->
+@Translaas.T(Html, "common", "welcome")
 ```
+
+Language is resolved in this order:
+1. Explicit `lang` parameter (if provided)
+2. HTTP request sources (route → query → header → cookie)
+3. Thread culture (`CultureInfo.CurrentUICulture`)
+4. Default language (`TranslaasOptions.DefaultLanguage`)
 
 ### 7. Caching
 
@@ -192,47 +271,55 @@ Translaas.Samples.WebApp/
 
 ### Example 1: Navigation Menu
 
-```html
+```razor
+@using L = Translaas.Models.LanguageCodes
+
 <nav>
     <a href="/">
-        <translaas group="navigation" entry="home" lang="en" />
+        <translaas group="navigation" entry="home" lang="@L.English" />
     </a>
     <a href="/privacy">
-        <translaas group="navigation" entry="privacy" lang="en" />
+        <translaas group="navigation" entry="privacy" lang="@L.English" />
     </a>
 </nav>
 ```
 
 ### Example 2: Dynamic Content
 
-```html
+```razor
+@using L = Translaas.Models.LanguageCodes
+
 <h1>
-    <translaas group="common" entry="welcome" lang="en" />
+    <translaas group="common" entry="welcome" lang="@L.English" />
 </h1>
 <p>
-    <translaas group="common" entry="welcome.message" lang="en" />
+    <translaas group="common" entry="welcome.message" lang="@L.English" />
 </p>
 ```
 
 ### Example 3: Pluralization in Lists
 
-```html
+```razor
+@using L = Translaas.Models.LanguageCodes
+
 <ul>
     <li>
-        <translaas group="messages" entry="item" lang="en" number="1" />
+        <translaas group="messages" entry="item" lang="@L.English" number="1" />
     </li>
     <li>
-        <translaas group="messages" entry="item" lang="en" number="5" />
+        <translaas group="messages" entry="item" lang="@L.English" number="5" />
     </li>
 </ul>
 ```
 
 ### Example 4: Conditional Translation
 
-```csharp
+```razor
+@using L = Translaas.Models.LanguageCodes
+
 @{
     var itemCount = 5;
-    var lang = "en";
+    var lang = L.English;
 }
 
 <p>

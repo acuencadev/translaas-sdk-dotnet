@@ -179,38 +179,78 @@ For Web API, WebApp, and Blazor samples, configure in `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdk-api.translaas.local"
+    "BaseUrl": "https://sdk-api.translaas.local",
+    "DefaultLanguage": "en",
+    "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
+    "Timeout": "00:00:30"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 ### 3. Code Configuration
 
 All samples show how to configure Translaas in code:
 
 ```csharp
+using System.Collections.Generic;
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc;
+using Translaas.Caching;
+using L = Translaas.Models.LanguageCodes;
+
 services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = "your-api-key-here";
     options.BaseUrl = "https://sdk-api.translaas.local";
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
+    
+    // Optional: Default language fallback
+    options.DefaultLanguage = L.English;
+    
+    // Optional: Cache configuration
     options.CacheMode = CacheMode.Group;
     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
     options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
     options.Timeout = TimeSpan.FromSeconds(30);
+}, language =>
+{
+    // Optional: Configure language resolution providers
+    language
+        .UseRequest()  // For web apps - resolves from HTTP request
+        .UseCulture()   // Uses thread culture
+        .UseDefault();  // Falls back to DefaultLanguage
 });
 ```
+
+**Configuration Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `ApiKey` | ✅ **Required** | Your Translaas API key (store in user secrets or environment variables) |
+| `BaseUrl` | ✅ **Required** | Base URL for the Translaas API (do NOT include `/api`) |
+| `DefaultLanguage` | ⚪ Optional | Default language code fallback (e.g., `L.English`) |
+| `CacheMode` | ⚪ Optional | Caching mode (`None`, `Entry`, `Group`, `Project`) |
+| `CacheAbsoluteExpiration` | ⚪ Optional | Absolute cache expiration time |
+| `CacheSlidingExpiration` | ⚪ Optional | Sliding cache expiration time |
+| `Timeout` | ⚪ Optional | HTTP client timeout |
+| Language Providers | ⚪ Optional | Configure automatic language resolution |
 
 ## Common Features
 
 All samples demonstrate:
 
 - **Dependency Injection**: How to register and use Translaas services
+- **Language Resolution**: How to configure automatic language resolution from HTTP request, culture, or default
 - **Caching**: How to configure and use caching for improved performance
 - **Error Handling**: How to handle translation errors gracefully
 - **Pluralization**: How to handle plural forms
 - **Multiple Languages**: How to switch between languages
+- **Configuration**: How to read settings from `appsettings.json` with proper fallbacks
 
 ## Getting Started
 
