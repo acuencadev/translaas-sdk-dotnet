@@ -87,8 +87,34 @@ public class TranslaasTagHelper : TagHelper
         // Suppress the original tag
         output.TagName = null;
 
-        // Get the translation (lang is optional when providers are configured)
-        var translation = await _translaasService.T(Group, Entry, Lang, Number).ConfigureAwait(false);
+        // Get the translation using appropriate overload based on provided parameters
+        Task<string> translationTask;
+        if (!string.IsNullOrWhiteSpace(Lang))
+        {
+            // Explicit language provided
+            if (Number.HasValue)
+            {
+                translationTask = _translaasService.T(Group, Entry, Lang, Number.Value);
+            }
+            else
+            {
+                translationTask = _translaasService.T(Group, Entry, Lang);
+            }
+        }
+        else
+        {
+            // Use automatic language resolution
+            if (Number.HasValue)
+            {
+                translationTask = _translaasService.T(Group, Entry, Number.Value);
+            }
+            else
+            {
+                translationTask = _translaasService.T(Group, Entry);
+            }
+        }
+
+        var translation = await translationTask.ConfigureAwait(false);
 
         // Set the output content
         output.Content.SetHtmlContent(translation);
