@@ -2,6 +2,9 @@ using System;
 using System.Globalization;
 
 using Microsoft.AspNetCore.Http;
+#if NETSTANDARD2_0
+using Microsoft.AspNetCore.Routing;
+#endif
 
 using Translaas.Extensions.DependencyInjection;
 
@@ -69,11 +72,20 @@ public class RequestLanguageProvider : ILanguageProvider
 
     private string? GetLanguageFromRoute(HttpContext httpContext)
     {
+#if NETSTANDARD2_0
+        // For netstandard2.0, RouteValues is accessed via IRoutingFeature
+        var routingFeature = httpContext.Features.Get<Microsoft.AspNetCore.Routing.IRoutingFeature>();
+        if (routingFeature?.RouteData?.Values != null && 
+            routingFeature.RouteData.Values.TryGetValue(_options.RouteParameterName, out var routeValue))
+        {
+            return routeValue?.ToString();
+        }
+#else
         if (httpContext.Request.RouteValues.TryGetValue(_options.RouteParameterName, out var routeValue))
         {
             return routeValue?.ToString();
         }
-
+#endif
         return null;
     }
 

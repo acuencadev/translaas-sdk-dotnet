@@ -16,7 +16,12 @@ namespace Translaas.Extensions.Mvc;
 /// <para>
 /// Example usage:
 /// <code>
+/// &lt;!-- With explicit language --&gt;
 /// &lt;translaas group="common" entry="welcome" lang="en" /&gt;
+/// 
+/// &lt;!-- With language resolution (requires providers configured) --&gt;
+/// &lt;translaas group="common" entry="welcome" /&gt;
+/// 
 /// &lt;translaas group="messages" entry="item" lang="en" number="5" /&gt;
 /// </code>
 /// </para>

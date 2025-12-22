@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 using Translaas.Extensions.DependencyInjection;
 
@@ -43,7 +44,12 @@ public static class TranslaasLanguageBuilderExtensions
         // Register IHttpContextAccessor if not present
         if (!services.Any(s => s.ServiceType == typeof(IHttpContextAccessor)))
         {
+#if NETSTANDARD2_0
+            // For netstandard2.0, manually register HttpContextAccessor
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+#else
             services.AddHttpContextAccessor();
+#endif
         }
 
         // Configure options
