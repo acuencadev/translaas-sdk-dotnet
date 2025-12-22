@@ -116,6 +116,9 @@ class Program
         // For single-entry lookups, always use ITranslaasService.T()
         var translaasClient = host.Services.GetRequiredService<ITranslaasClient>();
 
+        // Get the language resolver for debugging (optional - only if registered)
+        var languageResolver = host.Services.GetService<ILanguageResolver>();
+
         // Get the default language from configuration
         var configuration = host.Services.GetRequiredService<IConfiguration>();
         var defaultLanguage = configuration["Translaas:DefaultLanguage"] ?? L.English;
@@ -251,9 +254,21 @@ class Program
             System.Console.WriteLine("8c. Changing thread culture to French:");
             var originalCulture = System.Globalization.CultureInfo.CurrentUICulture;
             System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("fr-FR");
-            var frenchLang = await translaasService.T("common", "welcome"); // Uses thread culture if Culture provider is configured
-            System.Console.WriteLine($"  Thread culture: fr-FR");
+            System.Console.WriteLine($"  Thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
+            System.Console.WriteLine($"  Two-letter ISO code (what CultureLanguageProvider returns): {System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName}");
+            
+            // Show what language code is actually being resolved
+            if (languageResolver != null)
+            {
+                var resolvedLangCode = languageResolver.Resolve();
+                System.Console.WriteLine($"  Resolved language code (from providers): {resolvedLangCode ?? "(null)"}");
+            }
+            
+            var frenchLang = await translaasService.T("common", "welcome"); // Uses thread culture if Culture provider is configured first
             System.Console.WriteLine($"  Translation: {frenchLang}");
+            System.Console.WriteLine($"  Note: If translation is still in English, verify:");
+            System.Console.WriteLine($"    - The API has French translations for this entry");
+            System.Console.WriteLine($"    - The resolved language code above is 'fr'");
             System.Threading.Thread.CurrentThread.CurrentUICulture = originalCulture; // Restore
             System.Console.WriteLine();
 
