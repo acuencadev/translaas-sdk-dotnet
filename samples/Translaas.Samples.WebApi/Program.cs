@@ -4,6 +4,7 @@ using Translaas.Caching;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Extensions.Mvc;
+using L = Translaas.Models.LanguageCodes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,8 +39,8 @@ builder.Services.AddTranslaas(options =>
     // Optional: Configure timeout
     options.Timeout = TimeSpan.FromSeconds(30);
 
-    // Optional: Set default language fallback
-    options.DefaultLanguage = L.English;
+    // Optional: Set default language fallback (read from appsettings.json, fallback to English)
+    options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
 }, language =>
 {
     // Configure language resolution providers (checked in order)
