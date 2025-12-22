@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <!-- MAUI requires specific platform target frameworks -->
+    <!-- Note: MAUI packages 10.0.1 require .NET 10.0 MAUI workloads -->
+    <!-- Explicitly clear TargetFramework to prevent Directory.Build.props from setting it -->
+    <TargetFramework></TargetFramework>
     <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
