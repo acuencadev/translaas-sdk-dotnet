@@ -15,6 +15,7 @@ using Translaas.Caching;
 using Translaas.Caching.File;
 using Translaas.Client;
 using Translaas.Extensions.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Translaas.Extensions.DependencyInjection;
 
@@ -200,12 +201,12 @@ public static class ServiceCollectionExtensions
             var languageBuilder = new TranslaasLanguageBuilder(services);
             configureLanguage(languageBuilder);
 
-            // Register ILanguageResolver as scoped (may contain scoped providers)
+            // Replace this block inside AddTranslaas:
             services.AddScoped<ILanguageResolver>(serviceProvider =>
             {
                 var providers = serviceProvider.GetServices<ILanguageProvider>();
                 var loggerFactory = serviceProvider.GetService<Microsoft.Extensions.Logging.ILoggerFactory>();
-                var logger = loggerFactory?.CreateLogger(typeof(LanguageResolver));
+                var logger = loggerFactory?.CreateLogger<LanguageResolver>();
                 return new LanguageResolver(providers, logger);
             });
         }
