@@ -35,10 +35,20 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
     
     - name: Restore dependencies
-      run: dotnet restore -p:TargetFrameworks=${{ matrix.target-framework }}
+      run: dotnet restore -p:TargetFrameworks=${{ matrix.target-framework }} --ignore-failed-sources
+      continue-on-error: false
     
-    - name: Build
-      run: dotnet build --no-restore --configuration Release -f ${{ matrix.target-framework }}
+    - name: Build (excluding MAUI)
+      run: |
+        # Build all projects except MAUI (MAUI requires platform-specific workloads not available in CI)
+        # MAUI projects can only build for platform-specific frameworks (e.g., net10.0-android), not net8.0
+        dotnet build --no-restore --configuration Release -f ${{ matrix.target-framework }} \
+          src/**/*.csproj \
+          tests/**/*.csproj \
+          samples/Translaas.Samples.Blazor/Translaas.Samples.Blazor.csproj \
+          samples/Translaas.Samples.Console/Translaas.Samples.Console.csproj \
+          samples/Translaas.Samples.WebApi/Translaas.Samples.WebApi.csproj \
+          samples/Translaas.Samples.WebApp/Translaas.Samples.WebApp.csproj
     
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory:"${{ github.workspace }}/TestResults" -f ${{ matrix.target-framework }}
