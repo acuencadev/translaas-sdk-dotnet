@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Models;
@@ -17,6 +18,7 @@ public class TranslationController : ControllerBase
     private readonly ITranslaasService _translaasService;
     private readonly ITranslaasClient _translaasClient;
     private readonly ILogger<TranslationController> _logger;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranslationController"/> class.
@@ -24,11 +26,13 @@ public class TranslationController : ControllerBase
     public TranslationController(
         ITranslaasService translaasService,
         ITranslaasClient translaasClient,
-        ILogger<TranslationController> logger)
+        ILogger<TranslationController> logger,
+        IConfiguration configuration)
     {
         _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
         _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
     /// <summary>
@@ -59,8 +63,16 @@ public class TranslationController : ControllerBase
     {
         try
         {
+            // If lang is not provided, it will use the default language from appsettings.json
+            // via the language resolution providers (Request → Culture → Default)
+            var defaultLanguage = _configuration["Translaas:DefaultLanguage"] ?? "en";
             var translation = await _translaasService.T(group, entry, lang, number);
-            return Ok(new { translation, resolvedLanguage = lang ?? "auto" });
+            return Ok(new 
+            { 
+                translation, 
+                resolvedLanguage = lang ?? $"auto (default: {defaultLanguage})",
+                defaultLanguage = defaultLanguage
+            });
         }
         catch (Exception ex)
         {
