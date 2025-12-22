@@ -239,4 +239,70 @@ public class TranslaasHelperTests
             s => s.T("common", "welcome", null, null, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public void T_PropagatesException_FromService()
+    {
+        // Arrange
+        var mockService = new Mock<ITranslaasService>();
+        var expectedException = new InvalidOperationException("Language resolution failed");
+        
+        mockService
+            .Setup(s => s.T("common", "welcome", null, null, null, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expectedException);
+
+        var services = new ServiceCollection();
+        services.AddSingleton(mockService.Object);
+        var serviceProvider = services.BuildServiceProvider();
+        
+        var viewContext = new ViewContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+            {
+                RequestServices = serviceProvider
+            }
+        };
+        
+        var htmlHelper = Mock.Of<IHtmlHelper>(h => h.ViewContext == viewContext);
+
+        // Act
+        var act = () => Translaas.T(htmlHelper, "common", "welcome"); // lang omitted
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("Language resolution failed");
+    }
+
+    [Fact]
+    public void T_Works_WhenLangIsEmptyString()
+    {
+        // Arrange
+        var mockService = new Mock<ITranslaasService>();
+        var expectedTranslation = "Bonjour";
+        
+        mockService
+            .Setup(s => s.T("common", "welcome", "", null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedTranslation);
+
+        var services = new ServiceCollection();
+        services.AddSingleton(mockService.Object);
+        var serviceProvider = services.BuildServiceProvider();
+        
+        var viewContext = new ViewContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext
+            {
+                RequestServices = serviceProvider
+            }
+        };
+        
+        var htmlHelper = Mock.Of<IHtmlHelper>(h => h.ViewContext == viewContext);
+
+        // Act
+        var result = Translaas.T(htmlHelper, "common", "welcome", ""); // empty string
+
+        // Assert
+        result.Should().NotBeNull();
+        result.ToString().Should().Be(expectedTranslation);
+    }
 }

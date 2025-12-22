@@ -296,4 +296,39 @@ public class TranslaasTagHelperTests
             s => s.T("test-group", "test-entry", "fr", 10, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task ProcessAsync_PropagatesException_FromService()
+    {
+        // Arrange
+        var mockService = new Mock<ITranslaasService>();
+        var expectedException = new InvalidOperationException("Language resolution failed");
+        
+        mockService
+            .Setup(s => s.T("common", "welcome", null, null, null, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expectedException);
+
+        var tagHelper = new TranslaasTagHelper(mockService.Object);
+        tagHelper.Group = "common";
+        tagHelper.Entry = "welcome";
+        tagHelper.Lang = null;
+
+        var context = new TagHelperContext(
+            "translaas",
+            new TagHelperAttributeList(),
+            new Dictionary<object, object>(),
+            Guid.NewGuid().ToString());
+
+        var output = new TagHelperOutput(
+            "translaas",
+            new TagHelperAttributeList(),
+            (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
+
+        // Act
+        var act = async () => await tagHelper.ProcessAsync(context, output);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Language resolution failed");
+    }
 }
