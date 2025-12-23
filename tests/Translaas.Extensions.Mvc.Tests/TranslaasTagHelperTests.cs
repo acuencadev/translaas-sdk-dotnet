@@ -132,7 +132,7 @@ public class TranslaasTagHelperTests
         var expectedTranslation = "Bonjour";
         
         mockService
-            .Setup(s => s.T("common", "welcome", "", It.IsAny<CancellationToken>()))
+            .Setup(s => s.T("common", "welcome", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
         var tagHelper = new TranslaasTagHelper(mockService.Object);

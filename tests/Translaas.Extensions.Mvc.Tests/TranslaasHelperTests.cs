@@ -281,7 +281,7 @@ public class TranslaasHelperTests
         var expectedTranslation = "Bonjour";
         
         mockService
-            .Setup(s => s.T("common", "welcome", "", It.IsAny<CancellationToken>()))
+            .Setup(s => s.T("common", "welcome", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
         var services = new ServiceCollection();
@@ -304,5 +304,9 @@ public class TranslaasHelperTests
         // Assert
         result.Should().NotBeNull();
         result.ToString().Should().Be(expectedTranslation);
+        
+        mockService.Verify(
+            s => s.T("common", "welcome", It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

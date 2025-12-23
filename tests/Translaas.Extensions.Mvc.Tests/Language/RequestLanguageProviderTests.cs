@@ -59,11 +59,11 @@ public class RequestLanguageProviderTests
     public void GetLanguage_ReturnsLanguageFromQueryString_WhenConfigured()
     {
         // Arrange
-        var httpContext = CreateMockHttpContext();
-        httpContext.Request.Query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+        var query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
         {
             { "lang", "es" }
         });
+        var httpContext = CreateMockHttpContext(query: query);
 
         var httpContextAccessor = new Mock<IHttpContextAccessor>();
         httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
@@ -108,8 +108,8 @@ public class RequestLanguageProviderTests
     public void GetLanguage_ReturnsLanguageFromCookie_WhenConfigured()
     {
         // Arrange
-        var httpContext = CreateMockHttpContext();
-        httpContext.Request.Cookies = new MockRequestCookieCollection(new Dictionary<string, string> { { "lang", "it" } });
+        var cookies = new MockRequestCookieCollection(new Dictionary<string, string> { { "lang", "it" } });
+        var httpContext = CreateMockHttpContext(cookies: cookies);
 
         var httpContextAccessor = new Mock<IHttpContextAccessor>();
         httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
@@ -235,11 +235,11 @@ public class RequestLanguageProviderTests
     public void GetLanguage_UsesCustomQueryParameterName()
     {
         // Arrange
-        var httpContext = CreateMockHttpContext();
-        httpContext.Request.Query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+        var query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
         {
             { "locale", "ru" }
         });
+        var httpContext = CreateMockHttpContext(query: query);
 
         var httpContextAccessor = new Mock<IHttpContextAccessor>();
         httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
@@ -286,8 +286,8 @@ public class RequestLanguageProviderTests
     public void GetLanguage_UsesCustomCookieName()
     {
         // Arrange
-        var httpContext = CreateMockHttpContext();
-        httpContext.Request.Cookies = new MockRequestCookieCollection(new Dictionary<string, string> { { "locale", "zh" } });
+        var cookies = new MockRequestCookieCollection(new Dictionary<string, string> { { "locale", "zh" } });
+        var httpContext = CreateMockHttpContext(cookies: cookies);
 
         var httpContextAccessor = new Mock<IHttpContextAccessor>();
         httpContextAccessor.Setup(a => a.HttpContext).Returns(httpContext);
@@ -330,19 +330,25 @@ public class RequestLanguageProviderTests
             .WithParameterName("options");
     }
 
-    private static HttpContext CreateMockHttpContext()
+    private static HttpContext CreateMockHttpContext(
+        IRequestCookieCollection? cookies = null,
+        QueryCollection? query = null,
+        Microsoft.AspNetCore.Routing.RouteValueDictionary? routeValues = null,
+        HeaderDictionary? headers = null)
     {
         var httpContext = new Mock<HttpContext>();
         var request = new Mock<HttpRequest>();
         var response = new Mock<HttpResponse>();
-        var headers = new HeaderDictionary();
-        var routeValues = new Microsoft.AspNetCore.Routing.RouteValueDictionary();
-        var query = new QueryCollection();
+        
+        headers ??= new HeaderDictionary();
+        routeValues ??= new Microsoft.AspNetCore.Routing.RouteValueDictionary();
+        query ??= new QueryCollection();
+        cookies ??= new MockRequestCookieCollection();
 
         request.Setup(r => r.Headers).Returns(headers);
         request.Setup(r => r.RouteValues).Returns(routeValues);
         request.Setup(r => r.Query).Returns(query);
-        request.Setup(r => r.Cookies).Returns(new MockRequestCookieCollection());
+        request.Setup(r => r.Cookies).Returns(cookies);
 
         httpContext.Setup(c => c.Request).Returns(request.Object);
         httpContext.Setup(c => c.Response).Returns(response.Object);

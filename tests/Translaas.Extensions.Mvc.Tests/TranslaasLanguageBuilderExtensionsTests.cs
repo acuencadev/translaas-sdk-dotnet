@@ -32,8 +32,16 @@ public class TranslaasLanguageBuilderExtensionsTests
         // Assert
         var descriptors = services.Where(s => s.ServiceType == typeof(ILanguageProvider)).ToList();
         descriptors.Should().HaveCount(1);
-        descriptors[0].ImplementationType.Should().Be<RequestLanguageProvider>();
         descriptors[0].Lifetime.Should().Be(ServiceLifetime.Scoped);
+        
+        // Verify the actual type by resolving the service
+        var serviceProvider = services.BuildServiceProvider();
+        using (var scope = serviceProvider.CreateScope())
+        {
+            var provider = scope.ServiceProvider.GetService<ILanguageProvider>();
+            provider.Should().NotBeNull();
+            provider.Should().BeOfType<RequestLanguageProvider>();
+        }
     }
 
     [Fact]
