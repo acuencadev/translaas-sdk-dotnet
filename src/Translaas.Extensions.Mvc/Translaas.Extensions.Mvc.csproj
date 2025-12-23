@@ -24,6 +24,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>

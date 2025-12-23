@@ -16,7 +16,12 @@ namespace Translaas.Extensions.Mvc;
 /// <para>
 /// Example usage:
 /// <code>
+/// &lt;!-- With explicit language --&gt;
 /// &lt;translaas group="common" entry="welcome" lang="en" /&gt;
+/// 
+/// &lt;!-- With language resolution (requires providers configured) --&gt;
+/// &lt;translaas group="common" entry="welcome" /&gt;
+/// 
 /// &lt;translaas group="messages" entry="item" lang="en" number="5" /&gt;
 /// </code>
 /// </para>
@@ -50,9 +55,10 @@ public class TranslaasTagHelper : TagHelper
 
     /// <summary>
     /// Gets or sets the language code (e.g., "en", "fr").
+    /// Optional when language providers are configured.
     /// </summary>
     [HtmlAttributeName("lang")]
-    public string Lang { get; set; } = string.Empty;
+    public string? Lang { get; set; }
 
     /// <summary>
     /// Gets or sets the optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).
@@ -73,11 +79,6 @@ public class TranslaasTagHelper : TagHelper
             throw new System.ArgumentException("Entry is required.", nameof(Entry));
         }
 
-        if (string.IsNullOrWhiteSpace(Lang))
-        {
-            throw new System.ArgumentException("Lang is required.", nameof(Lang));
-        }
-
         if (output == null)
         {
             throw new System.ArgumentNullException(nameof(output));
@@ -86,8 +87,16 @@ public class TranslaasTagHelper : TagHelper
         // Suppress the original tag
         output.TagName = null;
 
-        // Get the translation
-        var translation = await _translaasService.T(Group, Entry, Lang, Number).ConfigureAwait(false);
+        // Get the translation using appropriate overload based on provided parameters
+        var translationTask = !string.IsNullOrWhiteSpace(Lang)
+            ? (Number.HasValue
+                ? _translaasService.T(Group, Entry, Lang, Number.Value)
+                : _translaasService.T(Group, Entry, Lang))
+            : (Number.HasValue
+                ? _translaasService.T(Group, Entry, Number.Value)
+                : _translaasService.T(Group, Entry));
+
+        var translation = await translationTask.ConfigureAwait(false);
 
         // Set the output content
         output.Content.SetHtmlContent(translation);

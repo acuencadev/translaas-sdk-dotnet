@@ -208,7 +208,7 @@ public class AddTranslaasTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            services.AddTranslaas(null!));
+            services.AddTranslaas((Action<TranslaasOptions>)null!));
     }
 
     [Fact]

@@ -1,5 +1,7 @@
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Home Page";
+    var defaultLanguage = Configuration["Translaas:DefaultLanguage"] ?? L.English;
     var greetingParams = new Dictionary<string, string>
     {
         { "userName", "John" },
@@ -13,10 +15,10 @@
 
 <div class="text-center">
     <h1 class="display-4">
-        <translaas group="common" entry="welcome" lang="@L.English" />
+        <translaas group="common" entry="welcome" /> @* Uses default language from appsettings.json: @defaultLanguage *@
     </h1>
     <p>
-        <translaas group="common" entry="welcome.message" lang="@L.English" />
+        <translaas group="common" entry="welcome.message" /> @* Uses default language from appsettings.json: @defaultLanguage *@
     </p>
     <p class="text-muted">
         <small>All samples use the same Translaas project (<code>translaas-sdk-samples</code>) to demonstrate cross-platform translation sharing.</small>
@@ -33,6 +35,10 @@
             </div>
             <div class="card-body">
                 <p>Using the <code>&lt;translaas&gt;</code> tag helper:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
+                <pre><code>&lt;translaas group="common" entry="welcome" /&gt;</code></pre>
+                <p>Result: <translaas group="common" entry="welcome" /></p>
+                <p><strong>With explicit override:</strong></p>
                 <pre><code>&lt;translaas group="common" entry="welcome" lang="@L.English" /&gt;</code></pre>
                 <p>Result: <translaas group="common" entry="welcome" lang="@L.English" /></p>
             </div>
@@ -44,6 +50,10 @@
             </div>
             <div class="card-body">
                 <p>Using the <code>Translaas.T()</code> static helper:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
+                <pre><code>@TranslaasMvc.T(Html, "common", "welcome")</code></pre>
+                <p>Result: @TranslaasMvc.T(Html, "common", "welcome")</p>
+                <p><strong>With explicit override:</strong></p>
                 <pre><code>@TranslaasMvc.T(Html, "common", "welcome", L.English)</code></pre>
                 <p>Result: @TranslaasMvc.T(Html, "common", "welcome", L.English)</p>
             </div>
@@ -55,6 +65,10 @@
             </div>
             <div class="card-body">
                 <p>Using injected <code>ITranslaasService</code> (already injected in _ViewImports.cshtml):</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
+                <pre><code>@await TranslaasService.T("common", "welcome")</code></pre>
+                <p>Result: @await TranslaasService.T("common", "welcome")</p>
+                <p><strong>With explicit override:</strong></p>
                 <pre><code>@await TranslaasService.T("common", "welcome", L.English)</code></pre>
                 <p>Result: @await TranslaasService.T("common", "welcome", L.English)</p>
             </div>
@@ -66,6 +80,12 @@
             </div>
             <div class="card-body">
                 <p>Using pluralization with the <code>number</code> attribute:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
+                <pre><code>&lt;translaas group="messages" entry="item" number="1" /&gt;
+&lt;translaas group="messages" entry="item" number="5" /&gt;</code></pre>
+                <p>1 item: <translaas group="messages" entry="item" number="1" /></p>
+                <p>5 items: <translaas group="messages" entry="item" number="5" /></p>
+                <p><strong>With explicit override:</strong></p>
                 <pre><code>&lt;translaas group="messages" entry="item" lang="@L.English" number="1" /&gt;
 &lt;translaas group="messages" entry="item" lang="@L.English" number="5" /&gt;</code></pre>
                 <p>1 item: <translaas group="messages" entry="item" lang="@L.English" number="1" /></p>
@@ -93,12 +113,16 @@
             </div>
             <div class="card-body">
                 <p>Using named parameters with <code>ITranslaasService.T()</code>:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
                 <pre><code>var parameters = new Dictionary&lt;string, string&gt;
 {
     { "userName", "John" },
     { "itemCount", "5" }
 };
-await TranslaasService.T("messages", "greeting", L.English, parameters: parameters)</code></pre>
+await TranslaasService.T("messages", "greeting", null, parameters: parameters)</code></pre>
+                <p>Translation with parameters: @await TranslaasService.T("messages", "greeting", null, parameters: greetingParams)</p>
+                <p><strong>With explicit override:</strong></p>
+                <pre><code>await TranslaasService.T("messages", "greeting", L.English, parameters: parameters)</code></pre>
                 <p>Translation with parameters: @await TranslaasService.T("messages", "greeting", L.English, parameters: greetingParams)</p>
             </div>
         </div>
@@ -109,12 +133,42 @@ await TranslaasService.T("messages", "greeting", L.English, parameters: paramete
             </div>
             <div class="card-body">
                 <p>Combining <code>number</code> and named parameters:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
                 <pre><code>var parameters = new Dictionary&lt;string, string&gt;
 {
     { "userName", "John" }
 };
-await TranslaasService.T("messages", "items", L.English, number: 5, parameters: parameters)</code></pre>
+await TranslaasService.T("messages", "items", null, number: 5, parameters: parameters)</code></pre>
+                <p>Translation with number and parameters: @await TranslaasService.T("messages", "items", null, number: 5, parameters: itemsParams)</p>
+                <p><strong>With explicit override:</strong></p>
+                <pre><code>await TranslaasService.T("messages", "items", L.English, number: 5, parameters: parameters)</code></pre>
                 <p>Translation with number and parameters: @await TranslaasService.T("messages", "items", L.English, number: 5, parameters: itemsParams)</p>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>8. Automatic Language Resolution (NEW!)</h3>
+            </div>
+            <div class="card-body">
+                <p>With language providers configured, you can omit the <code>lang</code> parameter:</p>
+                <ul>
+                    <li><strong>Tag Helper:</strong> <code>&lt;translaas group="common" entry="welcome" /&gt;</code></li>
+                    <li><strong>Static Helper:</strong> <code>@Translaas.T(Html, "common", "welcome")</code></li>
+                    <li><strong>Service:</strong> <code>await TranslaasService.T("common", "welcome")</code></li>
+                </ul>
+                <p>Language is resolved from (in order):</p>
+                <ol>
+                    <li>HTTP Request (route, query string, header, cookie)</li>
+                    <li>Thread Culture (<code>CultureInfo.CurrentUICulture</code>)</li>
+                    <li>Default Language (from <code>TranslaasOptions.DefaultLanguage</code>)</li>
+                </ol>
+                <p><strong>Examples:</strong></p>
+                <ul>
+                    <li>With explicit lang: <translaas group="common" entry="welcome" lang="@L.English" /></li>
+                    <li>Automatic resolution: <translaas group="common" entry="welcome" /></li>
+                </ul>
+                <p><small class="text-muted">Try adding <code>?lang=fr</code> to the URL to see automatic language resolution!</small></p>
             </div>
         </div>
     </div>

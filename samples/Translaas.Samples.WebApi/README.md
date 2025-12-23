@@ -10,7 +10,8 @@ This Web API sample shows:
 - How to use both convenience service and full client API
 - How to configure caching for improved performance
 - How to handle errors and logging
-- How to expose translation endpoints via REST API
+- **Real-world usage examples** - Products, Statistics, and Dashboard endpoints that return translated data
+- **Direct SDK API access** - Low-level translation endpoints for testing
 
 ## Prerequisites
 
@@ -27,11 +28,17 @@ Configure Translaas in `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdk-api.translaas.local"
+    "BaseUrl": "https://sdk-api.translaas.local",
+    "DefaultLanguage": "en",
+    "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
+    "Timeout": "00:00:30"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 ### Environment Variables
 
@@ -46,8 +53,15 @@ Alternatively, use environment variables:
 The configuration is set up in `Program.cs`:
 
 ```csharp
+using System.Collections.Generic;
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc;
+using Translaas.Caching;
+using L = Translaas.Models.LanguageCodes;
+
 builder.Services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = builder.Configuration["Translaas:ApiKey"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
         ?? "your-api-key-here";
@@ -58,10 +72,46 @@ builder.Services.AddTranslaas(options =>
     
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     
-    options.CacheMode = CacheMode.Group;
-    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
-    options.Timeout = TimeSpan.FromSeconds(30);
+    // Optional: Default language fallback
+    options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
+    
+    // Optional: Cache settings (read from configuration)
+    options.CacheMode = builder.Configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
+    options.CacheAbsoluteExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration)
+        ? absoluteExpiration
+        : TimeSpan.FromHours(1);
+    options.CacheSlidingExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration)
+        ? slidingExpiration
+        : TimeSpan.FromMinutes(30);
+    options.Timeout = TimeSpan.TryParse(builder.Configuration["Translaas:Timeout"], out var timeout)
+        ? timeout
+        : TimeSpan.FromSeconds(30);
+}, language =>
+{
+    // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
+    language
+        .UseRequest(request =>
+        {
+            // Configure which HTTP request sources to check
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,
+                RequestLanguageSource.QueryString,
+                RequestLanguageSource.Header,
+                RequestLanguageSource.Cookie
+            };
+        })
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
 });
 ```
 
@@ -87,35 +137,178 @@ builder.Services.AddTranslaas(options =>
 
 ## API Endpoints
 
-### Get Translation Entry (using ITranslaasService)
+This sample includes two types of endpoints:
+
+1. **Real-World Usage Examples** (ProductsController, StatsController, DashboardController) - Demonstrate how to use the SDK in real applications
+2. **Direct SDK API Access** (TranslationController) - Low-level access to SDK methods for testing
+
+### Real-World Usage Examples
+
+#### Products API
+
+Get a list of products with translated names and descriptions:
+
+```
+GET /api/products?lang=en
+GET /api/products  # lang omitted - uses automatic resolution
+```
+
+Get a specific product:
+
+```
+GET /api/products/1?lang=en
+```
+
+Get product categories:
+
+```
+GET /api/products/categories?lang=en
+```
+
+**Response Example:**
+```json
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Laptop",
+      "description": "High-performance laptop",
+      "price": 1299.99,
+      "category": "Electronics",
+      "inStock": true
+    }
+  ],
+  "totalCount": 3,
+  "inStockCount": 2,
+  "summary": "Showing 3 products, 2 in stock",
+  "language": "en"
+}
+```
+
+#### Statistics API
+
+Get application statistics with translated labels:
+
+```
+GET /api/stats?lang=en
+```
+
+Get user statistics:
+
+```
+GET /api/stats/users?lang=en
+```
+
+Get order statistics:
+
+```
+GET /api/stats/orders?lang=en
+```
+
+**Response Example:**
+```json
+{
+  "totalUsers": 1250,
+  "activeUsers": 342,
+  "totalOrders": 5678,
+  "pendingOrders": 23,
+  "totalRevenue": 125000.50,
+  "labels": {
+    "totalUsers": "Total Users",
+    "activeUsers": "Active Users",
+    "totalOrders": "Total Orders",
+    "pendingOrders": "Pending Orders",
+    "totalRevenue": "Total Revenue"
+  },
+  "messages": {
+    "usersOnline": "342 users online",
+    "itemsInStock": "23 items",
+    "summary": "You have 1250 total users, 342 active users, and 5678 total orders"
+  },
+  "language": "en"
+}
+```
+
+#### Dashboard API
+
+Get complete dashboard data with translated content:
+
+```
+GET /api/dashboard?lang=en
+```
+
+Get dashboard summary:
+
+```
+GET /api/dashboard/summary?lang=en
+```
+
+**Response Example:**
+```json
+{
+  "title": "Welcome",
+  "subtitle": "Dashboard Overview",
+  "metrics": [
+    {
+      "label": "Total Users",
+      "value": 1250,
+      "formattedValue": "1,250",
+      "message": "1,250 total users"
+    }
+  ],
+  "notifications": {
+    "count": 5,
+    "message": "You have 5 notifications",
+    "label": "Notifications"
+  },
+  "recentActivity": [
+    {
+      "type": "Order",
+      "description": "Order #12345 was created",
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "summary": "Dashboard summary with all metrics",
+  "language": "en"
+}
+```
+
+### Direct SDK API Access
+
+The `TranslationController` provides direct access to SDK methods for testing and low-level access:
+
+#### Get Translation Entry (using ITranslaasService)
 
 ```
 GET /api/translation/entry?group=common&entry=welcome&lang=en
 GET /api/translation/entry?group=messages&entry=item&lang=en&number=5
+GET /api/translation/entry?group=common&entry=welcome  # lang omitted - uses automatic resolution
 ```
 
-### Get Translation Entry (using ITranslaasClient)
+**Note:** The `lang` parameter is optional. If omitted, language is resolved from HTTP request (query string, header, cookie, route), thread culture, or default language.
+
+#### Get Translation Entry with Parameters
 
 ```
-GET /api/translation/entry/client?group=common&entry=welcome&lang=en
+GET /api/translation/entry-with-params?group=messages&entry=greeting&lang=en&userName=John&itemCount=5
 ```
 
-### Get Translation Group
+#### Get Translation Group
 
 ```
-GET /api/translation/group?project=my-project&group=common&lang=en
+GET /api/translation/group?group=common&lang=en
 ```
 
-### Get Translation Project
+#### Get Translation Project
 
 ```
-GET /api/translation/project?project=my-project&lang=en
+GET /api/translation/project?lang=en
 ```
 
-### Get Project Locales
+#### Get Project Locales
 
 ```
-GET /api/translation/locales?project=my-project
+GET /api/translation/locales
 ```
 
 ## Features Demonstrated
@@ -222,10 +415,15 @@ curl "https://localhost:5001/api/translation/locales?project=my-project"
 ### Using Swagger UI
 
 1. Navigate to `https://localhost:5001/swagger`
-2. Expand the `Translation` controller
-3. Click "Try it out" on any endpoint
-4. Fill in the parameters
-5. Click "Execute"
+2. Explore the real-world examples:
+   - **Products** - See how products are returned with translated names and descriptions
+   - **Stats** - See how statistics are returned with translated labels and messages
+   - **Dashboard** - See how dashboard data is returned with all translated content
+3. Explore the direct SDK access:
+   - **Translation** - Direct access to SDK methods for testing
+4. Click "Try it out" on any endpoint
+5. Fill in the parameters (try different languages: `en`, `fr`, `es`)
+6. Click "Execute"
 
 ## Next Steps
 

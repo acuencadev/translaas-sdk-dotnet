@@ -8,6 +8,7 @@ A strongly-typed, performant, and modular .NET SDK for consuming the **Translaas
 
 - ✅ **Strongly-typed API** - Full IntelliSense support with strongly-typed models
 - ✅ **Convenience API** - Simple `T()` method for quick translation lookups via `ITranslaasService`
+- ✅ **Automatic Language Resolution** - Optional language parameter with configurable providers (HTTP request, culture, default)
 - ✅ **Razor View Support** - Tag Helpers and HTML Helpers for easy translation in `.cshtml` files
 - ✅ **Dependency Injection Ready** - Seamless integration with `IServiceCollection`
 - ✅ **Flexible Caching** - Built-in memory caching with configurable cache modes
@@ -77,6 +78,7 @@ You can use either `ITranslaasClient` (full API) or `ITranslaasService` (conveni
 
 ```csharp
 using Translaas.Extensions.DependencyInjection;
+using L = Translaas.Models.LanguageCodes;
 
 public class MyService
 {
@@ -90,13 +92,20 @@ public class MyService
     public async Task<string> GetWelcomeMessageAsync()
     {
         // Use the convenient T() method
-        return await _translaas.T("common", "welcome", "en");
+        // lang parameter is optional when language providers are configured
+        return await _translaas.T("common", "welcome", L.English);
+    }
+
+    public async Task<string> GetWelcomeMessageAutoAsync()
+    {
+        // Automatic language resolution (requires providers configured)
+        return await _translaas.T("common", "welcome"); // lang omitted
     }
 
     public async Task<string> GetPluralMessageAsync(int count)
     {
         // With pluralization
-        return await _translaas.T("messages", "item", "en", count);
+        return await _translaas.T("messages", "item", L.English, count);
     }
 }
 ```
@@ -132,8 +141,12 @@ public class MyService
 ### Basic Configuration
 
 ```csharp
+using Translaas.Extensions.DependencyInjection;
+using L = Translaas.Models.LanguageCodes;
+
 services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = "your-api-key";
     options.BaseUrl = "https://api.translaas.com";
 });
@@ -142,33 +155,57 @@ services.AddTranslaas(options =>
 ### Advanced Configuration
 
 ```csharp
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Caching;
+using L = Translaas.Models.LanguageCodes;
+
 services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = "your-api-key";
     options.BaseUrl = "https://api.translaas.com";
     
-    // Caching
+    // Optional: Default language fallback
+    options.DefaultLanguage = L.English;
+    
+    // Optional: Caching configuration
     options.CacheMode = CacheMode.Group;
     options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
     options.CacheSlidingExpiration = TimeSpan.FromMinutes(15);
     
-    // HTTP Client
+    // Optional: HTTP Client timeout
     options.Timeout = TimeSpan.FromSeconds(30);
 });
 ```
+
+**Configuration Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `ApiKey` | ✅ **Required** | Your Translaas API key |
+| `BaseUrl` | ✅ **Required** | Base URL for the Translaas API (do NOT include `/api`) |
+| `DefaultLanguage` | ⚪ Optional | Default language code fallback (e.g., `L.English`) |
+| `CacheMode` | ⚪ Optional | Caching mode (`None`, `Entry`, `Group`, `Project`) |
+| `CacheAbsoluteExpiration` | ⚪ Optional | Absolute cache expiration time |
+| `CacheSlidingExpiration` | ⚪ Optional | Sliding cache expiration time |
+| `Timeout` | ⚪ Optional | HTTP client timeout |
 
 ### Configuration from appsettings.json
 
 ```json
 {
   "Translaas": {
-    "ApiKey": "your-api-key",
     "BaseUrl": "https://api.translaas.com",
+    "DefaultLanguage": "en",
     "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
     "Timeout": "00:00:30"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 ```csharp
 using Microsoft.Extensions.Configuration;
@@ -184,6 +221,111 @@ services.AddTranslaas(options =>
 });
 ```
 
+### Language Resolution
+
+The SDK supports automatic language resolution, making the `lang` parameter optional in `.T()` calls. Configure language providers to automatically determine the language from various sources.
+
+**Basic Setup:**
+
+```csharp
+using System.Collections.Generic;
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc; // For UseRequest() extension
+using L = Translaas.Models.LanguageCodes;
+
+services.AddTranslaas(options =>
+{
+    // Required: API key and base URL
+    options.ApiKey = "your-api-key";
+    options.BaseUrl = "https://api.translaas.com";
+    
+    // Optional: Default language fallback
+    options.DefaultLanguage = L.English;
+}, language =>
+{
+    // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
+    language
+        .UseRequest(request =>
+        {
+            // Configure which HTTP request sources to check
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,      // e.g., /en/products
+                RequestLanguageSource.QueryString, // e.g., ?lang=en
+                RequestLanguageSource.Header,     // e.g., X-Language: en
+                RequestLanguageSource.Cookie      // e.g., lang=en cookie
+            };
+        })
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
+});
+```
+
+**Language Resolution:**
+
+1. **Explicit `lang` parameter** (highest priority - always wins, bypasses all providers)
+2. **Configured providers** (checked in registration order):
+   - **RequestLanguageProvider** (for web apps): Route, query string, header, cookie
+   - **CultureLanguageProvider**: `CultureInfo.CurrentUICulture`
+   - **DefaultLanguageProvider**: `TranslaasOptions.DefaultLanguage`
+   
+   The first provider that returns a non-null language wins. You can configure the order and which providers to use.
+
+**Usage:**
+
+```csharp
+using L = Translaas.Models.LanguageCodes;
+
+// Explicit language (always works)
+await translaasService.T("common", "welcome", L.English);
+
+// Automatic resolution (requires providers configured)
+await translaasService.T("common", "welcome"); // lang omitted
+```
+
+**Console Applications:**
+
+For console apps (no HTTP context), use culture and default providers:
+
+```csharp
+using Translaas.Extensions.DependencyInjection;
+using L = Translaas.Models.LanguageCodes;
+
+services.AddTranslaas(options =>
+{
+    // Required: API key and base URL
+    options.ApiKey = "your-api-key";
+    options.BaseUrl = "https://api.translaas.com";
+    
+    // Optional: Default language fallback
+    options.DefaultLanguage = L.English;
+}, language =>
+{
+    // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // You can configure the order based on your needs.
+    language
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
+});
+{
+    language
+        .UseCulture()  // Uses thread culture
+        .UseDefault(); // Falls back to DefaultLanguage
+});
+```
+
+See the [sample projects](./samples/) for complete examples.
+
 ## Usage Examples
 
 ### Get Single Translation Entry
@@ -191,28 +333,35 @@ services.AddTranslaas(options =>
 **Using ITranslaasService (Convenience API):**
 
 ```csharp
-// Basic usage with the convenient T() method
-string translation = await _translaas.T("ui", "button.save", "en");
+using L = Translaas.Models.LanguageCodes;
+
+// Basic usage with explicit language
+string translation = await _translaas.T("ui", "button.save", L.English);
+
+// Automatic language resolution (requires providers configured)
+string translation = await _translaas.T("ui", "button.save"); // lang omitted
 
 // With pluralization
-string message = await _translaas.T("messages", "item.count", "en", 5);
+string message = await _translaas.T("messages", "item.count", L.English, 5);
 ```
 
 **Using ITranslaasClient (Full API):**
 
 ```csharp
+using L = Translaas.Models.LanguageCodes;
+
 // Basic usage
 string translation = await _client.GetEntryAsync(
     group: "ui",
     entry: "button.save",
-    lang: "en"
+    lang: L.English
 );
 
 // With pluralization
 string message = await _client.GetEntryAsync(
     group: "messages",
     entry: "item.count",
-    lang: "en",
+    lang: L.English,
     number: 5 // Used for pluralization rules
 );
 ```
@@ -220,10 +369,12 @@ string message = await _client.GetEntryAsync(
 ### Get All Translations for a Group
 
 ```csharp
+using L = Translaas.Models.LanguageCodes;
+
 TranslationGroup group = await _client.GetGroupAsync(
     project: "my-project",
     group: "ui",
-    lang: "en"
+    lang: L.English
 );
 
 // Access translations
@@ -236,9 +387,11 @@ foreach (var entry in group.Entries)
 ### Get All Translations for a Project
 
 ```csharp
+using L = Translaas.Models.LanguageCodes;
+
 TranslationProject project = await _client.GetProjectAsync(
     project: "my-project",
-    lang: "en"
+    lang: L.English
 );
 
 // Access all groups and entries
@@ -305,15 +458,20 @@ services.AddTranslaasMvc();
 **Option 1: Tag Helper (Declarative)**
 
 ```razor
-<!-- Basic usage -->
-<h1><translaas group="common" entry="welcome" lang="en" /></h1>
+@using L = Translaas.Models.LanguageCodes
+
+<!-- Basic usage with explicit language -->
+<h1><translaas group="common" entry="welcome" lang="@L.English" /></h1>
+
+<!-- Automatic language resolution (requires providers configured) -->
+<h1><translaas group="common" entry="welcome" /></h1>
 
 <!-- With pluralization -->
-<p><translaas group="messages" entry="item" lang="en" number="5" /></p>
+<p><translaas group="messages" entry="item" lang="@L.English" number="5" /></p>
 
 <!-- In attributes -->
-<button title="@Translaas.T(Html, "ui", "button.save.tooltip", "en")">
-    <translaas group="ui" entry="button.save" lang="en" />
+<button title="@Translaas.T(Html, "ui", "button.save.tooltip", L.English)">
+    <translaas group="ui" entry="button.save" lang="@L.English" />
 </button>
 ```
 
@@ -322,15 +480,20 @@ services.AddTranslaasMvc();
 The `Translaas.T()` static helper provides consistent naming with the Tag Helper and service:
 
 ```razor
-<!-- Basic usage - Html is available by default in Razor views -->
-<h1>@Translaas.T(Html, "common", "welcome", "en")</h1>
+@using L = Translaas.Models.LanguageCodes
+
+<!-- Basic usage with explicit language - Html is available by default in Razor views -->
+<h1>@Translaas.T(Html, "common", "welcome", L.English)</h1>
+
+<!-- Automatic language resolution (requires providers configured) -->
+<h1>@Translaas.T(Html, "common", "welcome")</h1>
 
 <!-- With pluralization -->
-<p>@Translaas.T(Html, "messages", "item", "en", 5)</p>
+<p>@Translaas.T(Html, "messages", "item", L.English, 5)</p>
 
 <!-- In code blocks -->
 @{
-    var greeting = Translaas.T(Html, "common", "greeting", "en");
+    var greeting = Translaas.T(Html, "common", "greeting", L.English);
 }
 <span>@greeting</span>
 ```
@@ -339,10 +502,14 @@ The `Translaas.T()` static helper provides consistent naming with the Tag Helper
 
 ```razor
 @inject ITranslaasService Translaas
+@using L = Translaas.Models.LanguageCodes
 
-<!-- Async usage -->
-<h1>@await Translaas.T("common", "welcome", "en")</h1>
-<p>@await Translaas.T("messages", "item", "en", 5)</p>
+<!-- Async usage with explicit language -->
+<h1>@await Translaas.T("common", "welcome", L.English)</h1>
+<p>@await Translaas.T("messages", "item", L.English, 5)</p>
+
+<!-- Async usage with automatic language resolution -->
+<h1>@await Translaas.T("common", "welcome")</h1>
 ```
 
 **All approaches:**
@@ -507,35 +674,55 @@ When a cache miss occurs in L1, the translation is automatically loaded from L2 
 
 ### ITranslaasService Interface (Convenience API)
 
-`ITranslaasService` provides a simplified API for common translation lookups. It's automatically registered when you call `AddTranslaas()`.
+`ITranslaasService` provides a simplified API for common translation lookups. It's automatically registered when you call `AddTranslaas()`. The interface provides multiple overloaded methods to avoid nullable parameters.
 
 ```csharp
 public interface ITranslaasService
 {
-    /// <summary>
-    /// Gets a translation entry (shorthand for GetEntryAsync).
-    /// </summary>
-    /// <param name="group">The translation group name</param>
-    /// <param name="entry">The translation entry key</param>
-    /// <param name="lang">The language code (e.g., "en", "fr")</param>
-    /// <param name="number">Optional number for pluralization</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The translated text</returns>
-    Task<string> T(string group, string entry, string lang, int? number = null, CancellationToken cancellationToken = default);
+    // Automatic language resolution (no lang parameter)
+    Task<string> T(string group, string entry, CancellationToken cancellationToken = default);
+    Task<string> T(string group, string entry, decimal number, CancellationToken cancellationToken = default);
+    Task<string> T(string group, string entry, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
+    Task<string> T(string group, string entry, decimal number, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
+    
+    // Explicit language override (bypasses all providers)
+    Task<string> T(string group, string entry, string lang, CancellationToken cancellationToken = default);
+    Task<string> T(string group, string entry, string lang, decimal number, CancellationToken cancellationToken = default);
+    Task<string> T(string group, string entry, string lang, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
+    Task<string> T(string group, string entry, string lang, decimal number, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
 }
 ```
 
 **Example Usage:**
 
 ```csharp
+using L = Translaas.Models.LanguageCodes;
+using System.Collections.Generic;
+
 // Inject ITranslaasService
 private readonly ITranslaasService _translaas;
 
-// Simple translation lookup
-string welcome = await _translaas.T("common", "welcome", "en");
+// Automatic language resolution (requires providers configured)
+string welcome = await _translaas.T("common", "welcome");
 
-// With pluralization
-string items = await _translaas.T("messages", "item", "en", 5);
+// Explicit language override (bypasses all providers)
+string welcome = await _translaas.T("common", "welcome", L.English);
+
+// With pluralization (automatic resolution)
+string items = await _translaas.T("messages", "item", 5);
+
+// With pluralization (explicit language)
+string items = await _translaas.T("messages", "item", L.English, 5);
+
+// With named parameters (automatic resolution)
+var parameters = new Dictionary<string, string> { { "userName", "John" } };
+string greeting = await _translaas.T("messages", "greeting", parameters);
+
+// With named parameters (explicit language)
+string greeting = await _translaas.T("messages", "greeting", L.English, parameters);
+
+// Combining pluralization and parameters
+string items = await _translaas.T("messages", "items", L.English, 5, parameters);
 ```
 
 ### ITranslaasClient Interface (Full API)
@@ -600,33 +787,48 @@ For ASP.NET Core MVC applications, use Tag Helpers or HTML Helpers in Razor view
 
 **Tag Helper (Declarative):**
 
-```html
-<translaas group="common" entry="welcome" lang="en" />
-<translaas group="messages" entry="item" lang="en" number="5" />
+```razor
+@using L = Translaas.Models.LanguageCodes
+
+<translaas group="common" entry="welcome" lang="@L.English" />
+<translaas group="messages" entry="item" lang="@L.English" number="5" />
+
+<!-- Automatic language resolution -->
+<translaas group="common" entry="welcome" />
 ```
 
 **Static Helper (Recommended - Consistent Naming):**
 
-```csharp
-@Translaas.T(Html, "common", "welcome", "en")
-@Translaas.T(Html, "messages", "item", "en", 5)
+```razor
+@using L = Translaas.Models.LanguageCodes
+
+@Translaas.T(Html, "common", "welcome", L.English)
+@Translaas.T(Html, "messages", "item", L.English, 5)
+
+<!-- Automatic language resolution -->
+@Translaas.T(Html, "common", "welcome")
 ```
 
 **Note:** `Html` is available by default in Razor views (no injection needed).
 
 **Direct Service Injection (Async Support):**
 
-```csharp
+```razor
 @inject ITranslaasService Translaas
-@await Translaas.T("common", "welcome", "en")
-@await Translaas.T("messages", "item", "en", 5)
+@using L = Translaas.Models.LanguageCodes
+
+@await Translaas.T("common", "welcome", L.English)
+@await Translaas.T("messages", "item", L.English, 5)
+
+<!-- Automatic language resolution -->
+@await Translaas.T("common", "welcome")
 ```
 
 **Parameters:**
 
 - `group` (required) - The translation group name
 - `entry` (required) - The translation entry key
-- `lang` (required) - The language code (e.g., "en", "fr")
+- `lang` (optional) - The language code (e.g., "en", "fr"). If omitted, language is resolved from configured providers
 - `number` (optional) - Number for pluralization
 
 **Notes:**
@@ -653,9 +855,11 @@ NuGet will automatically select the appropriate DLL for your project's target fr
 ## Error Handling
 
 ```csharp
+using L = Translaas.Models.LanguageCodes;
+
 try
 {
-    string translation = await _client.GetEntryAsync("group", "entry", "en");
+    string translation = await _client.GetEntryAsync("group", "entry", L.English);
 }
 catch (TranslaasException ex)
 {

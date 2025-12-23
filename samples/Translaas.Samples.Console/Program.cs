@@ -87,6 +87,25 @@ class Program
                     options.Timeout = TimeSpan.TryParse(configuration["Translaas:Timeout"], out var timeout)
                         ? timeout
                         : TimeSpan.FromSeconds(30);
+
+                    // Optional: Set default language fallback (for console apps, this is the final fallback)
+                    options.DefaultLanguage = configuration["Translaas:DefaultLanguage"] ?? L.English;
+                }, language =>
+                {
+                    // Configure language resolution providers for console apps
+                    // Note: Console apps don't have HTTP context, so RequestLanguageProvider is not available
+                    // 
+                    // Language providers are checked in the order they are registered.
+                    // The first provider that returns a non-null language wins.
+                    // 
+                    // Available providers for console apps:
+                    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+                    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+                    // 
+                    // You can configure the order and which providers to use based on your needs.
+                    language
+                        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+                        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
                 });
             })
             .Build();
@@ -97,54 +116,91 @@ class Program
         // For single-entry lookups, always use ITranslaasService.T()
         var translaasClient = host.Services.GetRequiredService<ITranslaasClient>();
 
+        // Get the language resolver for debugging (optional - only if registered)
+        var languageResolver = host.Services.GetService<ILanguageResolver>();
+
+        // Get the default language from configuration
+        var configuration = host.Services.GetRequiredService<IConfiguration>();
+        var defaultLanguage = configuration["Translaas:DefaultLanguage"] ?? L.English;
+
         System.Console.WriteLine("=== Translaas SDK Console Sample ===\n");
+        System.Console.WriteLine($"Default Language (from appsettings.json): {defaultLanguage}\n");
 
         try
         {
             const string projectId = "translaas-sdk-samples";
 
-            // Example 1: Using ITranslaasService (recommended approach)
-            System.Console.WriteLine("Example 1: Using ITranslaasService.T()");
-            var translation1 = await translaasService.T("common", "welcome", L.English);
-            System.Console.WriteLine($"Translation: {translation1}\n");
+            // Example 1: Using ITranslaasService with default language (from appsettings.json)
+            System.Console.WriteLine("Example 1: Using ITranslaasService.T() with default language");
+            var translation1 = await translaasService.T("common", "welcome"); // Uses default language from config
+            System.Console.WriteLine($"Translation (default language '{defaultLanguage}'): {translation1}\n");
 
-            // Example 2: Pluralization
-            System.Console.WriteLine("Example 2: Pluralization");
-            var translation2a = await translaasService.T("messages", "item", L.English, 1);
-            var translation2b = await translaasService.T("messages", "item", L.English, 5);
-            System.Console.WriteLine($"1 item: {translation2a}");
-            System.Console.WriteLine($"5 items: {translation2b}\n");
+            // Example 1b: Override with explicit language
+            System.Console.WriteLine("Example 1b: Override with explicit language");
+            var translation1b = await translaasService.T("common", "welcome", L.English); // Explicit override
+            System.Console.WriteLine($"Translation (explicit override to '{L.English}'): {translation1b}\n");
 
-            // Example 3: Named Parameters
-            System.Console.WriteLine("Example 3: Named Parameters");
+            // Example 2: Pluralization with default language
+            System.Console.WriteLine("Example 2: Pluralization with default language");
+            var translation2a = await translaasService.T("messages", "item", 1); // Uses default language
+            var translation2b = await translaasService.T("messages", "item", 5); // Uses default language
+            System.Console.WriteLine($"1 item (default language '{defaultLanguage}'): {translation2a}");
+            System.Console.WriteLine($"5 items (default language '{defaultLanguage}'): {translation2b}\n");
+
+            // Example 2b: Pluralization with override
+            System.Console.WriteLine("Example 2b: Pluralization with language override");
+            var translation2c = await translaasService.T("messages", "item", L.English, 1); // Explicit override
+            var translation2d = await translaasService.T("messages", "item", L.English, 5); // Explicit override
+            System.Console.WriteLine($"1 item (override to '{L.English}'): {translation2c}");
+            System.Console.WriteLine($"5 items (override to '{L.English}'): {translation2d}\n");
+
+            // Example 3: Named Parameters with default language
+            System.Console.WriteLine("Example 3: Named Parameters with default language");
             var parameters = new Dictionary<string, string>
             {
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            var translation3 = await translaasService.T("messages", "greeting", L.English, parameters: parameters);
-            System.Console.WriteLine($"Translation with parameters: {translation3}\n");
+            var translation3 = await translaasService.T("messages", "greeting", parameters); // Uses default language
+            System.Console.WriteLine($"Translation with parameters (default language '{defaultLanguage}'): {translation3}\n");
 
-            // Example 4: Combining Number and Named Parameters
-            System.Console.WriteLine("Example 4: Combining Number and Named Parameters");
-            var translation4 = await translaasService.T("messages", "items", L.English, number: 5, parameters: parameters);
-            System.Console.WriteLine($"Translation with number and parameters: {translation4}\n");
+            // Example 3b: Named Parameters with override
+            System.Console.WriteLine("Example 3b: Named Parameters with language override");
+            var translation3b = await translaasService.T("messages", "greeting", L.English, parameters); // Explicit override
+            System.Console.WriteLine($"Translation with parameters (override to '{L.English}'): {translation3b}\n");
 
-            // Example 4: Get multiple entries using .T() helper
-            System.Console.WriteLine("Example 4: Get multiple entries using .T() helper");
-            var appName = await translaasService.T("common", "app.name", L.English);
-            var welcome = await translaasService.T("common", "welcome", L.English);
-            var welcomeMessage = await translaasService.T("common", "welcome.message", L.English);
-            System.Console.WriteLine($"App Name: {appName}");
-            System.Console.WriteLine($"Welcome: {welcome}");
-            System.Console.WriteLine($"Message: {welcomeMessage}\n");
+            // Example 4: Combining Number and Named Parameters with default language
+            System.Console.WriteLine("Example 4: Combining Number and Named Parameters with default language");
+            var translation4 = await translaasService.T("messages", "items", 5, parameters); // Uses default language
+            System.Console.WriteLine($"Translation with number and parameters (default language '{defaultLanguage}'): {translation4}\n");
 
-            // Example 5: Get entire translation group (bulk operation)
-            System.Console.WriteLine("Example 5: Get entire translation group (bulk operation)");
+            // Example 4b: Combining Number and Named Parameters with override
+            System.Console.WriteLine("Example 4b: Combining Number and Named Parameters with language override");
+            var translation4b = await translaasService.T("messages", "items", L.English, 5, parameters); // Explicit override
+            System.Console.WriteLine($"Translation with number and parameters (override to '{L.English}'): {translation4b}\n");
+
+            // Example 5: Get multiple entries using .T() helper with default language
+            System.Console.WriteLine("Example 5: Get multiple entries using .T() helper with default language");
+            var appName = await translaasService.T("common", "app.name"); // Uses default language
+            var welcome = await translaasService.T("common", "welcome"); // Uses default language
+            var welcomeMessage = await translaasService.T("common", "welcome.message"); // Uses default language
+            System.Console.WriteLine($"App Name (default language '{defaultLanguage}'): {appName}");
+            System.Console.WriteLine($"Welcome (default language '{defaultLanguage}'): {welcome}");
+            System.Console.WriteLine($"Message (default language '{defaultLanguage}'): {welcomeMessage}\n");
+
+            // Example 5b: Get multiple entries with override
+            System.Console.WriteLine("Example 5b: Get multiple entries with language override");
+            var appNameOverride = await translaasService.T("common", "app.name", L.English); // Explicit override
+            var welcomeOverride = await translaasService.T("common", "welcome", L.English); // Explicit override
+            System.Console.WriteLine($"App Name (override to '{L.English}'): {appNameOverride}");
+            System.Console.WriteLine($"Welcome (override to '{L.English}'): {welcomeOverride}\n");
+
+            // Example 6: Get entire translation group (bulk operation) with default language
+            System.Console.WriteLine("Example 6: Get entire translation group (bulk operation) with default language");
             System.Console.WriteLine("Note: GetGroupAsync() retrieves all entries in a group at once.");
             System.Console.WriteLine("Use this when you need multiple entries, or use .T() for individual entries.\n");
             const string groupName = "common";
-            var group = await translaasClient.GetGroupAsync(projectId, groupName, L.English);
+            var group = await translaasClient.GetGroupAsync(projectId, groupName, defaultLanguage); // Uses default language
             
             // Filter out metadata fields and only show actual translation entries
             var translationEntries = group.Entries
@@ -163,21 +219,68 @@ class Program
             var locales = await translaasClient.GetProjectLocalesAsync(projectId);
             System.Console.WriteLine($"Available locales: {string.Join(", ", locales.Locales)}\n");
 
-            // Example 7: Caching demonstration
-            System.Console.WriteLine("Example 7: Caching demonstration");
+            // Example 7: Caching demonstration with default language
+            System.Console.WriteLine("Example 7: Caching demonstration with default language");
             System.Console.WriteLine("First call (cache miss):");
             var start1 = DateTime.UtcNow;
-            await translaasService.T("common", "welcome", L.English);
+            await translaasService.T("common", "welcome"); // Uses default language
             var duration1 = DateTime.UtcNow - start1;
             System.Console.WriteLine($"Duration: {duration1.TotalMilliseconds:F2}ms");
 
             System.Console.WriteLine("Second call (cache hit):");
             var start2 = DateTime.UtcNow;
-            await translaasService.T("common", "welcome", L.English);
+            await translaasService.T("common", "welcome"); // Uses default language
             var duration2 = DateTime.UtcNow - start2;
             System.Console.WriteLine($"Duration: {duration2.TotalMilliseconds:F2}ms");
             var speedup = duration1.TotalMilliseconds / duration2.TotalMilliseconds;
             System.Console.WriteLine($"Cache speedup: {speedup:F2}x faster\n");
+
+            // Example 8: Automatic Language Resolution
+            System.Console.WriteLine("Example 8: Automatic Language Resolution");
+            System.Console.WriteLine("Language is resolved from configured providers in the order they were registered.\n");
+            System.Console.WriteLine($"Current configuration: Culture → Default (from appsettings.json: {defaultLanguage})\n");
+            
+            System.Console.WriteLine("8a. Using automatic resolution (from configured providers):");
+            System.Console.WriteLine($"  Current thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
+            System.Console.WriteLine($"  Default language (from appsettings.json): {defaultLanguage}");
+            var autoLang = await translaasService.T("common", "welcome"); // Uses configured providers
+            System.Console.WriteLine($"  Translation: {autoLang}\n");
+
+            System.Console.WriteLine("8b. Override with explicit language (bypasses all providers):");
+            var explicitLang = await translaasService.T("common", "welcome", L.English); // Explicit override
+            System.Console.WriteLine($"  Override language: {L.English}");
+            System.Console.WriteLine($"  Translation: {explicitLang}\n");
+
+            System.Console.WriteLine("8c. Changing thread culture to French:");
+            var originalCulture = System.Globalization.CultureInfo.CurrentUICulture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("fr-FR");
+            System.Console.WriteLine($"  Thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
+            System.Console.WriteLine($"  Two-letter ISO code (what CultureLanguageProvider returns): {System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName}");
+            
+            // Show what language code is actually being resolved
+            if (languageResolver != null)
+            {
+                var resolvedLangCode = languageResolver.Resolve();
+                System.Console.WriteLine($"  Resolved language code (from providers): {resolvedLangCode ?? "(null)"}");
+            }
+            
+            var frenchLang = await translaasService.T("common", "welcome"); // Uses thread culture if Culture provider is configured first
+            System.Console.WriteLine($"  Translation: {frenchLang}");
+            System.Console.WriteLine($"  Note: If translation is still in English, verify:");
+            System.Console.WriteLine($"    - The API has French translations for this entry");
+            System.Console.WriteLine($"    - The resolved language code above is 'fr'");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = originalCulture; // Restore
+            System.Console.WriteLine();
+
+            System.Console.WriteLine("8d. Testing fallback behavior (when culture is invariant):");
+            var originalCulture2 = System.Globalization.CultureInfo.CurrentUICulture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
+            var defaultLangTranslation = await translaasService.T("common", "welcome"); // Falls back to next provider
+            System.Console.WriteLine($"  Thread culture: InvariantCulture (no language)");
+            System.Console.WriteLine($"  Default language (from appsettings.json): {defaultLanguage}");
+            System.Console.WriteLine($"  Translation: {defaultLangTranslation}");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = originalCulture2; // Restore
+            System.Console.WriteLine();
         }
         catch (Exception ex)
         {

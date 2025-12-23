@@ -5,6 +5,7 @@
 @using L = Translaas.Models.LanguageCodes
 @inject ITranslaasService Translaas
 @inject ITranslaasClient TranslaasClient
+@inject IConfiguration Configuration
 
 <PageTitle>Home</PageTitle>
 
@@ -22,8 +23,12 @@
             </div>
             <div class="card-body">
                 <p>Using injected <code>ITranslaasService</code>:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
+                <pre><code>@@await Translaas.T("common", "welcome")</code></pre>
+                <p>Result: @welcomeDefault</p>
+                <p><strong>With explicit override:</strong></p>
                 <pre><code>@@await Translaas.T("common", "welcome", L.English)</code></pre>
-                <p>Result: @welcome</p>
+                <p>Result: @welcomeEn</p>
             </div>
         </div>
 
@@ -33,10 +38,16 @@
             </div>
             <div class="card-body">
                 <p>Using pluralization with the <code>number</code> parameter:</p>
-                <pre><code>@@await Translaas.T("messages", "item", L.English, 1)
-@@await Translaas.T("messages", "item", L.English, 5)</code></pre>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
+                <pre><code>@@await Translaas.T("messages", "item", null, 1)
+@@await Translaas.T("messages", "item", null, 5)</code></pre>
                 <p>1 item: @itemSingular</p>
                 <p>5 items: @itemPlural</p>
+                <p><strong>With explicit override:</strong></p>
+                <pre><code>@@await Translaas.T("messages", "item", L.English, 1)
+@@await Translaas.T("messages", "item", L.English, 5)</code></pre>
+                <p>1 item: @itemSingularOverride</p>
+                <p>5 items: @itemPluralOverride</p>
             </div>
         </div>
 
@@ -46,13 +57,17 @@
             </div>
             <div class="card-body">
                 <p>Using named parameters with <code>ITranslaasService.T()</code>:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
                 <pre><code>var parameters = new Dictionary&lt;string, string&gt;
 {
     { "userName", "John" },
     { "itemCount", "5" }
 };
-@@await Translaas.T("messages", "greeting", L.English, parameters: parameters)</code></pre>
+@@await Translaas.T("messages", "greeting", null, parameters: parameters)</code></pre>
                 <p>Translation with parameters: @greetingWithParams</p>
+                <p><strong>With explicit override:</strong></p>
+                <pre><code>@@await Translaas.T("messages", "greeting", L.English, parameters: parameters)</code></pre>
+                <p>Translation with parameters: @greetingWithParamsOverride</p>
             </div>
         </div>
 
@@ -62,12 +77,16 @@
             </div>
             <div class="card-body">
                 <p>Combining <code>number</code> and named parameters:</p>
+                <p><strong>With default language (from appsettings.json: @defaultLanguage):</strong></p>
                 <pre><code>var parameters = new Dictionary&lt;string, string&gt;
 {
     { "userName", "John" }
 };
-@@await Translaas.T("messages", "items", L.English, number: 5, parameters: parameters)</code></pre>
+@@await Translaas.T("messages", "items", null, number: 5, parameters: parameters)</code></pre>
                 <p>Translation with number and parameters: @itemsWithParams</p>
+                <p><strong>With explicit override:</strong></p>
+                <pre><code>@@await Translaas.T("messages", "items", L.English, number: 5, parameters: parameters)</code></pre>
+                <p>Translation with number and parameters: @itemsWithParamsOverride</p>
             </div>
         </div>
 
@@ -128,20 +147,26 @@
 </div>
 
 @code {
-    private string currentLang = L.English;
+    private string defaultLanguage = string.Empty;
+    private string currentLang = string.Empty;
     private TranslationGroup? translationGroup;
     
     // Translation strings loaded in OnInitializedAsync
     private string welcome = string.Empty;
     private string welcomeMessage = string.Empty;
+    private string welcomeDefault = string.Empty;
     private string welcomeEn = string.Empty;
     private string welcomeFr = string.Empty;
     private string welcomeEs = string.Empty;
     private string itemSingular = string.Empty;
     private string itemPlural = string.Empty;
+    private string itemSingularOverride = string.Empty;
+    private string itemPluralOverride = string.Empty;
     private string currentWelcome = string.Empty;
     private string greetingWithParams = string.Empty;
+    private string greetingWithParamsOverride = string.Empty;
     private string itemsWithParams = string.Empty;
+    private string itemsWithParamsOverride = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -149,33 +174,54 @@
         {
             const string projectId = "translaas-sdk-samples";
             
+            // Get default language from configuration
+            defaultLanguage = Configuration["Translaas:DefaultLanguage"] ?? L.English;
+            currentLang = defaultLanguage;
+            
             // Load all translations upfront
-            welcome = await Translaas.T("common", "welcome", L.English);
-            welcomeMessage = await Translaas.T("common", "welcome.message", L.English);
-            welcomeEn = await Translaas.T("common", "welcome", L.English);
-            welcomeFr = await Translaas.T("common", "welcome", L.French);
-            welcomeEs = await Translaas.T("common", "welcome", L.Spanish);
-            itemSingular = await Translaas.T("messages", "item", L.English, 1);
-            itemPlural = await Translaas.T("messages", "item", L.English, 5);
+            // Using default language from appsettings.json
+            welcome = await Translaas.T("common", "welcome"); // Uses default language
+            welcomeMessage = await Translaas.T("common", "welcome.message"); // Uses default language
+            welcomeDefault = await Translaas.T("common", "welcome"); // Uses default language
+            
+            // Override examples
+            welcomeEn = await Translaas.T("common", "welcome", L.English); // Explicit override
+            welcomeFr = await Translaas.T("common", "welcome", L.French); // Explicit override
+            welcomeEs = await Translaas.T("common", "welcome", L.Spanish); // Explicit override
+            
+            // Pluralization with default language
+            itemSingular = await Translaas.T("messages", "item", null, 1); // Uses default language
+            itemPlural = await Translaas.T("messages", "item", null, 5); // Uses default language
+            
+            // Pluralization with override
+            itemSingularOverride = await Translaas.T("messages", "item", L.English, 1); // Explicit override
+            itemPluralOverride = await Translaas.T("messages", "item", L.English, 5); // Explicit override
+            
             currentWelcome = await Translaas.T("common", "welcome", currentLang);
             
-            // Named parameters example
+            // Named parameters example with default language
             var parameters = new Dictionary<string, string>
             {
                 { "userName", "John" },
                 { "itemCount", "5" }
             };
-            greetingWithParams = await Translaas.T("messages", "greeting", L.English, parameters: parameters);
+            greetingWithParams = await Translaas.T("messages", "greeting", null, parameters: parameters); // Uses default language
             
-            // Combining number and named parameters
+            // Named parameters with override
+            greetingWithParamsOverride = await Translaas.T("messages", "greeting", L.English, parameters: parameters); // Explicit override
+            
+            // Combining number and named parameters with default language
             var userNameParams = new Dictionary<string, string>
             {
                 { "userName", "John" }
             };
-            itemsWithParams = await Translaas.T("messages", "items", L.English, number: 5, parameters: userNameParams);
+            itemsWithParams = await Translaas.T("messages", "items", null, number: 5, parameters: userNameParams); // Uses default language
             
-            // Load translation group
-            translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", L.English);
+            // Combining number and named parameters with override
+            itemsWithParamsOverride = await Translaas.T("messages", "items", L.English, number: 5, parameters: userNameParams); // Explicit override
+            
+            // Load translation group with default language
+            translationGroup = await TranslaasClient.GetGroupAsync(projectId, "common", defaultLanguage);
         }
         catch (Exception ex)
         {
@@ -186,7 +232,7 @@
 
     private async Task ToggleLanguage()
     {
-        currentLang = currentLang == L.English ? L.French : L.English;
+        currentLang = currentLang == defaultLanguage ? L.French : defaultLanguage;
         currentWelcome = await Translaas.T("common", "welcome", currentLang);
         StateHasChanged();
     }
