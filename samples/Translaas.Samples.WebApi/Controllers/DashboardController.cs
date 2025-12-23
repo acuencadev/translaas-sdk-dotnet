@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using L = Translaas.Models.LanguageCodes;
 
@@ -98,7 +99,7 @@ public class DashboardController : ControllerBase
                         Label = await _translaasService.T("stats", "label.total.revenue", resolvedLang),
                         Value = (double)totalRevenue,
                         FormattedValue = totalRevenue.ToString("C"),
-                        Message = await _translaasService.T("stats", "revenue.total", resolvedLang, null,
+                        Message = await _translaasService.T("stats", "revenue.total", resolvedLang,
                             new Dictionary<string, string> { { "amount", totalRevenue.ToString("C") } })
                     }
                 },
@@ -113,26 +114,26 @@ public class DashboardController : ControllerBase
                     new ActivityDto
                     {
                         Type = await _translaasService.T("dashboard", "activity.type.order", resolvedLang),
-                        Description = await _translaasService.T("dashboard", "activity.order.created", resolvedLang, null,
+                        Description = await _translaasService.T("dashboard", "activity.order.created", resolvedLang,
                             new Dictionary<string, string> { { "orderId", "12345" } }),
                         Timestamp = DateTime.UtcNow.AddMinutes(-5)
                     },
                     new ActivityDto
                     {
                         Type = await _translaasService.T("dashboard", "activity.type.user", resolvedLang),
-                        Description = await _translaasService.T("dashboard", "activity.user.registered", resolvedLang, null,
+                        Description = await _translaasService.T("dashboard", "activity.user.registered", resolvedLang,
                             new Dictionary<string, string> { { "userName", "John Doe" } }),
                         Timestamp = DateTime.UtcNow.AddMinutes(-15)
                     },
                     new ActivityDto
                     {
                         Type = await _translaasService.T("dashboard", "activity.type.product", resolvedLang),
-                        Description = await _translaasService.T("dashboard", "activity.product.updated", resolvedLang, null,
+                        Description = await _translaasService.T("dashboard", "activity.product.updated", resolvedLang,
                             new Dictionary<string, string> { { "productName", await _translaasService.T("products", "laptop.name", resolvedLang) } }),
                         Timestamp = DateTime.UtcNow.AddHours(-1)
                     }
                 },
-                Summary = await _translaasService.T("dashboard", "summary", resolvedLang, null,
+                Summary = await _translaasService.T("dashboard", "summary", resolvedLang,
                     new Dictionary<string, string>
                     {
                         { "totalUsers", totalUsers.ToString() },
@@ -182,7 +183,7 @@ public class DashboardController : ControllerBase
                     WelcomeMessage = await _translaasService.T("common", "welcome", resolvedLang),
                     UsersMessage = await _translaasService.T("messages", "user.online", resolvedLang, activeUsers),
                     OrdersMessage = await _translaasService.T("stats", "orders.total", resolvedLang, totalOrders),
-                    RevenueMessage = await _translaasService.T("stats", "revenue.total", resolvedLang, null,
+                    RevenueMessage = await _translaasService.T("stats", "revenue.total", resolvedLang,
                         new Dictionary<string, string> { { "amount", totalRevenue.ToString("C") } })
                 },
                 Language = resolvedLang

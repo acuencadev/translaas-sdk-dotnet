@@ -68,7 +68,29 @@ public class TranslationController : ControllerBase
             // If lang is not provided, it will use the default language from appsettings.json
             // via the language resolution providers (Request → Culture → Default)
             var defaultLanguage = _configuration["Translaas:DefaultLanguage"] ?? "en";
-            var translation = await _translaasService.T(group, entry, lang, number);
+            string translation;
+            if (number.HasValue)
+            {
+                if (lang != null)
+                {
+                    translation = await _translaasService.T(group, entry, lang, number.Value);
+                }
+                else
+                {
+                    translation = await _translaasService.T(group, entry, number.Value);
+                }
+            }
+            else
+            {
+                if (lang != null)
+                {
+                    translation = await _translaasService.T(group, entry, lang);
+                }
+                else
+                {
+                    translation = await _translaasService.T(group, entry);
+                }
+            }
             return Ok(new 
             { 
                 translation, 
@@ -116,12 +138,57 @@ public class TranslationController : ControllerBase
                 parameters[kvp.Key] = kvp.Value[0] ?? string.Empty;
             }
 
-            var translation = await _translaasService.T(
-                group, 
-                entry, 
-                lang, 
-                number, 
-                parameters.Count > 0 ? parameters : null);
+            string translation;
+            if (parameters.Count > 0)
+            {
+                if (number.HasValue)
+                {
+                    if (lang != null)
+                    {
+                        translation = await _translaasService.T(group, entry, lang, number.Value, parameters);
+                    }
+                    else
+                    {
+                        translation = await _translaasService.T(group, entry, number.Value, parameters);
+                    }
+                }
+                else
+                {
+                    if (lang != null)
+                    {
+                        translation = await _translaasService.T(group, entry, lang, parameters);
+                    }
+                    else
+                    {
+                        translation = await _translaasService.T(group, entry, parameters);
+                    }
+                }
+            }
+            else
+            {
+                if (number.HasValue)
+                {
+                    if (lang != null)
+                    {
+                        translation = await _translaasService.T(group, entry, lang, number.Value);
+                    }
+                    else
+                    {
+                        translation = await _translaasService.T(group, entry, number.Value);
+                    }
+                }
+                else
+                {
+                    if (lang != null)
+                    {
+                        translation = await _translaasService.T(group, entry, lang);
+                    }
+                    else
+                    {
+                        translation = await _translaasService.T(group, entry);
+                    }
+                }
+            }
             
             return Ok(new { translation, resolvedLanguage = lang ?? "auto", parameters });
         }

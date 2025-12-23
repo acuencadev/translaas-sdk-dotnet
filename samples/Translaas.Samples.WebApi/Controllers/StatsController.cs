@@ -68,7 +68,7 @@ public class StatsController : ControllerBase
                 {
                     UsersOnline = await _translaasService.T("messages", "user.online", resolvedLang, activeUsers),
                     ItemsInStock = await _translaasService.T("messages", "item", resolvedLang, pendingOrders),
-                    Summary = await _translaasService.T("stats", "summary", resolvedLang, null,
+                    Summary = await _translaasService.T("stats", "summary", resolvedLang,
                         new Dictionary<string, string>
                         {
                             { "totalUsers", totalUsers.ToString() },

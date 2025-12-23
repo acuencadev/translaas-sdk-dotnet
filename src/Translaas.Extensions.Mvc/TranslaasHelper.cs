@@ -74,11 +74,11 @@ public static class Translaas
     /// <param name="htmlHelper">The HTML helper instance (available as <c>Html</c> in Razor views by default).</param>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr"). Bypasses all language providers.</param>
+    /// <param name="lang">The language code (e.g., "en", "fr"). Bypasses all language providers. Can be null to use language resolution.</param>
     /// <returns>An HTML-encoded string containing the translation.</returns>
     /// <exception cref="System.ArgumentNullException">Thrown when htmlHelper is null.</exception>
     /// <exception cref="System.InvalidOperationException">Thrown when ITranslaasService is not registered.</exception>
-    public static IHtmlContent T(IHtmlHelper htmlHelper, string group, string entry, string lang)
+    public static IHtmlContent T(IHtmlHelper htmlHelper, string group, string entry, string? lang)
     {
         if (htmlHelper == null)
         {
@@ -109,12 +109,12 @@ public static class Translaas
     /// <param name="htmlHelper">The HTML helper instance (available as <c>Html</c> in Razor views by default).</param>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr"). Bypasses all language providers.</param>
+    /// <param name="lang">The language code (e.g., "en", "fr"). Bypasses all language providers. Can be null to use language resolution.</param>
     /// <param name="number">Number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>An HTML-encoded string containing the translation.</returns>
     /// <exception cref="System.ArgumentNullException">Thrown when htmlHelper is null.</exception>
     /// <exception cref="System.InvalidOperationException">Thrown when ITranslaasService is not registered.</exception>
-    public static IHtmlContent T(IHtmlHelper htmlHelper, string group, string entry, string lang, decimal number)
+    public static IHtmlContent T(IHtmlHelper htmlHelper, string group, string entry, string? lang, decimal number)
     {
         if (htmlHelper == null)
         {

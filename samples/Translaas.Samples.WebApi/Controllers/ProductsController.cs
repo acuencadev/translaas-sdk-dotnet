@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Models;
 using Translaas.Models.Responses;
