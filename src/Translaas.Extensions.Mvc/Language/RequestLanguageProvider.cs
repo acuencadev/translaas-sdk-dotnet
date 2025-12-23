@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 
 using Microsoft.AspNetCore.Http;
 #if NETSTANDARD2_0
@@ -45,16 +46,9 @@ public class RequestLanguageProvider : ILanguageProvider
         }
 
         // Check sources in configured order
-        foreach (var source in _options.Sources)
-        {
-            var lang = GetLanguageFromSource(httpContext, source);
-            if (!string.IsNullOrWhiteSpace(lang))
-            {
-                return lang;
-            }
-        }
-
-        return null;
+        return _options.Sources
+            .Select(source => GetLanguageFromSource(httpContext, source))
+            .FirstOrDefault(lang => !string.IsNullOrWhiteSpace(lang));
     }
 
     private string? GetLanguageFromSource(HttpContext httpContext, RequestLanguageSource source)
@@ -130,17 +124,9 @@ public class RequestLanguageProvider : ILanguageProvider
         // Parse Accept-Language header (e.g., "en-US,en;q=0.9,fr;q=0.8")
         // Return the first language code (highest quality)
         var parts = acceptLanguageHeader.Split(',');
-        string? firstLanguage = null;
-
-        foreach (var part in parts)
-        {
-            var trimmed = part.Split(';')[0].Trim();
-            if (!string.IsNullOrWhiteSpace(trimmed))
-            {
-                firstLanguage = trimmed;
-                break;
-            }
-        }
+        var firstLanguage = parts
+            .Select(part => part.Split(';')[0].Trim())
+            .FirstOrDefault(trimmed => !string.IsNullOrWhiteSpace(trimmed));
 
         if (firstLanguage == null)
         {

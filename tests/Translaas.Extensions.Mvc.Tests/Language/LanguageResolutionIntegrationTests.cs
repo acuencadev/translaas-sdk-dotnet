@@ -134,14 +134,7 @@ public class LanguageResolutionIntegrationTests
         var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
         httpContextAccessor.HttpContext = httpContext;
 
-        // Act
-        using (var scope = serviceProvider.CreateScope())
-        {
-            var resolver = scope.ServiceProvider.GetRequiredService<ILanguageResolver>();
-            var result = resolver.Resolve();
-        }
-
-        // Assert - resolver should be able to resolve language from HTTP context
+        // Act & Assert - resolver should be able to resolve language from HTTP context
         using (var scope = serviceProvider.CreateScope())
         {
             var resolver = scope.ServiceProvider.GetRequiredService<ILanguageResolver>();
