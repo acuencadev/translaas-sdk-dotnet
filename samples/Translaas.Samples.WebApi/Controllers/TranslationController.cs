@@ -9,7 +9,9 @@ using Translaas.Models.Responses;
 namespace Translaas.Samples.WebApi.Controllers;
 
 /// <summary>
-/// API controller demonstrating Translaas SDK usage in ASP.NET Core Web API.
+/// API controller providing direct access to Translaas SDK API methods.
+/// This controller wraps the SDK API directly for testing and low-level access.
+/// For real-world usage examples, see ProductsController, StatsController, and DashboardController.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
