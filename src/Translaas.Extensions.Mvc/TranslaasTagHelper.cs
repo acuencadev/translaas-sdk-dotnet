@@ -88,31 +88,13 @@ public class TranslaasTagHelper : TagHelper
         output.TagName = null;
 
         // Get the translation using appropriate overload based on provided parameters
-        Task<string> translationTask;
-        if (!string.IsNullOrWhiteSpace(Lang))
-        {
-            // Explicit language provided
-            if (Number.HasValue)
-            {
-                translationTask = _translaasService.T(Group, Entry, Lang, Number.Value);
-            }
-            else
-            {
-                translationTask = _translaasService.T(Group, Entry, Lang);
-            }
-        }
-        else
-        {
-            // Use automatic language resolution
-            if (Number.HasValue)
-            {
-                translationTask = _translaasService.T(Group, Entry, Number.Value);
-            }
-            else
-            {
-                translationTask = _translaasService.T(Group, Entry);
-            }
-        }
+        var translationTask = !string.IsNullOrWhiteSpace(Lang)
+            ? (Number.HasValue
+                ? _translaasService.T(Group, Entry, Lang, Number.Value)
+                : _translaasService.T(Group, Entry, Lang))
+            : (Number.HasValue
+                ? _translaasService.T(Group, Entry, Number.Value)
+                : _translaasService.T(Group, Entry));
 
         var translation = await translationTask.ConfigureAwait(false);
 

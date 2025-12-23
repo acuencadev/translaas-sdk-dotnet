@@ -100,15 +100,9 @@ public static class Translaas
         }
 
         // If lang is null/empty/whitespace, use automatic language resolution
-        string translation;
-        if (string.IsNullOrWhiteSpace(lang))
-        {
-            translation = translaasService.T(group, entry).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-        else
-        {
-            translation = translaasService.T(group, entry, lang).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        var translation = string.IsNullOrWhiteSpace(lang)
+            ? translaasService.T(group, entry).ConfigureAwait(false).GetAwaiter().GetResult()
+            : translaasService.T(group, entry, lang).ConfigureAwait(false).GetAwaiter().GetResult();
         return new HtmlString(translation);
     }
 
@@ -145,15 +139,9 @@ public static class Translaas
         }
 
         // If lang is null/empty/whitespace, use automatic language resolution
-        string translation;
-        if (string.IsNullOrWhiteSpace(lang))
-        {
-            translation = translaasService.T(group, entry, number).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-        else
-        {
-            translation = translaasService.T(group, entry, lang, number).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        var translation = string.IsNullOrWhiteSpace(lang)
+            ? translaasService.T(group, entry, number).ConfigureAwait(false).GetAwaiter().GetResult()
+            : translaasService.T(group, entry, lang, number).ConfigureAwait(false).GetAwaiter().GetResult();
         return new HtmlString(translation);
     }
 
