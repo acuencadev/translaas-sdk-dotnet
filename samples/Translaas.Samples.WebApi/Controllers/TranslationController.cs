@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Models;
@@ -8,7 +9,9 @@ using Translaas.Models.Responses;
 namespace Translaas.Samples.WebApi.Controllers;
 
 /// <summary>
-/// API controller demonstrating Translaas SDK usage in ASP.NET Core Web API.
+/// API controller providing direct access to Translaas SDK API methods.
+/// This controller wraps the SDK API directly for testing and low-level access.
+/// For real-world usage examples, see ProductsController, StatsController, and DashboardController.
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -17,6 +20,7 @@ public class TranslationController : ControllerBase
     private readonly ITranslaasService _translaasService;
     private readonly ITranslaasClient _translaasClient;
     private readonly ILogger<TranslationController> _logger;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TranslationController"/> class.
@@ -24,11 +28,13 @@ public class TranslationController : ControllerBase
     public TranslationController(
         ITranslaasService translaasService,
         ITranslaasClient translaasClient,
-        ILogger<TranslationController> logger)
+        ILogger<TranslationController> logger,
+        IConfiguration configuration)
     {
         _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
         _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
     /// <summary>
@@ -36,20 +42,45 @@ public class TranslationController : ControllerBase
     /// </summary>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
+    /// <param name="lang">Optional language code (e.g., "en", "fr"). If omitted, language is resolved from HTTP request (query string, header, cookie) or thread culture.</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>The translated text.</returns>
+    /// <remarks>
+    /// Language resolution order:
+    /// 1. Explicit lang parameter (if provided)
+    /// 2. HTTP request sources (query string ?lang=en, header X-Language: en, cookie lang=en)
+    /// 3. Thread culture (CultureInfo.CurrentUICulture)
+    /// 4. Default language (from TranslaasOptions.DefaultLanguage)
+    /// 
+    /// Examples:
+    /// - GET /api/translation/entry?group=common&entry=welcome&lang=en (explicit)
+    /// - GET /api/translation/entry?group=common&entry=welcome (automatic from ?lang=en or header/cookie)
+    /// </remarks>
     [HttpGet("entry")]
     public async Task<ActionResult<string>> GetEntry(
         [FromQuery] string group,
         [FromQuery] string entry,
-        [FromQuery] string lang,
+        [FromQuery] string? lang = null,
         [FromQuery] decimal? number = null)
     {
         try
         {
-            var translation = await _translaasService.T(group, entry, lang, number);
-            return Ok(translation);
+            // If lang is not provided, it will use the default language from appsettings.json
+            // via the language resolution providers (Request → Culture → Default)
+            var defaultLanguage = _configuration["Translaas:DefaultLanguage"] ?? "en";
+            var translation = number.HasValue
+                ? (lang != null
+                    ? await _translaasService.T(group, entry, lang, number.Value)
+                    : await _translaasService.T(group, entry, number.Value))
+                : (lang != null
+                    ? await _translaasService.T(group, entry, lang)
+                    : await _translaasService.T(group, entry));
+            return Ok(new 
+            { 
+                translation, 
+                resolvedLanguage = lang ?? $"auto (default: {defaultLanguage})",
+                defaultLanguage = defaultLanguage
+            });
         }
         catch (Exception ex)
         {
@@ -66,14 +97,14 @@ public class TranslationController : ControllerBase
     /// </summary>
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
+    /// <param name="lang">Optional language code (e.g., "en", "fr"). If omitted, language is resolved automatically.</param>
     /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31).</param>
     /// <returns>The translated text.</returns>
     [HttpGet("entry-with-params")]
     public async Task<ActionResult<string>> GetEntryWithParams(
         [FromQuery] string group,
         [FromQuery] string entry,
-        [FromQuery] string lang,
+        [FromQuery] string? lang = null,
         [FromQuery] decimal? number = null)
     {
         try
@@ -91,14 +122,23 @@ public class TranslationController : ControllerBase
                 parameters[kvp.Key] = kvp.Value[0] ?? string.Empty;
             }
 
-            var translation = await _translaasService.T(
-                group, 
-                entry, 
-                lang, 
-                number, 
-                parameters.Count > 0 ? parameters : null);
+            var translation = parameters.Count > 0
+                ? (number.HasValue
+                    ? (lang != null
+                        ? await _translaasService.T(group, entry, lang, number.Value, parameters)
+                        : await _translaasService.T(group, entry, number.Value, parameters))
+                    : (lang != null
+                        ? await _translaasService.T(group, entry, lang, parameters)
+                        : await _translaasService.T(group, entry, parameters)))
+                : (number.HasValue
+                    ? (lang != null
+                        ? await _translaasService.T(group, entry, lang, number.Value)
+                        : await _translaasService.T(group, entry, number.Value))
+                    : (lang != null
+                        ? await _translaasService.T(group, entry, lang)
+                        : await _translaasService.T(group, entry)));
             
-            return Ok(translation);
+            return Ok(new { translation, resolvedLanguage = lang ?? "auto", parameters });
         }
         catch (Exception ex)
         {

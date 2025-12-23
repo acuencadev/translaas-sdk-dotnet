@@ -28,11 +28,17 @@ Configure Translaas in `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "ApiKey": "your-api-key-here",
-    "BaseUrl": "https://sdk-api.translaas.local"
+    "BaseUrl": "https://sdk-api.translaas.local",
+    "DefaultLanguage": "en",
+    "CacheMode": "Group",
+    "CacheAbsoluteExpiration": "01:00:00",
+    "CacheSlidingExpiration": "00:30:00",
+    "Timeout": "00:00:30"
   }
 }
 ```
+
+**Note:** `ApiKey` should be stored in user secrets or environment variables, not in `appsettings.json`.
 
 ### Environment Variables
 
@@ -47,8 +53,15 @@ Alternatively, use environment variables:
 The configuration is set up in `Program.cs`:
 
 ```csharp
+using System.Collections.Generic;
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Extensions.Mvc;
+using Translaas.Caching;
+using L = Translaas.Models.LanguageCodes;
+
 builder.Services.AddTranslaas(options =>
 {
+    // Required: API key and base URL
     options.ApiKey = builder.Configuration["Translaas:ApiKey"] 
         ?? Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") 
         ?? "your-api-key-here";
@@ -59,10 +72,46 @@ builder.Services.AddTranslaas(options =>
     
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     
-    options.CacheMode = CacheMode.Group;
-    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
-    options.CacheSlidingExpiration = TimeSpan.FromMinutes(30);
-    options.Timeout = TimeSpan.FromSeconds(30);
+    // Optional: Default language fallback
+    options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
+    
+    // Optional: Cache settings (read from configuration)
+    options.CacheMode = builder.Configuration.GetValue<CacheMode?>("Translaas:CacheMode") ?? CacheMode.Group;
+    options.CacheAbsoluteExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheAbsoluteExpiration"], out var absoluteExpiration)
+        ? absoluteExpiration
+        : TimeSpan.FromHours(1);
+    options.CacheSlidingExpiration = TimeSpan.TryParse(builder.Configuration["Translaas:CacheSlidingExpiration"], out var slidingExpiration)
+        ? slidingExpiration
+        : TimeSpan.FromMinutes(30);
+    options.Timeout = TimeSpan.TryParse(builder.Configuration["Translaas:Timeout"], out var timeout)
+        ? timeout
+        : TimeSpan.FromSeconds(30);
+}, language =>
+{
+    // Configure language resolution providers
+    // Providers are checked in the order they are registered.
+    // The first provider that returns a non-null language wins.
+    // 
+    // Available providers:
+    // - UseRequest() - Resolves from HTTP request (route, query string, header, cookie)
+    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
+    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+    // 
+    // You can configure the order and which providers to use based on your needs.
+    language
+        .UseRequest(request =>
+        {
+            // Configure which HTTP request sources to check
+            request.Sources = new List<RequestLanguageSource>
+            {
+                RequestLanguageSource.Route,
+                RequestLanguageSource.QueryString,
+                RequestLanguageSource.Header,
+                RequestLanguageSource.Cookie
+            };
+        })
+        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
+        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
 });
 
 builder.Services.AddTranslaasMvc();
@@ -97,8 +146,12 @@ Inject `ITranslaasService` or `ITranslaasClient` into Blazor components:
 ```razor
 @inject ITranslaasService Translaas
 @inject ITranslaasClient TranslaasClient
+@using L = Translaas.Models.LanguageCodes
 
-<h1>@await Translaas.T("common", "welcome", "en")</h1>
+<h1>@await Translaas.T("common", "welcome", L.English)</h1>
+
+<!-- Automatic language resolution -->
+<h1>@await Translaas.T("common", "welcome")</h1>
 ```
 
 ### 2. Using ITranslaasService
@@ -107,8 +160,12 @@ The convenience service provides a simple `T()` method:
 
 ```razor
 @inject ITranslaasService Translaas
+@using L = Translaas.Models.LanguageCodes
 
-<p>@await Translaas.T("common", "welcome", "en")</p>
+<p>@await Translaas.T("common", "welcome", L.English)</p>
+
+<!-- Automatic language resolution -->
+<p>@await Translaas.T("common", "welcome")</p>
 ```
 
 ### 3. Using ITranslaasClient
@@ -117,13 +174,14 @@ The full client provides access to all API methods:
 
 ```razor
 @inject ITranslaasClient TranslaasClient
+@using L = Translaas.Models.LanguageCodes
 
 @code {
     private TranslationGroup? translationGroup;
 
     protected override async Task OnInitializedAsync()
     {
-        translationGroup = await TranslaasClient.GetGroupAsync("my-project", "common", "en");
+        translationGroup = await TranslaasClient.GetGroupAsync("my-project", "common", L.English);
     }
 }
 ```
@@ -133,8 +191,10 @@ The full client provides access to all API methods:
 Support for plural forms using the `number` parameter:
 
 ```razor
-<p>@await Translaas.T("messages", "item", "en", 1)</p>
-<p>@await Translaas.T("messages", "item", "en", 5)</p>
+@using L = Translaas.Models.LanguageCodes
+
+<p>@await Translaas.T("messages", "item", L.English, 1)</p>
+<p>@await Translaas.T("messages", "item", L.English, 5)</p>
 ```
 
 ### 5. Dynamic Language Switching
@@ -142,12 +202,14 @@ Support for plural forms using the `number` parameter:
 Change the language dynamically based on component state:
 
 ```razor
+@using L = Translaas.Models.LanguageCodes
+
 @code {
-    private string currentLang = "en";
+    private string currentLang = L.English;
 
     private async Task ToggleLanguage()
     {
-        currentLang = currentLang == "en" ? "fr" : "en";
+        currentLang = currentLang == L.English ? L.French : L.English;
         StateHasChanged();
     }
 }
@@ -161,12 +223,14 @@ Change the language dynamically based on component state:
 Retrieve and display entire translation groups:
 
 ```razor
+@using L = Translaas.Models.LanguageCodes
+
 @code {
     private TranslationGroup? translationGroup;
 
     protected override async Task OnInitializedAsync()
     {
-        translationGroup = await TranslaasClient.GetGroupAsync("my-project", "common", "en");
+        translationGroup = await TranslaasClient.GetGroupAsync("my-project", "common", L.English);
     }
 }
 
@@ -214,29 +278,37 @@ Translaas.Samples.Blazor/
 ```razor
 @page "/"
 @inject ITranslaasService Translaas
+@using L = Translaas.Models.LanguageCodes
 
-<h1>@await Translaas.T("common", "welcome", "en")</h1>
+<h1>@await Translaas.T("common", "welcome", L.English)</h1>
+
+<!-- Automatic language resolution -->
+<h1>@await Translaas.T("common", "welcome")</h1>
 ```
 
 ### Example 2: Pluralization
 
 ```razor
+@using L = Translaas.Models.LanguageCodes
+
 @code {
     private int itemCount = 5;
 }
 
-<p>@await Translaas.T("messages", "item", "en", itemCount)</p>
+<p>@await Translaas.T("messages", "item", L.English, itemCount)</p>
 ```
 
 ### Example 3: Dynamic Language
 
 ```razor
+@using L = Translaas.Models.LanguageCodes
+
 @code {
-    private string lang = "en";
+    private string lang = L.English;
     
     private void SwitchLanguage()
     {
-        lang = lang == "en" ? "fr" : "en";
+        lang = lang == L.English ? L.French : L.English;
         StateHasChanged();
     }
 }
@@ -249,13 +321,14 @@ Translaas.Samples.Blazor/
 
 ```razor
 @inject ITranslaasClient TranslaasClient
+@using L = Translaas.Models.LanguageCodes
 
 @code {
     private TranslationGroup? group;
 
     protected override async Task OnInitializedAsync()
     {
-        group = await TranslaasClient.GetGroupAsync("my-project", "common", "en");
+        group = await TranslaasClient.GetGroupAsync("my-project", "common", L.English);
     }
 }
 
@@ -271,6 +344,8 @@ Translaas.Samples.Blazor/
 ### Example 5: Error Handling
 
 ```razor
+@using L = Translaas.Models.LanguageCodes
+
 @code {
     private string? translation;
     private string? error;
@@ -279,7 +354,7 @@ Translaas.Samples.Blazor/
     {
         try
         {
-            translation = await Translaas.T("common", "welcome", "en");
+            translation = await Translaas.T("common", "welcome", L.English);
         }
         catch (Exception ex)
         {

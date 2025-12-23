@@ -76,4 +76,18 @@ public class TranslaasOptions
     /// When enabled, translations are cached locally in JSON files for offline use.
     /// </remarks>
     public OfflineCacheOptions OfflineCache { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the default language code used when no other provider returns a value.
+    /// </summary>
+    /// <remarks>
+    /// This property is used by <see cref="DefaultLanguageProvider"/> as a fallback
+    /// when no other language provider can determine the language.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// options.DefaultLanguage = LanguageCodes.English;
+    /// </code>
+    /// </example>
+    public string? DefaultLanguage { get; set; }
 }
