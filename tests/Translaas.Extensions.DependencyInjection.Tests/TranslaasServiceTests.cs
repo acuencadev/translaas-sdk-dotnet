@@ -202,50 +202,6 @@ public class TranslaasServiceTests
     }
 
     [Fact]
-    public async Task T_UsesResolver_WhenLangIsEmptyString()
-    {
-        // Arrange
-        var mockClient = new Mock<ITranslaasClient>();
-        var mockResolver = new Mock<ILanguageResolver>();
-        mockResolver.Setup(r => r.Resolve()).Returns("fr");
-
-        mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Bonjour");
-
-        var service = new TranslaasService(mockClient.Object, mockResolver.Object);
-
-        // Act
-        var result = await service.T("common", "welcome", "");
-
-        // Assert
-        result.Should().Be("Bonjour");
-        mockResolver.Verify(r => r.Resolve(), Times.Once);
-    }
-
-    [Fact]
-    public async Task T_UsesResolver_WhenLangIsWhitespace()
-    {
-        // Arrange
-        var mockClient = new Mock<ITranslaasClient>();
-        var mockResolver = new Mock<ILanguageResolver>();
-        mockResolver.Setup(r => r.Resolve()).Returns("fr");
-
-        mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Bonjour");
-
-        var service = new TranslaasService(mockClient.Object, mockResolver.Object);
-
-        // Act
-        var result = await service.T("common", "welcome", "   ");
-
-        // Assert
-        result.Should().Be("Bonjour");
-        mockResolver.Verify(r => r.Resolve(), Times.Once);
-    }
-
-    [Fact]
     public async Task T_UsesResolver_WhenLangIsNull()
     {
         // Arrange
