@@ -50,12 +50,6 @@ public class ProductsController : ControllerBase
             var defaultLanguage = _configuration["Translaas:DefaultLanguage"] ?? L.English;
             var resolvedLang = lang ?? defaultLanguage;
 
-            // Get translations for product-related strings
-            var productGroup = await _translaasClient.GetGroupAsync(ProjectId, "products", resolvedLang);
-            
-            // Get common translations
-            var commonGroup = await _translaasClient.GetGroupAsync(ProjectId, "common", resolvedLang);
-
             // Mock product data - in a real app, this would come from a database
             var products = new List<ProductDto>
             {

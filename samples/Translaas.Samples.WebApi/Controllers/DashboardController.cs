@@ -48,10 +48,6 @@ public class DashboardController : ControllerBase
             var defaultLanguage = _configuration["Translaas:DefaultLanguage"] ?? L.English;
             var resolvedLang = lang ?? defaultLanguage;
 
-            // Load translation groups for dashboard
-            var commonGroup = await _translaasClient.GetGroupAsync(ProjectId, "common", resolvedLang);
-            var messagesGroup = await _translaasClient.GetGroupAsync(ProjectId, "messages", resolvedLang);
-
             // Mock dashboard data - in a real app, this would come from various data sources
             var totalUsers = 1250;
             var activeUsers = 342;
