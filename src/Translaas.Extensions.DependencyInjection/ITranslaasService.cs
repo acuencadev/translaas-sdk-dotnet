@@ -28,6 +28,12 @@ public interface ITranslaasService
     /// <returns>The translated text.</returns>
     /// <exception cref="System.InvalidOperationException">Thrown when no provider returns a language.</exception>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // Automatic language resolution (requires providers configured)
+    /// string welcome = await service.T("common", "welcome");
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -39,6 +45,12 @@ public interface ITranslaasService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // Explicit language override (bypasses all providers)
+    /// string welcome = await service.T("common", "welcome", "en");
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, string lang, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -51,6 +63,12 @@ public interface ITranslaasService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // With pluralization
+    /// string items = await service.T("messages", "item", "en", 5);
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, string lang, decimal number, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -63,6 +81,13 @@ public interface ITranslaasService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // With named parameters
+    /// var parameters = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
+    /// string greeting = await service.T("messages", "greeting", "en", parameters);
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, string lang, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -76,6 +101,13 @@ public interface ITranslaasService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The translated text.</returns>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // Combining pluralization and parameters
+    /// var parameters = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
+    /// string items = await service.T("messages", "items", "en", 5, parameters);
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, string lang, decimal number, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -88,6 +120,12 @@ public interface ITranslaasService
     /// <returns>The translated text.</returns>
     /// <exception cref="System.InvalidOperationException">Thrown when no provider returns a language.</exception>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // With pluralization (automatic language resolution)
+    /// string items = await service.T("messages", "item", 5);
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, decimal number, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -100,6 +138,13 @@ public interface ITranslaasService
     /// <returns>The translated text.</returns>
     /// <exception cref="System.InvalidOperationException">Thrown when no provider returns a language.</exception>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // With named parameters (automatic language resolution)
+    /// var parameters = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
+    /// string greeting = await service.T("messages", "greeting", parameters);
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -113,5 +158,12 @@ public interface ITranslaasService
     /// <returns>The translated text.</returns>
     /// <exception cref="System.InvalidOperationException">Thrown when no provider returns a language.</exception>
     /// <exception cref="Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// // Combining pluralization and parameters (automatic language resolution)
+    /// var parameters = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
+    /// string items = await service.T("messages", "items", 5, parameters);
+    /// </code>
+    /// </example>
     Task<string> T(string group, string entry, decimal number, Dictionary<string, string> parameters, CancellationToken cancellationToken = default);
 }

@@ -21,6 +21,16 @@ public class TranslationProject
     /// </summary>
     /// <param name="groupName">The group name.</param>
     /// <returns>The translation group, or null if not found.</returns>
+    /// <example>
+    /// <code>
+    /// TranslationProject project = await client.GetProjectAsync("my-project", "en");
+    /// TranslationGroup? uiGroup = project.GetGroup("ui");
+    /// if (uiGroup != null)
+    /// {
+    ///     string welcome = uiGroup.GetValue("welcome");
+    /// }
+    /// </code>
+    /// </example>
     public TranslationGroup? GetGroup(string groupName)
     {
         if (Groups.TryGetValue(groupName, out var element))

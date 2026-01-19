@@ -74,6 +74,13 @@ builder.Services.AddTranslaas(options =>
 
 You can use either `ITranslaasClient` (full API) or `ITranslaasService` (convenience wrapper):
 
+**Service Lifetimes:**
+- `ITranslaasClient` - Registered as **Scoped** (one instance per HTTP request in ASP.NET Core)
+- `ITranslaasService` - Registered as **Scoped** (convenience wrapper around `ITranslaasClient`)
+- `IOptions<TranslaasOptions>` - Registered as **Singleton** (configuration loaded once at startup)
+- `IMemoryCache` - Registered as **Singleton** when caching is enabled
+- `ITranslaasCacheProvider` - Registered as **Singleton** when caching is enabled
+
 **Option A: Using ITranslaasService (Recommended for simple lookups)**
 
 ```csharp
@@ -219,6 +226,67 @@ services.AddTranslaas(options =>
 {
     builder.Configuration.GetSection("Translaas").Bind(options);
 });
+```
+
+### Configuration from Environment Variables
+
+You can also configure Translaas using environment variables:
+
+```bash
+# Windows PowerShell
+$env:Translaas__ApiKey = "your-api-key"
+$env:Translaas__BaseUrl = "https://api.translaas.com"
+$env:Translaas__CacheMode = "Group"
+
+# Linux/Mac
+export Translaas__ApiKey="your-api-key"
+export Translaas__BaseUrl="https://api.translaas.com"
+export Translaas__CacheMode="Group"
+```
+
+```csharp
+// Environment variables are automatically loaded by IConfiguration
+services.AddHttpClient();
+services.AddTranslaas(builder.Configuration);
+```
+
+### Configuration from User Secrets (Development)
+
+For development, use .NET User Secrets:
+
+```bash
+dotnet user-secrets set "Translaas:ApiKey" "your-api-key"
+dotnet user-secrets set "Translaas:BaseUrl" "https://api.translaas.com"
+```
+
+```csharp
+// In Program.cs or Startup.cs
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
+services.AddHttpClient();
+services.AddTranslaas(builder.Configuration);
+```
+
+### Configuration Validation
+
+The SDK validates configuration on startup. Invalid configuration will throw `TranslaasConfigurationException`:
+
+```csharp
+try
+{
+    services.AddTranslaas(options =>
+    {
+        options.ApiKey = ""; // Invalid: empty API key
+        options.BaseUrl = "not-a-valid-url"; // Invalid: not a valid URL
+    });
+}
+catch (TranslaasConfigurationException ex)
+{
+    Console.WriteLine($"Configuration error: {ex.Message}");
+}
 ```
 
 ### Language Resolution
@@ -549,9 +617,60 @@ services.AddTranslaas(options =>
 
 ### Custom Cache Provider
 
+You can implement a custom cache provider by implementing `ITranslaasCacheProvider`:
+
 ```csharp
+using Translaas.Caching;
+
+public class MyCustomCacheProvider : ITranslaasCacheProvider
+{
+    public bool TryGetValue<T>(string key, out T? value)
+    {
+        // Your custom cache logic
+    }
+
+    public void Set<T>(string key, T value, TimeSpan? absoluteExpiration = null, TimeSpan? slidingExpiration = null)
+    {
+        // Your custom cache logic
+    }
+
+    public void Remove(string key)
+    {
+        // Your custom cache logic
+    }
+}
+
+// Register your custom provider
 services.AddSingleton<ITranslaasCacheProvider, MyCustomCacheProvider>();
 services.AddTranslaas(options => { /* ... */ });
+```
+
+### Cache Mode Comparison
+
+| Cache Mode | Performance | Memory Usage | Use Case |
+|------------|-------------|--------------|----------|
+| `None` | Fastest API calls | None | Development, testing |
+| `Entry` | Fast for repeated entries | Low | Few frequently accessed entries |
+| `Group` | Fast for group access | Medium | Multiple entries from same group |
+| `Project` | Fastest for project-wide access | High | Full project translations needed |
+
+### Cache Expiration Strategies
+
+```csharp
+services.AddTranslaas(options =>
+{
+    options.ApiKey = "your-api-key";
+    options.BaseUrl = "https://api.translaas.com";
+    options.CacheMode = CacheMode.Group;
+    
+    // Absolute expiration: Cache expires after 1 hour regardless of access
+    options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+    
+    // Sliding expiration: Cache expires after 15 minutes of inactivity
+    options.CacheSlidingExpiration = TimeSpan.FromMinutes(15);
+    
+    // Both can be used together: Cache expires after 1 hour OR 15 minutes of inactivity, whichever comes first
+});
 ```
 
 ## Offline Caching
@@ -854,23 +973,117 @@ NuGet will automatically select the appropriate DLL for your project's target fr
 
 ## Error Handling
 
+The SDK provides comprehensive error handling with specific exception types for different scenarios.
+
+### Exception Types
+
+- **`TranslaasException`** - Base exception for all Translaas errors
+- **`TranslaasApiException`** - Thrown when the API returns an error (includes HTTP status code)
+- **`TranslaasConfigurationException`** - Thrown when configuration is invalid
+- **`TranslaasOfflineCacheException`** - Base exception for offline cache errors
+- **`TranslaasOfflineCacheMissException`** - Thrown when translation is not found in offline cache
+
+### Basic Error Handling
+
 ```csharp
-using L = Translaas.Models.LanguageCodes;
+using Translaas.Models.Errors;
+using Translaas.Models.LanguageCodes;
 
 try
 {
-    string translation = await _client.GetEntryAsync("group", "entry", L.English);
+    string translation = await _client.GetEntryAsync("group", "entry", LanguageCodes.English);
 }
-catch (TranslaasException ex)
+catch (TranslaasApiException ex)
 {
-    // Handle Translaas-specific errors
-    Console.WriteLine($"Error: {ex.Message}");
+    // Handle API errors (400, 404, 500, etc.)
+    Console.WriteLine($"API Error: {ex.Message}");
     Console.WriteLine($"Status Code: {ex.StatusCode}");
+    Console.WriteLine($"Response: {ex.ResponseContent}");
+    
+    // Handle specific status codes
+    if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+        // Translation not found
+    }
+    else if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+    {
+        // Invalid API key
+    }
 }
-catch (HttpRequestException ex)
+catch (TranslaasConfigurationException ex)
 {
-    // Handle HTTP errors
-    Console.WriteLine($"HTTP Error: {ex.Message}");
+    // Handle configuration errors
+    Console.WriteLine($"Configuration Error: {ex.Message}");
+}
+catch (TranslaasOfflineCacheMissException ex)
+{
+    // Handle offline cache miss
+    Console.WriteLine($"Cache Miss: {ex.Message}");
+    Console.WriteLine($"Project: {ex.Project}");
+    Console.WriteLine($"Language: {ex.Language}");
+}
+catch (System.Net.Http.HttpRequestException ex)
+{
+    // Handle network errors
+    Console.WriteLine($"Network Error: {ex.Message}");
+}
+catch (System.OperationCanceledException)
+{
+    // Handle cancellation
+    Console.WriteLine("Operation was cancelled");
+}
+```
+
+### Error Handling with ITranslaasService
+
+```csharp
+using Translaas.Extensions.DependencyInjection;
+using Translaas.Models.Errors;
+
+try
+{
+    // Automatic language resolution
+    string translation = await _service.T("common", "welcome");
+}
+catch (System.InvalidOperationException ex)
+{
+    // Thrown when language resolution fails (no provider returns a language)
+    Console.WriteLine($"Language resolution failed: {ex.Message}");
+    // Fallback to explicit language
+    translation = await _service.T("common", "welcome", "en");
+}
+catch (TranslaasApiException ex)
+{
+    // Handle API errors
+    Console.WriteLine($"API Error: {ex.Message}");
+}
+```
+
+### Error Handling Best Practices
+
+1. **Always catch specific exceptions first** - Catch `TranslaasApiException` before `TranslaasException`
+2. **Handle offline cache misses gracefully** - Provide fallback behavior when cache misses occur
+3. **Log errors appropriately** - Include context (project, group, entry, language) in error logs
+4. **Provide user-friendly messages** - Translate error messages for end users when appropriate
+
+```csharp
+public async Task<string> GetTranslationSafely(string group, string entry, string lang)
+{
+    try
+    {
+        return await _client.GetEntryAsync(group, entry, lang);
+    }
+    catch (TranslaasApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+    {
+        // Return a fallback message or log the missing translation
+        _logger.LogWarning("Translation not found: {Group}.{Entry} ({Lang})", group, entry, lang);
+        return $"[{group}.{entry}]"; // Fallback display
+    }
+    catch (TranslaasApiException ex)
+    {
+        _logger.LogError(ex, "API error retrieving translation: {Group}.{Entry} ({Lang})", group, entry, lang);
+        throw; // Re-throw for other API errors
+    }
 }
 ```
 
