@@ -483,6 +483,68 @@ public class GetEntryAsyncTests
         VerifyHttpRequest(handlerMock, "/api/translations/text");
     }
 
+    [Fact]
+    public async Task GetEntryAsync_ShouldReturnEntryKey_WhenApiReturns204NoContent()
+    {
+        // Arrange
+        var entryKey = "nonexistent.entry";
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.NoContent, string.Empty);
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var result = await client.GetEntryAsync("ui", entryKey, "en");
+
+        // Assert
+        result.Should().Be(entryKey); // Client returns entry key as fallback when 204 No Content
+        VerifyHttpRequest(handlerMock, "/api/translations/text");
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldThrowArgumentNullException_WhenGroupIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetEntryAsync(string.Empty, "entry", "en");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "group");
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldThrowArgumentNullException_WhenEntryIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetEntryAsync("ui", string.Empty, "en");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "entry");
+    }
+
+    [Fact]
+    public async Task GetEntryAsync_ShouldThrowArgumentNullException_WhenLangIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetEntryAsync("ui", "entry", string.Empty);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "lang");
+    }
+
     private void VerifyHttpRequest(
         Mock<HttpMessageHandler> handlerMock,
         string expectedEndpoint)

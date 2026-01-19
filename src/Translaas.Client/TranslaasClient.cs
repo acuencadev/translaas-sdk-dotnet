@@ -63,17 +63,17 @@ public class TranslaasClient : ITranslaasClient
         CancellationToken cancellationToken = default)
     {
         // Parameter validation
-        if (group == null)
+        if (string.IsNullOrEmpty(group))
         {
             throw new ArgumentNullException(nameof(group));
         }
 
-        if (entry == null)
+        if (string.IsNullOrEmpty(entry))
         {
             throw new ArgumentNullException(nameof(entry));
         }
 
-        if (lang == null)
+        if (string.IsNullOrEmpty(lang))
         {
             throw new ArgumentNullException(nameof(lang));
         }
@@ -169,17 +169,17 @@ public class TranslaasClient : ITranslaasClient
         CancellationToken cancellationToken = default)
     {
         // Parameter validation
-        if (project == null)
+        if (string.IsNullOrEmpty(project))
         {
             throw new ArgumentNullException(nameof(project));
         }
 
-        if (group == null)
+        if (string.IsNullOrEmpty(group))
         {
             throw new ArgumentNullException(nameof(group));
         }
 
-        if (lang == null)
+        if (string.IsNullOrEmpty(lang))
         {
             throw new ArgumentNullException(nameof(lang));
         }
@@ -269,12 +269,12 @@ public class TranslaasClient : ITranslaasClient
         CancellationToken cancellationToken = default)
     {
         // Parameter validation
-        if (project == null)
+        if (string.IsNullOrEmpty(project))
         {
             throw new ArgumentNullException(nameof(project));
         }
 
-        if (lang == null)
+        if (string.IsNullOrEmpty(lang))
         {
             throw new ArgumentNullException(nameof(lang));
         }
@@ -362,7 +362,7 @@ public class TranslaasClient : ITranslaasClient
         CancellationToken cancellationToken = default)
     {
         // Parameter validation
-        if (project == null)
+        if (string.IsNullOrEmpty(project))
         {
             throw new ArgumentNullException(nameof(project));
         }

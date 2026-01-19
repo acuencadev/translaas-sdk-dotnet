@@ -299,6 +299,68 @@ public class GetGroupAsyncTests
         result.Entries["entry3"].GetBoolean().Should().Be(true);
     }
 
+    [Fact]
+    public async Task GetGroupAsync_ShouldReturnEmptyGroup_WhenApiReturns204NoContent()
+    {
+        // Arrange
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.NoContent, string.Empty, "application/json");
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var result = await client.GetGroupAsync("my-project", "nonexistent", "en");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Entries.Should().BeEmpty(); // Client returns empty group when 204 No Content
+        VerifyHttpRequest(handlerMock, "/api/translations/group");
+    }
+
+    [Fact]
+    public async Task GetGroupAsync_ShouldThrowArgumentNullException_WhenProjectIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetGroupAsync(string.Empty, "ui", "en");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "project");
+    }
+
+    [Fact]
+    public async Task GetGroupAsync_ShouldThrowArgumentNullException_WhenGroupIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetGroupAsync("my-project", string.Empty, "en");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "group");
+    }
+
+    [Fact]
+    public async Task GetGroupAsync_ShouldThrowArgumentNullException_WhenLangIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetGroupAsync("my-project", "ui", string.Empty);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "lang");
+    }
+
     private Mock<HttpMessageHandler> CreateMockHttpMessageHandler(HttpStatusCode statusCode, string responseContent, string contentType = "application/json")
     {
         var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
