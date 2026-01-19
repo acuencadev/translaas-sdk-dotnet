@@ -30,6 +30,23 @@ public interface ITranslaasClient
     /// If both <paramref name="number"/> and a parameter named "N" are provided, the "N" parameter takes precedence.
     /// </para>
     /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Basic usage
+    /// string translation = await client.GetEntryAsync("common", "welcome", "en");
+    /// 
+    /// // With pluralization
+    /// string message = await client.GetEntryAsync("messages", "item", "en", number: 5);
+    /// 
+    /// // With named parameters
+    /// var parameters = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
+    /// string greeting = await client.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
+    /// 
+    /// // With pluralization and parameters
+    /// var params = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
+    /// string items = await client.GetEntryAsync("messages", "items", "en", number: 5, parameters: params);
+    /// </code>
+    /// </example>
     Task<string> GetEntryAsync(
         string group,
         string entry,
@@ -48,6 +65,26 @@ public interface ITranslaasClient
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="TranslationGroup"/> containing all entries for the group.</returns>
     /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// TranslationGroup group = await client.GetGroupAsync("my-project", "ui", "en");
+    /// 
+    /// // Access entries
+    /// foreach (var entry in group.Entries)
+    /// {
+    ///     Console.WriteLine($"{entry.Key}: {entry.Value}");
+    /// }
+    /// 
+    /// // Get specific value
+    /// string welcome = group.GetValue("welcome");
+    /// 
+    /// // Check for plural forms
+    /// if (group.HasPluralForms("item"))
+    /// {
+    ///     var pluralForms = group.GetPluralForms("item");
+    /// }
+    /// </code>
+    /// </example>
     Task<TranslationGroup> GetGroupAsync(
         string project,
         string group,
@@ -64,6 +101,25 @@ public interface ITranslaasClient
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="TranslationProject"/> containing all groups and entries.</returns>
     /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// TranslationProject project = await client.GetProjectAsync("my-project", "en");
+    /// 
+    /// // Access groups
+    /// foreach (var groupEntry in project.Groups)
+    /// {
+    ///     var group = project.GetGroup(groupEntry.Key);
+    ///     if (group != null)
+    ///     {
+    ///         Console.WriteLine($"Group: {groupEntry.Key}");
+    ///         foreach (var entry in group.Entries)
+    ///         {
+    ///             Console.WriteLine($"  {entry.Key}: {entry.Value}");
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     Task<TranslationProject> GetProjectAsync(
         string project,
         string lang,
@@ -77,6 +133,16 @@ public interface ITranslaasClient
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A <see cref="ProjectLocales"/> object containing available locales.</returns>
     /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    /// <example>
+    /// <code>
+    /// ProjectLocales locales = await client.GetProjectLocalesAsync("my-project");
+    /// 
+    /// foreach (string locale in locales.Locales)
+    /// {
+    ///     Console.WriteLine($"Available locale: {locale}");
+    /// }
+    /// </code>
+    /// </example>
     Task<ProjectLocales> GetProjectLocalesAsync(
         string project,
         CancellationToken cancellationToken = default);
