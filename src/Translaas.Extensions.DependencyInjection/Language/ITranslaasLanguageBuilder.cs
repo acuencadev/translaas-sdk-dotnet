@@ -18,6 +18,12 @@ public interface ITranslaasLanguageBuilder
     /// </summary>
     /// <param name="configure">Optional configuration for culture options.</param>
     /// <returns>The builder for chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services.AddTranslaas(options => { /* ... */ }, language => language
+    ///     .UseCulture()); // Uses CultureInfo.CurrentUICulture
+    /// </code>
+    /// </example>
     ITranslaasLanguageBuilder UseCulture(Action<CultureLanguageOptions>? configure = null);
     
     /// <summary>
@@ -28,6 +34,15 @@ public interface ITranslaasLanguageBuilder
     /// Reads from <see cref="TranslaasOptions.DefaultLanguage"/>.
     /// Typically registered last as a fallback.
     /// </remarks>
+    /// <example>
+    /// <code>
+    /// services.AddTranslaas(options => 
+    /// {
+    ///     options.DefaultLanguage = "en";
+    /// }, language => language
+    ///     .UseDefault()); // Falls back to DefaultLanguage when other providers fail
+    /// </code>
+    /// </example>
     ITranslaasLanguageBuilder UseDefault();
     
     /// <summary>
@@ -35,6 +50,12 @@ public interface ITranslaasLanguageBuilder
     /// </summary>
     /// <typeparam name="TProvider">The provider type to register.</typeparam>
     /// <returns>The builder for chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services.AddTranslaas(options => { /* ... */ }, language => language
+    ///     .UseProvider&lt;MyCustomLanguageProvider&gt;());
+    /// </code>
+    /// </example>
     ITranslaasLanguageBuilder UseProvider<TProvider>() 
         where TProvider : class, ILanguageProvider;
     

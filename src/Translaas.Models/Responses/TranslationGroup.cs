@@ -26,6 +26,12 @@ public class TranslationGroup
     /// </summary>
     /// <param name="key">The entry key.</param>
     /// <returns>The translated text, or null if not found or if the entry has plural forms.</returns>
+    /// <example>
+    /// <code>
+    /// TranslationGroup group = await client.GetGroupAsync("my-project", "ui", "en");
+    /// string welcome = group.GetValue("welcome"); // Returns "Welcome" or null if not found
+    /// </code>
+    /// </example>
     public string? GetValue(string key)
     {
         if (Entries.TryGetValue(key, out var element))
@@ -51,6 +57,17 @@ public class TranslationGroup
     /// </summary>
     /// <param name="key">The entry key.</param>
     /// <returns>A dictionary mapping plural categories to translated text, or null if not found or if the entry is not a plural form entry.</returns>
+    /// <example>
+    /// <code>
+    /// TranslationGroup group = await client.GetGroupAsync("my-project", "messages", "en");
+    /// var pluralForms = group.GetPluralForms("item");
+    /// if (pluralForms != null)
+    /// {
+    ///     string singular = pluralForms[PluralCategory.One]; // "1 item"
+    ///     string plural = pluralForms[PluralCategory.Other]; // "5 items"
+    /// }
+    /// </code>
+    /// </example>
     public Dictionary<PluralCategory, string>? GetPluralForms(string key)
     {
         if (!Entries.TryGetValue(key, out var element))
@@ -86,6 +103,15 @@ public class TranslationGroup
     /// </summary>
     /// <param name="key">The entry key.</param>
     /// <returns>True if the entry has plural forms, false otherwise.</returns>
+    /// <example>
+    /// <code>
+    /// TranslationGroup group = await client.GetGroupAsync("my-project", "messages", "en");
+    /// if (group.HasPluralForms("item"))
+    /// {
+    ///     var pluralForms = group.GetPluralForms("item");
+    /// }
+    /// </code>
+    /// </example>
     public bool HasPluralForms(string key)
     {
         if (!Entries.TryGetValue(key, out var element))
@@ -102,6 +128,13 @@ public class TranslationGroup
     /// <param name="key">The entry key.</param>
     /// <param name="category">The plural category.</param>
     /// <returns>The translated text for the specified plural category, or null if not found.</returns>
+    /// <example>
+    /// <code>
+    /// TranslationGroup group = await client.GetGroupAsync("my-project", "messages", "en");
+    /// string singular = group.GetPluralForm("item", PluralCategory.One); // "1 item"
+    /// string plural = group.GetPluralForm("item", PluralCategory.Other); // "5 items"
+    /// </code>
+    /// </example>
     public string? GetPluralForm(string key, PluralCategory category)
     {
         var pluralForms = GetPluralForms(key);
