@@ -291,6 +291,53 @@ public class GetProjectAsyncTests
             .Where(ex => ex.InnerException is JsonException);
     }
 
+    [Fact]
+    public async Task GetProjectAsync_ShouldReturnEmptyProject_WhenApiReturns204NoContent()
+    {
+        // Arrange
+        var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.NoContent, string.Empty, "application/json");
+        var httpClient = new HttpClient(handlerMock.Object);
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var result = await client.GetProjectAsync("nonexistent-project", "en");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Groups.Should().BeEmpty(); // Client returns empty project when 204 No Content
+        VerifyHttpRequest(handlerMock, "/api/translations/project");
+    }
+
+    [Fact]
+    public async Task GetProjectAsync_ShouldThrowArgumentNullException_WhenProjectIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetProjectAsync(string.Empty, "en");
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "project");
+    }
+
+    [Fact]
+    public async Task GetProjectAsync_ShouldThrowArgumentNullException_WhenLangIsEmptyString()
+    {
+        // Arrange
+        var httpClient = new HttpClient();
+        var client = new TranslaasClient(httpClient, _defaultOptions);
+
+        // Act
+        var act = async () => await client.GetProjectAsync("my-project", string.Empty);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>()
+            .Where(ex => ex.ParamName == "lang");
+    }
+
     private Mock<HttpMessageHandler> CreateMockHttpMessageHandler(HttpStatusCode statusCode, string responseContent, string contentType = "application/json")
     {
         var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
