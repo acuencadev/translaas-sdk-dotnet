@@ -392,7 +392,7 @@ services.AddTranslaas(options =>
 });
 ```
 
-See the [sample projects](./samples/) for complete examples.
+See the [sample projects](https://github.com/acuencadev/translaas-sdk-examples) for complete examples.
 
 ## Usage Examples
 
