@@ -90,6 +90,12 @@ public static class ServiceCollectionExtensions
         // Register TranslaasOptions using Options pattern
         services.Configure(configure);
 
+        // Check if we're in CacheOnly mode (ApiKey/BaseUrl not needed)
+        var tempOptions = new TranslaasOptions();
+        configure(tempOptions);
+        var isCacheOnlyMode = tempOptions.OfflineCache.Enabled && 
+                              tempOptions.OfflineCache.FallbackMode == OfflineFallbackMode.CacheOnly;
+
         // Register HttpClient via HttpClientFactory
         services.AddTranslaasHttpClient(options =>
         {
@@ -100,11 +106,9 @@ public static class ServiceCollectionExtensions
             options.ApiKey = translaasOptions.ApiKey;
             options.BaseUrl = translaasOptions.BaseUrl;
             options.Timeout = translaasOptions.Timeout;
-        });
+        }, skipApiValidation: isCacheOnlyMode);
 
         // Register caching services if caching is enabled
-        var tempOptions = new TranslaasOptions();
-        configure(tempOptions);
 
         if (tempOptions.CacheMode != CacheMode.None)
         {
@@ -329,22 +333,29 @@ public static class ServiceCollectionExtensions
         {
             configurationSection.Bind(options);
             
-            // Validate required properties
-            // Check if ApiKey was explicitly set in configuration
-            var apiKeyValue = configurationSection[nameof(TranslaasOptions.ApiKey)];
-            if (string.IsNullOrWhiteSpace(apiKeyValue) || string.IsNullOrWhiteSpace(options.ApiKey))
+            // Check if we're in CacheOnly mode (ApiKey/BaseUrl not needed)
+            var isCacheOnlyMode = options.OfflineCache.Enabled && 
+                                  options.OfflineCache.FallbackMode == OfflineFallbackMode.CacheOnly;
+            
+            // Validate required properties (skip if CacheOnly mode)
+            if (!isCacheOnlyMode)
             {
-                throw new InvalidOperationException(
-                    $"Translaas configuration is invalid: ApiKey is required. Ensure '{sectionName}:ApiKey' is set in configuration.");
-            }
+                // Check if ApiKey was explicitly set in configuration
+                var apiKeyValue = configurationSection[nameof(TranslaasOptions.ApiKey)];
+                if (string.IsNullOrWhiteSpace(apiKeyValue) || string.IsNullOrWhiteSpace(options.ApiKey))
+                {
+                    throw new InvalidOperationException(
+                        $"Translaas configuration is invalid: ApiKey is required. Ensure '{sectionName}:ApiKey' is set in configuration.");
+                }
 
-            // Check if BaseUrl was explicitly set in configuration
-            // BaseUrl has a default value, so we need to check if it was actually set in config
-            var baseUrlValue = configurationSection[nameof(TranslaasOptions.BaseUrl)];
-            if (string.IsNullOrWhiteSpace(baseUrlValue))
-            {
-                throw new InvalidOperationException(
-                    $"Translaas configuration is invalid: BaseUrl is required. Ensure '{sectionName}:BaseUrl' is set in configuration.");
+                // Check if BaseUrl was explicitly set in configuration
+                // BaseUrl has a default value, so we need to check if it was actually set in config
+                var baseUrlValue = configurationSection[nameof(TranslaasOptions.BaseUrl)];
+                if (string.IsNullOrWhiteSpace(baseUrlValue))
+                {
+                    throw new InvalidOperationException(
+                        $"Translaas configuration is invalid: BaseUrl is required. Ensure '{sectionName}:BaseUrl' is set in configuration.");
+                }
             }
         }, configureLanguage);
     }

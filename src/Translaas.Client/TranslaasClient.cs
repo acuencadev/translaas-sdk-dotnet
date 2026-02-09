@@ -39,7 +39,9 @@ public class TranslaasClient : ITranslaasClient
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _cacheProvider = cacheProvider;
         
-        _options.Validate();
+        // Skip API validation if ApiKey/BaseUrl are empty (used in CacheOnly offline mode)
+        var skipApiValidation = string.IsNullOrWhiteSpace(_options.ApiKey) || string.IsNullOrWhiteSpace(_options.BaseUrl);
+        _options.Validate(skipApiValidation);
         
         // Apply timeout from options if specified
         if (_options.Timeout.HasValue)

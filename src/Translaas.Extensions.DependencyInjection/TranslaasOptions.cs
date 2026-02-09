@@ -17,9 +17,10 @@ public class TranslaasOptions
     /// Gets or sets the API key for authentication.
     /// </summary>
     /// <remarks>
-    /// This property is required and must not be null or empty.
+    /// This property is required when offline cache is not enabled or when using fallback modes other than CacheOnly.
+    /// When <see cref="OfflineCache.Enabled"/> is true and <see cref="OfflineCacheOptions.FallbackMode"/> is <see cref="OfflineFallbackMode.CacheOnly"/>,
+    /// this property is optional as the API will never be called.
     /// </remarks>
-    [Required(ErrorMessage = "ApiKey is required and cannot be null or empty.")]
     public string ApiKey { get; set; } = string.Empty;
 
     /// <summary>
@@ -27,9 +28,11 @@ public class TranslaasOptions
     /// </summary>
     /// <remarks>
     /// Defaults to "https://sdk-api.translaas.local/api" if not specified.
-    /// Must be a valid HTTP or HTTPS URL.
+    /// Must be a valid HTTP or HTTPS URL when provided.
+    /// This property is required when offline cache is not enabled or when using fallback modes other than CacheOnly.
+    /// When <see cref="OfflineCache.Enabled"/> is true and <see cref="OfflineCacheOptions.FallbackMode"/> is <see cref="OfflineFallbackMode.CacheOnly"/>,
+    /// this property is optional as the API will never be called.
     /// </remarks>
-    [Required(ErrorMessage = "BaseUrl is required and cannot be null or empty.")]
     [Url(ErrorMessage = "BaseUrl must be a valid HTTP or HTTPS URL.")]
     public string BaseUrl { get; set; } = DefaultBaseUrl;
 

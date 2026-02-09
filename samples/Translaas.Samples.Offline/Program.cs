@@ -52,16 +52,16 @@ class Program
                 
                 services.AddTranslaas(options =>
                 {
-                    // API key and BaseUrl are not used in CacheOnly mode, but still required for configuration
-                    options.ApiKey = configuration["Translaas:ApiKey"] ?? "dummy-not-used";
-                    options.BaseUrl = configuration["Translaas:BaseUrl"] ?? "https://api.translaas.com";
+                    // ApiKey and BaseUrl are optional in CacheOnly mode (not used since API is never called)
+                    // They are only required for other OfflineFallbackMode values (CacheFirst, ApiFirst, ApiOnlyWithBackup)
+                    // In CacheOnly mode, you can omit them entirely - they will use default values but won't be validated
 
                     // Configure offline cache with CacheOnly mode
                     options.OfflineCache.Enabled = true;
                     options.OfflineCache.CacheDirectory = configuration["Translaas:OfflineCache:CacheDirectory"] ?? "./cache";
                     options.OfflineCache.FallbackMode = OfflineFallbackMode.CacheOnly; // ⚠️ CRITICAL: Never calls API
                     options.OfflineCache.AutoSync = false; // Disable sync to prevent any API calls
-                    options.OfflineCache.DefaultProjectId = configuration["Translaas:OfflineCache:DefaultProjectId"] ?? "translaas-sdk-samples"; // Required for offline cache
+                    options.OfflineCache.DefaultProjectId = configuration["Translaas:OfflineCache:DefaultProjectId"] ?? "translaas-sdk-samples"; // Required for offline cache                   
 
                     // Optional: Set default language fallback
                     options.DefaultLanguage = configuration["Translaas:DefaultLanguage"] ?? L.English;

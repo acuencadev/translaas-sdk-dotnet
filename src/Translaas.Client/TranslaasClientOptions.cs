@@ -58,22 +58,26 @@ public class TranslaasClientOptions
     /// <summary>
     /// Validates the configuration options.
     /// </summary>
+    /// <param name="skipApiValidation">If true, skips validation of ApiKey and BaseUrl. Used when offline cache is enabled with CacheOnly mode.</param>
     /// <exception cref="TranslaasConfigurationException">Thrown when validation fails.</exception>
-    public void Validate()
+    public void Validate(bool skipApiValidation = false)
     {
-        if (string.IsNullOrWhiteSpace(ApiKey))
+        if (!skipApiValidation)
         {
-            throw new TranslaasConfigurationException("ApiKey is required and cannot be null or empty.");
-        }
+            if (string.IsNullOrWhiteSpace(ApiKey))
+            {
+                throw new TranslaasConfigurationException("ApiKey is required and cannot be null or empty.");
+            }
 
-        if (string.IsNullOrWhiteSpace(BaseUrl))
-        {
-            throw new TranslaasConfigurationException("BaseUrl is required and cannot be null or empty.");
-        }
+            if (string.IsNullOrWhiteSpace(BaseUrl))
+            {
+                throw new TranslaasConfigurationException("BaseUrl is required and cannot be null or empty.");
+            }
 
-        if (!UrlRegex.IsMatch(BaseUrl))
-        {
-            throw new TranslaasConfigurationException($"BaseUrl must be a valid HTTP or HTTPS URL. Provided value: {BaseUrl}");
+            if (!UrlRegex.IsMatch(BaseUrl))
+            {
+                throw new TranslaasConfigurationException($"BaseUrl must be a valid HTTP or HTTPS URL. Provided value: {BaseUrl}");
+            }
         }
 
         if (Timeout.HasValue && Timeout.Value <= TimeSpan.Zero)

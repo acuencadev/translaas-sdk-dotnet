@@ -40,8 +40,6 @@ The sample is configured via `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "ApiKey": "dummy-not-used-in-offline-mode",
-    "BaseUrl": "https://api.translaas.com",
     "DefaultLanguage": "en",
     "OfflineCache": {
       "Enabled": true,
@@ -61,7 +59,7 @@ The sample is configured via `appsettings.json`:
 - `CacheDirectory: "./cache"` - Points to the local cache directory
 - `DefaultProjectId` - **Required**: The project ID that matches your cache files (must match the directory name in cache folder)
 - `DefaultLanguage` - The default language to use (e.g., "en", "fr", "es")
-- `ApiKey` and `BaseUrl` - Not used in CacheOnly mode, but still required for configuration
+- `ApiKey` and `BaseUrl` - **Optional** in CacheOnly mode (not used since API is never called). Required for other `OfflineFallbackMode` values (CacheFirst, ApiFirst, ApiOnlyWithBackup)
 
 **Language Resolution:**
 
