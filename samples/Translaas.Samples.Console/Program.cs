@@ -1,9 +1,11 @@
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Translaas.Caching;
+using Translaas.Caching.File;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using L = Translaas.Models.LanguageCodes;
@@ -17,6 +19,16 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        // Set console output encoding to UTF-8 to properly display non-ASCII characters (e.g., Cyrillic)
+        try
+        {
+            System.Console.OutputEncoding = Encoding.UTF8;
+        }
+        catch
+        {
+            // If UTF-8 encoding is not supported, continue with default encoding
+            // Non-ASCII characters may not display correctly
+        }
         // Build the host with dependency injection
         // Host.CreateDefaultBuilder automatically loads:
         // - appsettings.json
@@ -86,22 +98,43 @@ class Program
 
                     // Optional: Set default language fallback (for console apps, this is the final fallback)
                     options.DefaultLanguage = configuration["Translaas:DefaultLanguage"] ?? L.English;
+
+                    // Optional: Configure offline cache (enabled by default with ApiFirst mode)
+                    var offlineCacheEnabled = configuration.GetValue<bool?>("Translaas:OfflineCache:Enabled") ?? true;
+                    if (offlineCacheEnabled)
+                    {
+                        options.OfflineCache.Enabled = true;
+                        options.OfflineCache.CacheDirectory = configuration["Translaas:OfflineCache:CacheDirectory"] ?? "./cache";
+                        
+                        // Parse FallbackMode from configuration, default to ApiFirst
+                        var fallbackModeStr = configuration["Translaas:OfflineCache:FallbackMode"] ?? "ApiFirst";
+                        if (Enum.TryParse<OfflineFallbackMode>(fallbackModeStr, ignoreCase: true, out var fallbackMode))
+                        {
+                            options.OfflineCache.FallbackMode = fallbackMode;
+                        }
+                        else
+                        {
+                            options.OfflineCache.FallbackMode = OfflineFallbackMode.ApiFirst;
+                        }
+                        
+                        options.OfflineCache.AutoSync = configuration.GetValue<bool?>("Translaas:OfflineCache:AutoSync") ?? false;
+                        options.OfflineCache.DefaultProjectId = configuration["Translaas:OfflineCache:DefaultProjectId"] ?? "translaas-sdk-samples";
+                    }
                 }, language =>
                 {
                     // Configure language resolution providers for console apps
-                    // Note: Console apps don't have HTTP context, so RequestLanguageProvider is not available
-                    // 
                     // Language providers are checked in the order they are registered.
                     // The first provider that returns a non-null language wins.
                     // 
-                    // Available providers for console apps:
-                    // - UseCulture() - Resolves from CultureInfo.CurrentUICulture
-                    // - UseDefault() - Resolves from TranslaasOptions.DefaultLanguage
+                    // Priority order:
+                    // 1. UseDefault() - Resolves from DefaultLanguage option (appsettings.json)
+                    // 2. UseCulture() - Resolves from thread culture (CultureInfo.CurrentUICulture)
                     // 
-                    // You can configure the order and which providers to use based on your needs.
+                    // This ensures DefaultLanguage from appsettings.json is prioritized,
+                    // but falls back to thread culture if no default is configured.
                     language
-                        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
-                        .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
+                        .UseDefault()  // Resolves from DefaultLanguage option (appsettings.json)
+                        .UseCulture(); // Resolves from thread culture (CultureInfo.CurrentUICulture) as fallback
                 });
             })
             .Build();

@@ -1,4 +1,5 @@
 using Translaas.Caching;
+using Translaas.Caching.File;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Extensions.Mvc;
 using L = Translaas.Models.LanguageCodes;
@@ -44,6 +45,46 @@ builder.Services.AddTranslaas(options =>
 
     // Optional: Set default language fallback (read from appsettings.json, fallback to English)
     options.DefaultLanguage = builder.Configuration["Translaas:DefaultLanguage"] ?? L.English;
+
+    // Optional: Configure offline cache (enabled by default with ApiFirst mode)
+    var offlineCacheEnabled = builder.Configuration.GetValue<bool?>("Translaas:OfflineCache:Enabled") ?? true;
+    if (offlineCacheEnabled)
+    {
+        options.OfflineCache.Enabled = true;
+        options.OfflineCache.CacheDirectory = builder.Configuration["Translaas:OfflineCache:CacheDirectory"] ?? "./cache";
+        
+        // Parse FallbackMode from configuration, default to ApiFirst
+        var fallbackModeStr = builder.Configuration["Translaas:OfflineCache:FallbackMode"] ?? "ApiFirst";
+        if (Enum.TryParse<OfflineFallbackMode>(fallbackModeStr, ignoreCase: true, out var fallbackMode))
+        {
+            options.OfflineCache.FallbackMode = fallbackMode;
+        }
+        else
+        {
+            options.OfflineCache.FallbackMode = OfflineFallbackMode.ApiFirst;
+        }
+        
+        options.OfflineCache.AutoSync = builder.Configuration.GetValue<bool?>("Translaas:OfflineCache:AutoSync") ?? false;
+        options.OfflineCache.DefaultProjectId = builder.Configuration["Translaas:OfflineCache:DefaultProjectId"] ?? "translaas-sdk-samples";
+        
+        // Validate API settings for CacheFirst and ApiFirst modes
+        if (options.OfflineCache.FallbackMode != OfflineFallbackMode.CacheOnly)
+        {
+            if (string.IsNullOrWhiteSpace(options.ApiKey) || options.ApiKey == "your-api-key-here")
+            {
+                throw new InvalidOperationException(
+                    $"ApiKey is required for {options.OfflineCache.FallbackMode} mode. " +
+                    "Please configure it in appsettings.json or set the TRANSLAAS_API_KEY environment variable.");
+            }
+            
+            if (string.IsNullOrWhiteSpace(options.BaseUrl))
+            {
+                throw new InvalidOperationException(
+                    $"BaseUrl is required for {options.OfflineCache.FallbackMode} mode. " +
+                    "Please configure it in appsettings.json or set the TRANSLAAS_BASE_URL environment variable.");
+            }
+        }
+    }
 }, language =>
 {
     // Configure language resolution providers
