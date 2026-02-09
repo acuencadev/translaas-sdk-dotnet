@@ -44,20 +44,23 @@ public class TranslationProject
                 if (element.TryGetProperty("Entries", out _))
                 {
                     // Full TranslationGroup structure - deserialize normally
-                    return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText());
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText(), options);
                 }
                 else
                 {
                     // Flat entries dictionary from cache file - wrap it in a TranslationGroup
                     var group = new TranslationGroup();
                     // Deserialize the entries dictionary directly into Entries
-                    group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(element.GetRawText()) ?? new Dictionary<string, JsonElement>();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(element.GetRawText(), options) ?? new Dictionary<string, JsonElement>();
                     return group;
                 }
             }
             
             // Fallback: try to deserialize as TranslationGroup
-            return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText());
+            var fallbackOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText(), fallbackOptions);
         }
         return null;
     }

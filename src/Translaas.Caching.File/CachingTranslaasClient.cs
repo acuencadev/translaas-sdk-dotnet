@@ -675,7 +675,12 @@ public class CachingTranslaasClient(
                 
                 // Extract only the Entries dictionary from the group (not the metadata)
                 // The cache file stores groups as flat entry dictionaries, not full TranslationGroup objects
-                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries);
+                // Use encoder that doesn't escape non-ASCII characters for readability
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries, jsonOptions);
                 projectToSave.Groups[group] = entriesJson;
             }
             else
@@ -683,7 +688,13 @@ public class CachingTranslaasClient(
                 // No existing project, create a new one with just this group
                 projectToSave = new TranslationProject();
                 // Extract only the Entries dictionary from the group (not the metadata)
-                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries);
+                // The cache file stores groups as flat entry dictionaries, not full TranslationGroup objects
+                // Use encoder that doesn't escape non-ASCII characters for readability
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries, jsonOptions);
                 projectToSave.Groups[group] = entriesJson;
             }
             
