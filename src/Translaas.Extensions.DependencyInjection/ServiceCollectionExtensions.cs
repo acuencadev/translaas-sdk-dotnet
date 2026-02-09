@@ -196,6 +196,8 @@ public static class ServiceCollectionExtensions
                 return new CachingTranslaasClient(innerClient, cacheProvider, offlineOptions, offlineOptions.DefaultProjectId!);
             }
 
+            // If offline cache is disabled but in-memory cache is enabled, return the inner client
+            // (which already has in-memory cache configured via CreateInnerClient)
             return innerClient;
         });
 
@@ -260,10 +262,20 @@ public static class ServiceCollectionExtensions
         {
             ApiKey = translaasOptions.ApiKey,
             BaseUrl = translaasOptions.BaseUrl,
-            Timeout = translaasOptions.Timeout
+            Timeout = translaasOptions.Timeout,
+            CacheMode = translaasOptions.CacheMode,
+            CacheAbsoluteExpiration = translaasOptions.CacheAbsoluteExpiration,
+            CacheSlidingExpiration = translaasOptions.CacheSlidingExpiration
         };
 
-        return new TranslaasClient(httpClient, clientOptions);
+        // Get in-memory cache provider if caching is enabled
+        ITranslaasCacheProvider? cacheProvider = null;
+        if (translaasOptions.CacheMode != CacheMode.None)
+        {
+            cacheProvider = serviceProvider.GetService<ITranslaasCacheProvider>();
+        }
+
+        return new TranslaasClient(httpClient, clientOptions, cacheProvider);
     }
 
     /// <summary>
