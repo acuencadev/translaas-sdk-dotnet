@@ -1,15 +1,12 @@
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
-using System.Collections.Generic;
-using System.Text.Json;
-
 using Translaas.Caching.File;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
-using Translaas.Models;
 using Translaas.Models.Errors;
 using L = Translaas.Models.LanguageCodes;
 
@@ -23,9 +20,20 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        System.Console.WriteLine("=== Translaas SDK Offline Mode Sample ===\n");
-        System.Console.WriteLine("This sample demonstrates offline mode using CacheOnly fallback mode.");
-        System.Console.WriteLine("All translations are read from local cache files - no API calls are made.\n");
+        // Set console output encoding to UTF-8 to properly display non-ASCII characters (e.g., Cyrillic)
+        try
+        {
+            Console.OutputEncoding = Encoding.UTF8;
+        }
+        catch
+        {
+            // If UTF-8 encoding is not supported, continue with default encoding
+            // Non-ASCII characters may not display correctly
+        }
+        
+        Console.WriteLine("=== Translaas SDK Offline Mode Sample ===\n");
+        Console.WriteLine("This sample demonstrates offline mode using CacheOnly fallback mode.");
+        Console.WriteLine("All translations are read from local cache files - no API calls are made.\n");
 
         // Build the host with dependency injection
         var host = Host.CreateDefaultBuilder(args)
@@ -60,9 +68,12 @@ class Program
                 }, language =>
                 {
                     // Configure language resolution providers for console apps
+                    // For offline mode, prioritize DefaultLanguage over thread culture
+                    // This ensures the configured language is used even if thread culture differs
                     language
-                        .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
                         .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)
+                    // Note: UseCulture() is intentionally omitted for offline mode to ensure
+                    // the configured DefaultLanguage is always used, regardless of thread culture
                 });
             })
             .Build();
@@ -81,60 +92,60 @@ class Program
 
         var defaultProjectId = configuration["Translaas:OfflineCache:DefaultProjectId"] ?? "translaas-sdk-samples";
         
-        System.Console.WriteLine($"Configuration:");
-        System.Console.WriteLine($"  Cache Directory: {cacheDirectory}");
-        System.Console.WriteLine($"  Default Project ID: {defaultProjectId}");
-        System.Console.WriteLine($"  Fallback Mode: CacheOnly (no API calls)");
-        System.Console.WriteLine($"  Default Language: {defaultLanguage}\n");
+        Console.WriteLine($"Configuration:");
+        Console.WriteLine($"  Cache Directory: {cacheDirectory}");
+        Console.WriteLine($"  Default Project ID: {defaultProjectId}");
+        Console.WriteLine($"  Fallback Mode: CacheOnly (no API calls)");
+        Console.WriteLine($"  Default Language: {defaultLanguage}\n");
 
         try
         {
             var projectId = defaultProjectId;
 
             // Verify cache files exist
-            System.Console.WriteLine("=== Verifying Cache Files ===\n");
+            Console.WriteLine("=== Verifying Cache Files ===\n");
             var cacheProvider = host.Services.GetRequiredService<IOfflineCacheProvider>();
             var isCached = await cacheProvider.IsCachedAsync(projectId, defaultLanguage);
             
             if (!isCached)
             {
-                System.Console.WriteLine($"⚠️  WARNING: Cache file not found for project '{projectId}' and language '{defaultLanguage}'");
-                System.Console.WriteLine($"   Expected location: {cacheDirectory}/{projectId}/{defaultLanguage}/project.json");
-                System.Console.WriteLine($"   Please ensure cache files are present before running this sample.\n");
+                Console.WriteLine($"⚠️  WARNING: Cache file not found for project '{projectId}' and language '{defaultLanguage}'");
+                Console.WriteLine($"   Expected location: {cacheDirectory}/{projectId}/{defaultLanguage}/project.json");
+                Console.WriteLine($"   Please ensure cache files are present before running this sample.\n");
             }
             else
             {
-                System.Console.WriteLine($"✅ Cache file found for project '{projectId}' and language '{defaultLanguage}'\n");
+                Console.WriteLine($"✅ Cache file found for project '{projectId}' and language '{defaultLanguage}'\n");
             }
 
             // Example 1: Using ITranslaasService with default language
-            System.Console.WriteLine("=== Example 1: Basic Translation ===\n");
+            Console.WriteLine("=== Example 1: Basic Translation ===\n");
             try
             {
                 var translation1 = await translaasService.T("common", "welcome");
-                System.Console.WriteLine($"Translation (group: 'common', entry: 'welcome'): {translation1}\n");
+                Console.WriteLine($"Translation (group: 'common', entry: 'welcome'): {translation1}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 2: Pluralization
-            System.Console.WriteLine("=== Example 2: Pluralization ===\n");
+            Console.WriteLine("=== Example 2: Pluralization ===\n");
             try
             {
                 var translation2a = await translaasService.T("messages", "item", 1);
                 var translation2b = await translaasService.T("messages", "item", 5);
-                System.Console.WriteLine($"1 item: {translation2a}");
-                System.Console.WriteLine($"5 items: {translation2b}\n");
+                Console.WriteLine($"1 item: {translation2a}");
+                Console.WriteLine($"5 items: {translation2b}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 3: Named Parameters
-            System.Console.WriteLine("=== Example 3: Named Parameters ===\n");
+            Console.WriteLine("=== Example 3: Named Parameters ===\n");
             try
             {
                 var parameters = new Dictionary<string, string>
@@ -143,15 +154,15 @@ class Program
                     { "itemCount", "5" }
                 };
                 var translation3 = await translaasService.T("messages", "greeting", parameters);
-                System.Console.WriteLine($"Translation with parameters: {translation3}\n");
+                Console.WriteLine($"Translation with parameters: {translation3}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 4: Combining Number and Named Parameters
-            System.Console.WriteLine("=== Example 4: Number + Named Parameters ===\n");
+            Console.WriteLine("=== Example 4: Number + Named Parameters ===\n");
             try
             {
                 var parameters = new Dictionary<string, string>
@@ -159,31 +170,31 @@ class Program
                     { "userName", "John" }
                 };
                 var translation4 = await translaasService.T("messages", "items", 5, parameters);
-                System.Console.WriteLine($"Translation with number and parameters: {translation4}\n");
+                Console.WriteLine($"Translation with number and parameters: {translation4}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 5: Get multiple entries
-            System.Console.WriteLine("=== Example 5: Multiple Entries ===\n");
+            Console.WriteLine("=== Example 5: Multiple Entries ===\n");
             try
             {
                 var appName = await translaasService.T("common", "app.name");
                 var welcome = await translaasService.T("common", "welcome");
                 var welcomeMessage = await translaasService.T("common", "welcome.message");
-                System.Console.WriteLine($"App Name: {appName}");
-                System.Console.WriteLine($"Welcome: {welcome}");
-                System.Console.WriteLine($"Welcome Message: {welcomeMessage}\n");
+                Console.WriteLine($"App Name: {appName}");
+                Console.WriteLine($"Welcome: {welcome}");
+                Console.WriteLine($"Welcome Message: {welcomeMessage}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 6: Get entire translation group
-            System.Console.WriteLine("=== Example 6: Get Translation Group ===\n");
+            Console.WriteLine("=== Example 6: Get Translation Group ===\n");
             try
             {
                 const string groupName = "common";
@@ -194,93 +205,94 @@ class Program
                     .Where(e => e.Value.ValueKind == JsonValueKind.String)
                     .ToDictionary(e => e.Key, e => e.Value.GetString() ?? string.Empty);
                 
-                System.Console.WriteLine($"Group '{groupName}' contains {translationEntries.Count} translation entries:");
+                Console.WriteLine($"Group '{groupName}' contains {translationEntries.Count} translation entries:");
                 foreach (var entry in translationEntries)
                 {
-                    System.Console.WriteLine($"  {entry.Key}: {entry.Value}");
+                    Console.WriteLine($"  {entry.Key}: {entry.Value}");
                 }
-                System.Console.WriteLine();
+                Console.WriteLine();
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 7: Get project locales
-            System.Console.WriteLine("=== Example 7: Get Available Locales ===\n");
+            Console.WriteLine("=== Example 7: Get Available Locales ===\n");
             try
             {
                 var locales = await translaasClient.GetProjectLocalesAsync(projectId);
-                System.Console.WriteLine($"Available locales: {string.Join(", ", locales.Locales)}\n");
+                Console.WriteLine($"Available locales: {string.Join(", ", locales.Locales)}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 8: Language Resolution
-            System.Console.WriteLine("=== Example 8: Language Resolution ===\n");
-            System.Console.WriteLine($"Current thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
-            System.Console.WriteLine($"Default language (from appsettings.json): {defaultLanguage}");
+            Console.WriteLine("=== Example 8: Language Resolution ===\n");
+            Console.WriteLine($"Current thread culture: {System.Globalization.CultureInfo.CurrentUICulture.Name}");
+            Console.WriteLine($"Default language (from appsettings.json): {defaultLanguage}");
             
             if (languageResolver != null)
             {
                 var resolvedLangCode = languageResolver.Resolve();
-                System.Console.WriteLine($"Resolved language code (from providers): {resolvedLangCode ?? "(null)"}");
+                Console.WriteLine($"Resolved language code (from providers): {resolvedLangCode ?? "(null)"}");
             }
             
             try
             {
                 var autoLang = await translaasService.T("common", "welcome");
-                System.Console.WriteLine($"Translation (auto-resolved): {autoLang}\n");
+                Console.WriteLine($"Translation (auto-resolved): {autoLang}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 9: Explicit Language Override
-            System.Console.WriteLine("=== Example 9: Explicit Language Override ===\n");
+            Console.WriteLine("=== Example 9: Explicit Language Override ===\n");
             try
             {
-                var explicitLang = await translaasService.T("common", "welcome", L.English);
-                System.Console.WriteLine($"Translation (explicit override to '{L.English}'): {explicitLang}\n");
+                // Test with the configured default language
+                var explicitLang = await translaasService.T("common", "welcome", defaultLanguage);
+                Console.WriteLine($"Translation (explicit override to '{defaultLanguage}'): {explicitLang}\n");
             }
             catch (TranslaasOfflineCacheMissException ex)
             {
-                System.Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
+                Console.WriteLine($"❌ Cache miss: {ex.Message}\n");
             }
 
             // Example 10: Demonstrate offline mode (no API calls)
-            System.Console.WriteLine("=== Example 10: Offline Mode Verification ===\n");
-            System.Console.WriteLine("✅ All translations were loaded from local cache files.");
-            System.Console.WriteLine("✅ No API calls were made (CacheOnly mode).");
-            System.Console.WriteLine("✅ Application works entirely offline.\n");
+            Console.WriteLine("=== Example 10: Offline Mode Verification ===\n");
+            Console.WriteLine("✅ All translations were loaded from local cache files.");
+            Console.WriteLine("✅ No API calls were made (CacheOnly mode).");
+            Console.WriteLine("✅ Application works entirely offline.\n");
         }
         catch (TranslaasOfflineCacheMissException ex)
         {
-            System.Console.WriteLine($"\n❌ Offline Cache Miss Exception:");
-            System.Console.WriteLine($"   Project: {ex.Project}");
-            System.Console.WriteLine($"   Language: {ex.Language}");
+            Console.WriteLine($"\n❌ Offline Cache Miss Exception:");
+            Console.WriteLine($"   Project: {ex.Project}");
+            Console.WriteLine($"   Language: {ex.Language}");
             if (!string.IsNullOrEmpty(ex.Group))
             {
-                System.Console.WriteLine($"   Group: {ex.Group}");
+                Console.WriteLine($"   Group: {ex.Group}");
             }
             if (!string.IsNullOrEmpty(ex.Entry))
             {
-                System.Console.WriteLine($"   Entry: {ex.Entry}");
+                Console.WriteLine($"   Entry: {ex.Entry}");
             }
-            System.Console.WriteLine($"\n   This exception is thrown when a translation is not found in the cache.");
-            System.Console.WriteLine($"   In CacheOnly mode, the SDK never calls the API, so missing translations");
-            System.Console.WriteLine($"   cannot be fetched from the backend.\n");
+            Console.WriteLine($"\n   This exception is thrown when a translation is not found in the cache.");
+            Console.WriteLine($"   In CacheOnly mode, the SDK never calls the API, so missing translations");
+            Console.WriteLine($"   cannot be fetched from the backend.\n");
         }
         catch (Exception ex)
         {
-            System.Console.WriteLine($"\n❌ Error: {ex.Message}");
-            System.Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            Console.WriteLine($"\n❌ Error: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
 
-        System.Console.WriteLine("Press any key to exit...");
-        System.Console.ReadKey();
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
     }
 }
