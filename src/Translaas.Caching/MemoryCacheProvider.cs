@@ -16,19 +16,6 @@ public class MemoryCacheProvider : ITranslaasCacheProvider
     /// <param name="cache">The memory cache instance.</param>
     /// <exception cref="ArgumentNullException">Thrown when cache is null.</exception>
     public MemoryCacheProvider(IMemoryCache cache)
-<<<<<<< TODO: Unmerged change from project 'Translaas.Caching(net8.0)', Before:
-    {
-        if (cache == null)
-        {
-            throw new ArgumentNullException(nameof(cache));
-        }
-
-        _cache = cache;
-=======
-    {
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
->>>>>>> After
-
     {
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }

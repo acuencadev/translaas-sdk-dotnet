@@ -53,7 +53,7 @@ class Program
                 services.AddTranslaas(options =>
                 {
                     // ApiKey and BaseUrl are optional in CacheOnly mode (not used since API is never called)
-                    // They are only required for other OfflineFallbackMode values (CacheFirst, ApiFirst, ApiOnlyWithBackup)
+                    // They are only required for other OfflineFallbackMode values (CacheFirst, ApiFirst)
                     // In CacheOnly mode, you can omit them entirely - they will use default values but won't be validated
 
                     // Configure offline cache with CacheOnly mode

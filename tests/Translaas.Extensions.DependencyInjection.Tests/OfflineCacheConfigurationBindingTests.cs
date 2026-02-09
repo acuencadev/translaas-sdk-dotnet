@@ -99,7 +99,6 @@ public class OfflineCacheConfigurationBindingTests
     [InlineData("CacheFirst", OfflineFallbackMode.CacheFirst)]
     [InlineData("ApiFirst", OfflineFallbackMode.ApiFirst)]
     [InlineData("CacheOnly", OfflineFallbackMode.CacheOnly)]
-    [InlineData("ApiOnlyWithBackup", OfflineFallbackMode.ApiOnlyWithBackup)]
     public void AddTranslaas_WithConfiguration_ShouldBindAllFallbackModes(string configValue, OfflineFallbackMode expected)
     {
         // Arrange

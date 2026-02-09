@@ -345,27 +345,6 @@ public class CachingTranslaasClientTests
 
     #endregion
 
-    #region GetEntryAsync - ApiOnlyWithBackup Tests
-
-    [Fact]
-    public async Task GetEntryAsync_ApiOnlyWithBackup_AlwaysCallsApi()
-    {
-        // Arrange
-        var client = CreateClient(OfflineFallbackMode.ApiOnlyWithBackup);
-
-        _mockInnerClient
-            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Hello from API");
-
-        // Act
-        var result = await client.GetEntryAsync("common", "hello", "en");
-
-        // Assert
-        result.Should().Be("Hello from API");
-        _mockInnerClient.Verify(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    #endregion
 
     #region GetProjectAsync - CacheFirst Tests
 

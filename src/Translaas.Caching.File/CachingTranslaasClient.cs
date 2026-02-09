@@ -48,7 +48,6 @@ public class CachingTranslaasClient(
             OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetEntryWithApiOnlyBackupAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -66,7 +65,6 @@ public class CachingTranslaasClient(
             OfflineFallbackMode.CacheFirst => await GetGroupWithCacheFirstAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetGroupWithApiFirstAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetGroupFromCacheOnlyAsync(project, group, lang, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetGroupWithApiOnlyBackupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -83,7 +81,6 @@ public class CachingTranslaasClient(
             OfflineFallbackMode.CacheFirst => await GetProjectWithCacheFirstAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetProjectWithApiFirstAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetProjectFromCacheOnlyAsync(project, lang, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetProjectWithApiOnlyBackupAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -98,7 +95,6 @@ public class CachingTranslaasClient(
             OfflineFallbackMode.CacheFirst => await GetProjectLocalesWithCacheFirstAsync(project, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetProjectLocalesWithApiFirstAsync(project, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetProjectLocalesFromCacheOnlyAsync(project, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetProjectLocalesWithApiOnlyBackupAsync(project, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -128,8 +124,8 @@ public class CachingTranslaasClient(
         {
             var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background (fire and forget)
-            _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
+            // Update cache in background (fire and forget) - only fetch the specific group, not entire project
+            _ = UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken);
 
             return result;
         }
@@ -151,8 +147,8 @@ public class CachingTranslaasClient(
         {
             var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background
-            _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
+            // Update cache in background - only fetch the specific group, not entire project
+            _ = UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken);
 
             return result;
         }
@@ -218,21 +214,6 @@ public class CachingTranslaasClient(
         throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
     }
 
-    private async Task<string> GetEntryWithApiOnlyBackupAsync(
-        string group,
-        string entry,
-        string lang,
-        decimal? number,
-        System.Collections.Generic.Dictionary<string, string>? parameters,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
-
-        // Update cache in background
-        _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
-
-        return result;
-    }
 
     #endregion
 
@@ -258,8 +239,8 @@ public class CachingTranslaasClient(
         {
             var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background
-            _ = UpdateProjectCacheAsync(project, lang, cancellationToken);
+            // Update cache in background - only fetch the specific group, not entire project
+            _ = UpdateGroupCacheAsync(project, group, lang, cancellationToken);
 
             return result;
         }
@@ -280,8 +261,8 @@ public class CachingTranslaasClient(
         {
             var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background
-            _ = UpdateProjectCacheAsync(project, lang, cancellationToken);
+            // Update cache in background - only fetch the specific group, not entire project
+            _ = UpdateGroupCacheAsync(project, group, lang, cancellationToken);
 
             return result;
         }
@@ -315,20 +296,6 @@ public class CachingTranslaasClient(
         throw new TranslaasOfflineCacheMissException(project, lang, group);
     }
 
-    private async Task<TranslationGroup> GetGroupWithApiOnlyBackupAsync(
-        string project,
-        string group,
-        string lang,
-        string? format,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
-
-        // Update cache in background
-        _ = UpdateProjectCacheAsync(project, lang, cancellationToken);
-
-        return result;
-    }
 
     #endregion
 
@@ -408,19 +375,6 @@ public class CachingTranslaasClient(
         throw new TranslaasOfflineCacheMissException(project, lang);
     }
 
-    private async Task<TranslationProject> GetProjectWithApiOnlyBackupAsync(
-        string project,
-        string lang,
-        string? format,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false);
-
-        // Update cache
-        await _cacheProvider.SaveProjectAsync(project, lang, result, cancellationToken).ConfigureAwait(false);
-
-        return result;
-    }
 
     #endregion
 
@@ -501,17 +455,6 @@ public class CachingTranslaasClient(
             null, project, null);
     }
 
-    private async Task<ProjectLocales> GetProjectLocalesWithApiOnlyBackupAsync(
-        string project,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false);
-
-        // Update cache
-        await _cacheProvider.SaveProjectLocalesAsync(project, result, cancellationToken).ConfigureAwait(false);
-
-        return result;
-    }
 
     #endregion
 
@@ -625,6 +568,51 @@ public class CachingTranslaasClient(
         return merged.Count > 0 ? merged : null;
     }
 
+    /// <summary>
+    /// Updates the cache with a specific translation group (more efficient than updating entire project).
+    /// Fetches only the group from API and merges it into the existing cached project.
+    /// </summary>
+    private async Task UpdateGroupCacheAsync(string project, string group, string lang, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Fetch only the specific group from API (more efficient than entire project)
+            var groupData = await _innerClient.GetGroupAsync(project, group, lang, cancellationToken: cancellationToken).ConfigureAwait(false);
+            
+            // Get existing project from cache (if exists)
+            var existingProject = await _cacheProvider.GetProjectAsync(project, lang, cancellationToken).ConfigureAwait(false);
+            
+            TranslationProject projectToSave;
+            if (existingProject != null)
+            {
+                // Merge the new group into existing project
+                projectToSave = existingProject;
+                
+                // Serialize the group to JsonElement and add/update it in the project
+                var groupJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData);
+                projectToSave.Groups[group] = groupJson;
+            }
+            else
+            {
+                // No existing project, create a new one with just this group
+                projectToSave = new TranslationProject();
+                var groupJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData);
+                projectToSave.Groups[group] = groupJson;
+            }
+            
+            // Save the updated project
+            await _cacheProvider.SaveProjectAsync(project, lang, projectToSave, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Ignore cache update errors - this is a background operation
+        }
+    }
+
+    /// <summary>
+    /// Updates the cache with the entire translation project.
+    /// Used when fetching the full project (GetProjectAsync) or when group is unknown.
+    /// </summary>
     private async Task UpdateProjectCacheAsync(string project, string lang, CancellationToken cancellationToken)
     {
         try

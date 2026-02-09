@@ -705,7 +705,6 @@ services.AddTranslaas(options =>
 - `OfflineFallbackMode.CacheFirst` - Try cache first, fall back to API (default)
 - `OfflineFallbackMode.ApiFirst` - Try API first, fall back to cache
 - `OfflineFallbackMode.CacheOnly` - Only use cache, never call API
-- `OfflineFallbackMode.ApiOnlyWithBackup` - Always call API, update cache as backup
 
 ### Configuration from appsettings.json
 
