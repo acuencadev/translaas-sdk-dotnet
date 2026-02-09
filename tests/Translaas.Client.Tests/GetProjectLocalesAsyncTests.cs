@@ -159,7 +159,7 @@ public class GetProjectLocalesAsyncTests
     }
 
     [Fact]
-    public async Task GetProjectLocalesAsync_ShouldSetJsonContentType()
+    public async Task GetProjectLocalesAsync_ShouldUseQueryStringParameters()
     {
         // Arrange
         var jsonResponse = "{\"locales\":[\"en\",\"fr\"]}";
@@ -170,15 +170,15 @@ public class GetProjectLocalesAsyncTests
         // Act
         await client.GetProjectLocalesAsync("my-project");
 
-        // Assert
+        // Assert - Verify query string parameters are used (not JSON body)
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req =>
-                    req.Content != null &&
-                    req.Content.Headers.ContentType != null &&
-                    req.Content.Headers.ContentType.MediaType == "application/json"),
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("project=my-project") &&
+                    req.Content == null), // GET requests with query strings don't have content
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -217,8 +217,8 @@ public class GetProjectLocalesAsyncTests
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req =>
-                    req.Content != null &&
-                    req.Content.ReadAsStringAsync().Result.Contains("\"project\":\"my-project\"")),
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("project=my-project")),
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -293,7 +293,7 @@ public class GetProjectLocalesAsyncTests
         Mock<HttpMessageHandler> handlerMock,
         string expectedEndpoint)
     {
-        var expectedUrl = $"{_defaultOptions.BaseUrl.TrimEnd('/')}/{expectedEndpoint.TrimStart('/')}";
+        var expectedBaseUrl = $"{_defaultOptions.BaseUrl.TrimEnd('/')}/{expectedEndpoint.TrimStart('/')}";
 
         handlerMock.Protected()
             .Verify(
@@ -301,7 +301,8 @@ public class GetProjectLocalesAsyncTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
-                    req.RequestUri.ToString() == expectedUrl),
+                    req.RequestUri.ToString().StartsWith(expectedBaseUrl) &&
+                    req.RequestUri.Query.Length > 0), // Query string should be present
                 ItExpr.IsAny<CancellationToken>());
     }
 }

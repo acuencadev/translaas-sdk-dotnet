@@ -55,14 +55,14 @@ public class GetEntryAsyncTests
         // Assert
         result.Should().Be(expectedText);
         
-        // Verify number is included in query string
+        // Verify number is included in query string as lowercase 'n' when passed directly
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.RequestUri != null && 
-                    req.RequestUri.Query.Contains("N=5")),
+                    req.RequestUri.Query.Contains("n=5")), // Number parameter becomes lowercase 'n' in query string
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -82,14 +82,14 @@ public class GetEntryAsyncTests
         result.Should().Be(expectedText);
         VerifyHttpRequest(handlerMock, "/api/translations/text");
         
-        // Verify number is null in request body
+        // Verify number is not included in query string when null
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
-                    req.Content != null && 
-                    req.Content.ReadAsStringAsync().Result.Contains("\"n\":null")),
+                    req.RequestUri != null && 
+                    !req.RequestUri.Query.Contains("n=")),
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -115,7 +115,7 @@ public class GetEntryAsyncTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.RequestUri != null && 
-                    req.RequestUri.Query.Contains("N=1.31")),
+                    req.RequestUri.Query.Contains("n=1.31")),
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -261,7 +261,7 @@ public class GetEntryAsyncTests
     }
 
     [Fact]
-    public async Task GetEntryAsync_ShouldSetJsonContentType()
+    public async Task GetEntryAsync_ShouldUseQueryStringParameters()
     {
         // Arrange
         var handlerMock = CreateMockHttpMessageHandler(HttpStatusCode.OK, "test");
@@ -271,15 +271,17 @@ public class GetEntryAsyncTests
         // Act
         await client.GetEntryAsync("ui", "entry", "en");
 
-        // Assert
+        // Assert - Verify query string parameters are used (not JSON body)
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req =>
-                    req.Content != null &&
-                    req.Content.Headers.ContentType != null &&
-                    req.Content.Headers.ContentType.MediaType == "application/json"),
+                    req.RequestUri != null &&
+                    req.RequestUri.Query.Contains("group=ui") &&
+                    req.RequestUri.Query.Contains("entry=entry") &&
+                    req.RequestUri.Query.Contains("lang=en") &&
+                    req.Content == null), // GET requests with query strings don't have content
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -327,7 +329,7 @@ public class GetEntryAsyncTests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
                     req.RequestUri.Query.Contains("userName=John") &&
-                    req.RequestUri.Query.Contains("N=5")),
+                    req.RequestUri.Query.Contains("N=5")), // When passed via parameters dictionary, case is preserved
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -351,7 +353,7 @@ public class GetEntryAsyncTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
-                    req.RequestUri.Query.Contains("N=5")),
+                    req.RequestUri.Query.Contains("n=5")), // Number parameter becomes lowercase 'n' when passed directly
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -380,7 +382,7 @@ public class GetEntryAsyncTests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
                     req.RequestUri.Query.Contains("userName=John") &&
-                    req.RequestUri.Query.Contains("N=5")),
+                    req.RequestUri.Query.Contains("n=5")), // Number parameter becomes lowercase 'n' when passed directly
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -410,8 +412,8 @@ public class GetEntryAsyncTests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
                     req.RequestUri.Query.Contains("userName=John") &&
-                    req.RequestUri.Query.Contains("N=10") &&
-                    !req.RequestUri.Query.Contains("N=5")),
+                    req.RequestUri.Query.Contains("N=10") && // Parameter name preserves case from dictionary
+                    !req.RequestUri.Query.Contains("N=5")), // Parameter name preserves case from dictionary
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -544,7 +546,7 @@ public class GetEntryAsyncTests
         Mock<HttpMessageHandler> handlerMock,
         string expectedEndpoint)
     {
-        var expectedUrl = $"{_defaultOptions.BaseUrl.TrimEnd('/')}/{expectedEndpoint.TrimStart('/')}";
+        var expectedBaseUrl = $"{_defaultOptions.BaseUrl.TrimEnd('/')}/{expectedEndpoint.TrimStart('/')}";
         
         handlerMock.Protected()
             .Verify(
@@ -552,7 +554,8 @@ public class GetEntryAsyncTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.RequestUri != null && 
-                    req.RequestUri.ToString() == expectedUrl),
+                    req.RequestUri.ToString().StartsWith(expectedBaseUrl) &&
+                    req.RequestUri.Query.Length > 0), // Query string should be present
                 ItExpr.IsAny<CancellationToken>());
     }
 }

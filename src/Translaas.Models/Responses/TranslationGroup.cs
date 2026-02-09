@@ -7,8 +7,79 @@ using System.Text.Json.Serialization;
 namespace Translaas.Models.Responses;
 
 /// <summary>
+/// Custom JSON converter for TranslationGroup that handles both full structure (with "Entries" property)
+/// and flat dictionary structure (where the root object is the entries dictionary).
+/// </summary>
+internal sealed class TranslationGroupJsonConverter : JsonConverter<TranslationGroup>
+{
+    public override TranslationGroup? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartObject)
+        {
+            throw new JsonException();
+        }
+
+        var group = new TranslationGroup();
+        var document = JsonDocument.ParseValue(ref reader);
+        var root = document.RootElement;
+
+        // Check if this is a full TranslationGroup structure (has "Entries", "Project", "Lang", etc.)
+        if (root.TryGetProperty("Entries", out var entriesElement))
+        {
+            // Full structure - deserialize normally
+            group.Project = root.TryGetProperty("Project", out var projectElement) ? projectElement.GetString() : null;
+            group.Lang = root.TryGetProperty("Lang", out var langElement) ? langElement.GetString() : null;
+            group.Version = root.TryGetProperty("Version", out var versionElement) ? versionElement : null;
+            group.GeneratedAt = root.TryGetProperty("GeneratedAt", out var generatedAtElement) && generatedAtElement.ValueKind != JsonValueKind.Null
+                ? generatedAtElement.GetDateTimeOffset()
+                : null;
+            group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(entriesElement.GetRawText(), options) ?? new Dictionary<string, JsonElement>();
+        }
+        else
+        {
+            // Flat dictionary structure - treat the root object as the entries dictionary
+            group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(root.GetRawText(), options) ?? new Dictionary<string, JsonElement>();
+        }
+
+        return group;
+    }
+
+    public override void Write(Utf8JsonWriter writer, TranslationGroup value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        
+        if (value.Project != null)
+        {
+            writer.WriteString("Project", value.Project);
+        }
+        
+        if (value.Lang != null)
+        {
+            writer.WriteString("Lang", value.Lang);
+        }
+        
+        if (value.Version.HasValue)
+        {
+            writer.WritePropertyName("Version");
+            JsonSerializer.Serialize(writer, value.Version.Value, options);
+        }
+        
+        if (value.GeneratedAt.HasValue)
+        {
+            writer.WriteString("GeneratedAt", value.GeneratedAt.Value);
+        }
+        
+        writer.WritePropertyName("Entries");
+        JsonSerializer.Serialize(writer, value.Entries, options);
+        
+        writer.WriteEndObject();
+    }
+}
+
+/// <summary>
 /// Represents a translation group containing multiple translation entries.
 /// </summary>
+[JsonConverter(typeof(TranslationGroupJsonConverter))]
 public class TranslationGroup
 {
     /// <summary>

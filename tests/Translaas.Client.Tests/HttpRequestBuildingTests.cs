@@ -106,7 +106,10 @@ public class HttpRequestBuildingTests
         // Assert
         request.Should().NotBeNull();
         request.Method.Should().Be(HttpMethod.Get);
-        request.RequestUri!.ToString().Should().Be("https://api.test.com/api/translations/text");
+        request.RequestUri!.ToString().Should().StartWith("https://api.test.com/api/translations/text");
+        request.RequestUri.Query.Should().Contain("group=ui");
+        request.RequestUri.Query.Should().Contain("entry=button.save");
+        request.RequestUri.Query.Should().Contain("lang=en");
     }
 
     [Fact]
@@ -135,7 +138,7 @@ public class HttpRequestBuildingTests
     }
 
     [Fact]
-    public void BuildGetRequest_ShouldSetJsonContentType()
+    public void BuildGetRequest_ShouldUseQueryStringParameters()
     {
         // Arrange
         var options = new TranslaasClientOptions
@@ -156,12 +159,15 @@ public class HttpRequestBuildingTests
         var request = client.BuildGetRequest("translations/text", requestModel);
 
         // Assert
-        request.Content.Should().NotBeNull();
-        request.Content!.Headers.ContentType!.MediaType.Should().Be("application/json");
+        request.Content.Should().BeNull(); // GET requests with query strings don't have content
+        request.RequestUri.Should().NotBeNull();
+        request.RequestUri!.Query.Should().Contain("group=ui");
+        request.RequestUri.Query.Should().Contain("entry=button.save");
+        request.RequestUri.Query.Should().Contain("lang=en");
     }
 
     [Fact]
-    public async Task BuildGetRequest_ShouldSetJsonRequestBody()
+    public void BuildGetRequest_ShouldIncludeRequestModelInQueryString()
     {
         // Arrange
         var options = new TranslaasClientOptions
@@ -183,11 +189,12 @@ public class HttpRequestBuildingTests
         var request = client.BuildGetRequest("translations/text", requestModel);
 
         // Assert
-        var body = await request.Content!.ReadAsStringAsync();
-        body.Should().Contain("\"group\":\"ui\"");
-        body.Should().Contain("\"entry\":\"button.save\"");
-        body.Should().Contain("\"lang\":\"en\"");
-        body.Should().Contain("\"n\":5");
+        request.Content.Should().BeNull(); // GET requests with query strings don't have content
+        request.RequestUri.Should().NotBeNull();
+        request.RequestUri!.Query.Should().Contain("group=ui");
+        request.RequestUri.Query.Should().Contain("entry=button.save");
+        request.RequestUri.Query.Should().Contain("lang=en");
+        request.RequestUri.Query.Should().Contain("n=5");
     }
 
     [Fact]
@@ -252,7 +259,7 @@ public class HttpRequestBuildingTests
         // Assert
         request.Should().NotBeNull();
         request.RequestUri!.Query.Should().Contain("userName=John");
-        request.RequestUri.Query.Should().Contain("N=5");
+        request.RequestUri.Query.Should().Contain("N=5"); // Parameter name preserves case from dictionary
     }
 
     [Fact]
@@ -318,7 +325,7 @@ public class HttpRequestBuildingTests
     }
 
     [Fact]
-    public void BuildGetRequest_ShouldNotAppendQueryString_WhenParametersIsNull()
+    public void BuildGetRequest_ShouldIncludeRequestModelInQueryString_WhenParametersIsNull()
     {
         // Arrange
         var options = new TranslaasClientOptions
@@ -340,11 +347,14 @@ public class HttpRequestBuildingTests
 
         // Assert
         request.Should().NotBeNull();
-        request.RequestUri!.Query.Should().BeEmpty();
+        request.RequestUri!.Query.Should().NotBeEmpty(); // Request model properties are always in query string
+        request.RequestUri.Query.Should().Contain("group=ui");
+        request.RequestUri.Query.Should().Contain("entry=button.save");
+        request.RequestUri.Query.Should().Contain("lang=en");
     }
 
     [Fact]
-    public void BuildGetRequest_ShouldNotAppendQueryString_WhenParametersIsEmpty()
+    public void BuildGetRequest_ShouldIncludeRequestModelProperties_WhenParametersIsEmpty()
     {
         // Arrange
         var options = new TranslaasClientOptions
@@ -367,6 +377,9 @@ public class HttpRequestBuildingTests
 
         // Assert
         request.Should().NotBeNull();
-        request.RequestUri!.Query.Should().BeEmpty();
+        // Request model properties are always included in query string, even when parameters is empty
+        request.RequestUri!.Query.Should().Contain("group=ui");
+        request.RequestUri.Query.Should().Contain("entry=button.save");
+        request.RequestUri.Query.Should().Contain("lang=en");
     }
 }
