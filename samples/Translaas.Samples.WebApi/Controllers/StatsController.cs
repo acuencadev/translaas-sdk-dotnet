@@ -58,22 +58,21 @@ public class StatsController : ControllerBase
                 TotalRevenue = totalRevenue,
                 Labels = new StatsLabels
                 {
-                    TotalUsers = await _translaasService.T("stats", "label.total.users", resolvedLang),
-                    ActiveUsers = await _translaasService.T("stats", "label.active.users", resolvedLang),
-                    TotalOrders = await _translaasService.T("stats", "label.total.orders", resolvedLang),
-                    PendingOrders = await _translaasService.T("stats", "label.pending.orders", resolvedLang),
-                    TotalRevenue = await _translaasService.T("stats", "label.total.revenue", resolvedLang)
+                    TotalUsers = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Users",
+                    ActiveUsers = await _translaasService.T("common", "app.name", resolvedLang) + " - Active Users",
+                    TotalOrders = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Orders",
+                    PendingOrders = await _translaasService.T("common", "app.name", resolvedLang) + " - Pending Orders",
+                    TotalRevenue = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Revenue"
                 },
                 Messages = new StatsMessages
                 {
                     UsersOnline = await _translaasService.T("messages", "user.online", resolvedLang, activeUsers),
                     ItemsInStock = await _translaasService.T("messages", "item", resolvedLang, pendingOrders),
-                    Summary = await _translaasService.T("stats", "summary", resolvedLang,
+                    Summary = await _translaasService.T("messages", "greeting", resolvedLang,
                         new Dictionary<string, string>
                         {
-                            { "totalUsers", totalUsers.ToString() },
-                            { "activeUsers", activeUsers.ToString() },
-                            { "totalOrders", totalOrders.ToString() }
+                            { "userName", await _translaasService.T("common", "app.name", resolvedLang) },
+                            { "itemCount", totalOrders.ToString() }
                         })
                 },
                 Language = resolvedLang
@@ -115,10 +114,10 @@ public class StatsController : ControllerBase
                 NewUsersThisWeek = newUsersThisWeek,
                 Messages = new UserStatsMessages
                 {
-                    TotalUsersMessage = await _translaasService.T("stats", "users.total", resolvedLang, totalUsers),
+                    TotalUsersMessage = await _translaasService.T("messages", "item", resolvedLang, totalUsers),
                     OnlineUsersMessage = await _translaasService.T("messages", "user.online", resolvedLang, onlineUsers),
-                    NewUsersTodayMessage = await _translaasService.T("stats", "users.new.today", resolvedLang, newUsersToday),
-                    NewUsersThisWeekMessage = await _translaasService.T("stats", "users.new.week", resolvedLang, newUsersThisWeek)
+                    NewUsersTodayMessage = await _translaasService.T("messages", "item", resolvedLang, newUsersToday),
+                    NewUsersThisWeekMessage = await _translaasService.T("messages", "item", resolvedLang, newUsersThisWeek)
                 },
                 Language = resolvedLang
             };
@@ -159,10 +158,10 @@ public class StatsController : ControllerBase
                 CancelledOrders = cancelledOrders,
                 Messages = new OrderStatsMessages
                 {
-                    TotalOrdersMessage = await _translaasService.T("stats", "orders.total", resolvedLang, totalOrders),
-                    PendingOrdersMessage = await _translaasService.T("stats", "orders.pending", resolvedLang, pendingOrders),
-                    CompletedOrdersMessage = await _translaasService.T("stats", "orders.completed", resolvedLang, completedOrders),
-                    CancelledOrdersMessage = await _translaasService.T("stats", "orders.cancelled", resolvedLang, cancelledOrders)
+                    TotalOrdersMessage = await _translaasService.T("messages", "item", resolvedLang, totalOrders),
+                    PendingOrdersMessage = await _translaasService.T("messages", "item", resolvedLang, pendingOrders),
+                    CompletedOrdersMessage = await _translaasService.T("messages", "item", resolvedLang, completedOrders),
+                    CancelledOrdersMessage = await _translaasService.T("messages", "item", resolvedLang, cancelledOrders)
                 },
                 Language = resolvedLang
             };

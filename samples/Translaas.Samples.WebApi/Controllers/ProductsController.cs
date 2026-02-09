@@ -56,28 +56,28 @@ public class ProductsController : ControllerBase
                 new ProductDto
                 {
                     Id = 1,
-                    Name = await _translaasService.T("products", "laptop.name", resolvedLang),
-                    Description = await _translaasService.T("products", "laptop.description", resolvedLang),
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 1",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang),
                     Price = 1299.99m,
-                    Category = await _translaasService.T("products", "category.electronics", resolvedLang),
+                    Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = true
                 },
                 new ProductDto
                 {
                     Id = 2,
-                    Name = await _translaasService.T("products", "phone.name", resolvedLang),
-                    Description = await _translaasService.T("products", "phone.description", resolvedLang),
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 2",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang),
                     Price = 899.99m,
-                    Category = await _translaasService.T("products", "category.electronics", resolvedLang),
+                    Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = true
                 },
                 new ProductDto
                 {
                     Id = 3,
-                    Name = await _translaasService.T("products", "book.name", resolvedLang),
-                    Description = await _translaasService.T("products", "book.description", resolvedLang),
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 3",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang),
                     Price = 29.99m,
-                    Category = await _translaasService.T("products", "category.books", resolvedLang),
+                    Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = false
                 }
             };
@@ -90,8 +90,8 @@ public class ProductsController : ControllerBase
                 Products = products,
                 TotalCount = totalCount,
                 InStockCount = inStockCount,
-                Summary = await _translaasService.T("products", "summary", resolvedLang, totalCount, 
-                    new Dictionary<string, string> { { "count", totalCount.ToString() }, { "inStock", inStockCount.ToString() } }),
+                Summary = await _translaasService.T("messages", "greeting", resolvedLang,
+                    new Dictionary<string, string> { { "userName", await _translaasService.T("common", "app.name", resolvedLang) }, { "itemCount", totalCount.ToString() } }),
                 Language = resolvedLang
             };
 
@@ -124,39 +124,39 @@ public class ProductsController : ControllerBase
                 1 => new ProductDto
                 {
                     Id = 1,
-                    Name = await _translaasService.T("products", "laptop.name", resolvedLang),
-                    Description = await _translaasService.T("products", "laptop.description", resolvedLang),
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 1",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang),
                     Price = 1299.99m,
-                    Category = await _translaasService.T("products", "category.electronics", resolvedLang),
+                    Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = true,
-                    Details = await _translaasService.T("products", "laptop.details", resolvedLang)
+                    Details = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
                 2 => new ProductDto
                 {
                     Id = 2,
-                    Name = await _translaasService.T("products", "phone.name", resolvedLang),
-                    Description = await _translaasService.T("products", "phone.description", resolvedLang),
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 2",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang),
                     Price = 899.99m,
-                    Category = await _translaasService.T("products", "category.electronics", resolvedLang),
+                    Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = true,
-                    Details = await _translaasService.T("products", "phone.details", resolvedLang)
+                    Details = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
                 3 => new ProductDto
                 {
                     Id = 3,
-                    Name = await _translaasService.T("products", "book.name", resolvedLang),
-                    Description = await _translaasService.T("products", "book.description", resolvedLang),
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 3",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang),
                     Price = 29.99m,
-                    Category = await _translaasService.T("products", "category.books", resolvedLang),
+                    Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = false,
-                    Details = await _translaasService.T("products", "book.details", resolvedLang)
+                    Details = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
                 _ => null
             };
 
             if (product == null)
             {
-                var notFoundMessage = await _translaasService.T("api", "product.not.found", resolvedLang);
+                var notFoundMessage = await _translaasService.T("common", "error", resolvedLang);
                 return NotFound(new { error = notFoundMessage, productId = id });
             }
 
@@ -186,21 +186,21 @@ public class ProductsController : ControllerBase
             {
                 new CategoryDto
                 {
-                    Id = "electronics",
-                    Name = await _translaasService.T("products", "category.electronics", resolvedLang),
-                    Description = await _translaasService.T("products", "category.electronics.description", resolvedLang)
+                    Id = "category1",
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Category 1",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
                 new CategoryDto
                 {
-                    Id = "books",
-                    Name = await _translaasService.T("products", "category.books", resolvedLang),
-                    Description = await _translaasService.T("products", "category.books.description", resolvedLang)
+                    Id = "category2",
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Category 2",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
                 new CategoryDto
                 {
-                    Id = "clothing",
-                    Name = await _translaasService.T("products", "category.clothing", resolvedLang),
-                    Description = await _translaasService.T("products", "category.clothing.description", resolvedLang)
+                    Id = "category3",
+                    Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Category 3",
+                    Description = await _translaasService.T("common", "welcome.message", resolvedLang)
                 }
             };
 

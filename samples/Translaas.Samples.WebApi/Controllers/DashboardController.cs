@@ -59,83 +59,81 @@ public class DashboardController : ControllerBase
             var dashboard = new DashboardResponse
             {
                 Title = await _translaasService.T("common", "welcome", resolvedLang),
-                Subtitle = await _translaasService.T("dashboard", "subtitle", resolvedLang),
+                Subtitle = await _translaasService.T("common", "welcome.message", resolvedLang),
                 Metrics = new List<MetricDto>
                 {
                     new MetricDto
                     {
-                        Label = await _translaasService.T("stats", "label.total.users", resolvedLang),
+                        Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Users",
                         Value = totalUsers,
                         FormattedValue = totalUsers.ToString("N0"),
-                        Message = await _translaasService.T("stats", "users.total", resolvedLang, totalUsers)
+                        Message = await _translaasService.T("messages", "item", resolvedLang, totalUsers)
                     },
                     new MetricDto
                     {
-                        Label = await _translaasService.T("stats", "label.active.users", resolvedLang),
+                        Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Active Users",
                         Value = activeUsers,
                         FormattedValue = activeUsers.ToString("N0"),
                         Message = await _translaasService.T("messages", "user.online", resolvedLang, activeUsers)
                     },
                     new MetricDto
                     {
-                        Label = await _translaasService.T("stats", "label.total.orders", resolvedLang),
+                        Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Orders",
                         Value = totalOrders,
                         FormattedValue = totalOrders.ToString("N0"),
-                        Message = await _translaasService.T("stats", "orders.total", resolvedLang, totalOrders)
+                        Message = await _translaasService.T("messages", "item", resolvedLang, totalOrders)
                     },
                     new MetricDto
                     {
-                        Label = await _translaasService.T("stats", "label.pending.orders", resolvedLang),
+                        Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Pending Orders",
                         Value = pendingOrders,
                         FormattedValue = pendingOrders.ToString("N0"),
-                        Message = await _translaasService.T("stats", "orders.pending", resolvedLang, pendingOrders)
+                        Message = await _translaasService.T("messages", "item", resolvedLang, pendingOrders)
                     },
                     new MetricDto
                     {
-                        Label = await _translaasService.T("stats", "label.total.revenue", resolvedLang),
+                        Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Revenue",
                         Value = (double)totalRevenue,
                         FormattedValue = totalRevenue.ToString("C"),
-                        Message = await _translaasService.T("stats", "revenue.total", resolvedLang,
-                            new Dictionary<string, string> { { "amount", totalRevenue.ToString("C") } })
+                        Message = await _translaasService.T("messages", "greeting", resolvedLang,
+                            new Dictionary<string, string> { { "userName", await _translaasService.T("common", "app.name", resolvedLang) }, { "itemCount", totalRevenue.ToString("N0") } })
                     }
                 },
                 Notifications = new NotificationDto
                 {
                     Count = notifications,
                     Message = await _translaasService.T("messages", "notification", resolvedLang, notifications),
-                    Label = await _translaasService.T("dashboard", "notifications.label", resolvedLang)
+                    Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Notifications"
                 },
                 RecentActivity = new List<ActivityDto>
                 {
                     new ActivityDto
                     {
-                        Type = await _translaasService.T("dashboard", "activity.type.order", resolvedLang),
-                        Description = await _translaasService.T("dashboard", "activity.order.created", resolvedLang,
-                            new Dictionary<string, string> { { "orderId", "12345" } }),
+                        Type = await _translaasService.T("common", "app.name", resolvedLang),
+                        Description = await _translaasService.T("messages", "greeting", resolvedLang,
+                            new Dictionary<string, string> { { "userName", "Order #12345" }, { "itemCount", "1" } }),
                         Timestamp = DateTime.UtcNow.AddMinutes(-5)
                     },
                     new ActivityDto
                     {
-                        Type = await _translaasService.T("dashboard", "activity.type.user", resolvedLang),
-                        Description = await _translaasService.T("dashboard", "activity.user.registered", resolvedLang,
-                            new Dictionary<string, string> { { "userName", "John Doe" } }),
+                        Type = await _translaasService.T("common", "app.name", resolvedLang),
+                        Description = await _translaasService.T("messages", "greeting", resolvedLang,
+                            new Dictionary<string, string> { { "userName", "John Doe" }, { "itemCount", "1" } }),
                         Timestamp = DateTime.UtcNow.AddMinutes(-15)
                     },
                     new ActivityDto
                     {
-                        Type = await _translaasService.T("dashboard", "activity.type.product", resolvedLang),
-                        Description = await _translaasService.T("dashboard", "activity.product.updated", resolvedLang,
-                            new Dictionary<string, string> { { "productName", await _translaasService.T("products", "laptop.name", resolvedLang) } }),
+                        Type = await _translaasService.T("common", "app.name", resolvedLang),
+                        Description = await _translaasService.T("messages", "items", resolvedLang, 1,
+                            new Dictionary<string, string> { { "userName", await _translaasService.T("common", "app.name", resolvedLang) } }),
                         Timestamp = DateTime.UtcNow.AddHours(-1)
                     }
                 },
-                Summary = await _translaasService.T("dashboard", "summary", resolvedLang,
+                Summary = await _translaasService.T("messages", "greeting", resolvedLang,
                     new Dictionary<string, string>
                     {
-                        { "totalUsers", totalUsers.ToString() },
-                        { "activeUsers", activeUsers.ToString() },
-                        { "totalOrders", totalOrders.ToString() },
-                        { "totalRevenue", totalRevenue.ToString("C") }
+                        { "userName", await _translaasService.T("common", "app.name", resolvedLang) },
+                        { "itemCount", totalOrders.ToString() }
                     }),
                 Language = resolvedLang
             };
@@ -178,9 +176,9 @@ public class DashboardController : ControllerBase
                 {
                     WelcomeMessage = await _translaasService.T("common", "welcome", resolvedLang),
                     UsersMessage = await _translaasService.T("messages", "user.online", resolvedLang, activeUsers),
-                    OrdersMessage = await _translaasService.T("stats", "orders.total", resolvedLang, totalOrders),
-                    RevenueMessage = await _translaasService.T("stats", "revenue.total", resolvedLang,
-                        new Dictionary<string, string> { { "amount", totalRevenue.ToString("C") } })
+                    OrdersMessage = await _translaasService.T("messages", "item", resolvedLang, totalOrders),
+                    RevenueMessage = await _translaasService.T("messages", "greeting", resolvedLang,
+                        new Dictionary<string, string> { { "userName", await _translaasService.T("common", "app.name", resolvedLang) }, { "itemCount", totalRevenue.ToString("N0") } })
                 },
                 Language = resolvedLang
             };
