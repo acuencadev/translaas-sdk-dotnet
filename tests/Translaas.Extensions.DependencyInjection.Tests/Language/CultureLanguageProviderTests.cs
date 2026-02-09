@@ -1,9 +1,6 @@
 using System.Globalization;
-using System.Threading;
 
 using FluentAssertions;
-
-using Xunit;
 
 namespace Translaas.Extensions.DependencyInjection.Tests.Language;
 

@@ -1,15 +1,10 @@
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using FluentAssertions;
 using Moq;
 using Moq.Protected;
 using Translaas.Models.Errors;
-using Translaas.Models.Responses;
-using Xunit;
 
 namespace Translaas.Client.Tests;
 

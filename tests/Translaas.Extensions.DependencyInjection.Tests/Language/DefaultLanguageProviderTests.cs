@@ -4,8 +4,6 @@ using Microsoft.Extensions.Options;
 
 using Moq;
 
-using Xunit;
-
 namespace Translaas.Extensions.DependencyInjection.Tests.Language;
 
 /// <summary>

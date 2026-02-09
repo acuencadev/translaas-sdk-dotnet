@@ -33,27 +33,21 @@ namespace Translaas.Caching.File;
 /// <item><description>Write to file cache (L2) - persistent</description></item>
 /// </list>
 /// </remarks>
-public class HybridCacheProvider : IOfflineCacheProvider
+/// <remarks>
+/// Initializes a new instance of the <see cref="HybridCacheProvider"/> class.
+/// </remarks>
+/// <param name="fileCache">The file-based cache provider (L2).</param>
+/// <param name="options">The hybrid cache options.</param>
+/// <exception cref="ArgumentNullException">Thrown when fileCache or options is null.</exception>
+public class HybridCacheProvider(IOfflineCacheProvider fileCache, HybridCacheOptions options) : IOfflineCacheProvider
 {
-    private readonly IOfflineCacheProvider _fileCache;
-    private readonly HybridCacheOptions _options;
+    private readonly IOfflineCacheProvider _fileCache = fileCache ?? throw new ArgumentNullException(nameof(fileCache));
+    private readonly HybridCacheOptions _options = options ?? throw new ArgumentNullException(nameof(options));
 
     // In-memory cache for fast L1 lookups
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry<TranslationProject>> _projectCache = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry<TranslationGroup>> _groupCache = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry<ProjectLocales>> _localesCache = new();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="HybridCacheProvider"/> class.
-    /// </summary>
-    /// <param name="fileCache">The file-based cache provider (L2).</param>
-    /// <param name="options">The hybrid cache options.</param>
-    /// <exception cref="ArgumentNullException">Thrown when fileCache or options is null.</exception>
-    public HybridCacheProvider(IOfflineCacheProvider fileCache, HybridCacheOptions options)
-    {
-        _fileCache = fileCache ?? throw new ArgumentNullException(nameof(fileCache));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
 
     /// <inheritdoc />
     public async Task<TranslationProject?> GetProjectAsync(
@@ -357,19 +351,12 @@ public class HybridCacheProvider : IOfflineCacheProvider
     /// <summary>
     /// Represents a cache entry with optional expiration.
     /// </summary>
-    private sealed class CacheEntry<T> where T : class
+    private sealed class CacheEntry<T>(T value, DateTimeOffset? expiresAt) where T : class
     {
-        public T Value { get; }
-        public DateTimeOffset CreatedAt { get; }
-        public DateTimeOffset? ExpiresAt { get; }
+        public T Value { get; } = value;
+        public DateTimeOffset CreatedAt { get; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? ExpiresAt { get; } = expiresAt;
 
         public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value < DateTimeOffset.UtcNow;
-
-        public CacheEntry(T value, DateTimeOffset? expiresAt)
-        {
-            Value = value;
-            CreatedAt = DateTimeOffset.UtcNow;
-            ExpiresAt = expiresAt;
-        }
     }
 }

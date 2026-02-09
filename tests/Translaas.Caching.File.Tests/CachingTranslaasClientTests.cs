@@ -1,11 +1,8 @@
-using System.Collections.Generic;
 using System.Text.Json;
 
 using FluentAssertions;
 
 using Moq;
-
-using Translaas.Caching.File;
 using Translaas.Client;
 using Translaas.Models.Errors;
 using Translaas.Models.Responses;
@@ -348,27 +345,6 @@ public class CachingTranslaasClientTests
 
     #endregion
 
-    #region GetEntryAsync - ApiOnlyWithBackup Tests
-
-    [Fact]
-    public async Task GetEntryAsync_ApiOnlyWithBackup_AlwaysCallsApi()
-    {
-        // Arrange
-        var client = CreateClient(OfflineFallbackMode.ApiOnlyWithBackup);
-
-        _mockInnerClient
-            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Hello from API");
-
-        // Act
-        var result = await client.GetEntryAsync("common", "hello", "en");
-
-        // Assert
-        result.Should().Be("Hello from API");
-        _mockInnerClient.Verify(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    #endregion
 
     #region GetProjectAsync - CacheFirst Tests
 
@@ -527,7 +503,7 @@ public class CachingTranslaasClientTests
     {
         // Arrange
         var client = CreateClient(OfflineFallbackMode.CacheFirst);
-        var cachedLocales = new ProjectLocales { Locales = new List<string> { "en", "es" } };
+        var cachedLocales = new ProjectLocales { Locales = ["en", "es"] };
 
         _mockCacheProvider
             .Setup(c => c.GetProjectLocalesAsync("my-project", It.IsAny<CancellationToken>()))
@@ -545,7 +521,7 @@ public class CachingTranslaasClientTests
     {
         // Arrange
         var client = CreateClient(OfflineFallbackMode.ApiFirst);
-        var apiLocales = new ProjectLocales { Locales = new List<string> { "en", "es" } };
+        var apiLocales = new ProjectLocales { Locales = ["en", "es"] };
 
         _mockInnerClient
             .Setup(c => c.GetProjectLocalesAsync("my-project", It.IsAny<CancellationToken>()))

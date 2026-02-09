@@ -67,7 +67,7 @@ public class OfflineCacheOptions
     /// If empty, no projects are pre-cached automatically.
     /// Projects will still be cached on first access.
     /// </remarks>
-    public List<string> Projects { get; set; } = new();
+    public List<string> Projects { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the list of language codes to pre-cache.
@@ -77,7 +77,7 @@ public class OfflineCacheOptions
     /// If empty, all available languages are cached for each project.
     /// Language codes should match the project's available locales (e.g., "en", "es", "fr").
     /// </remarks>
-    public List<string> Languages { get; set; } = new();
+    public List<string> Languages { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the default project ID for single entry lookups.

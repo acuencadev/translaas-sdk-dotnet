@@ -1,14 +1,8 @@
-using System;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.Caching.Memory;
 
 using Moq;
-
-using Translaas.Caching;
-
-using Xunit;
 
 namespace Translaas.Caching.Tests;
 

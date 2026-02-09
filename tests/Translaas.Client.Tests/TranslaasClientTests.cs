@@ -56,8 +56,8 @@ public class TranslaasClientTests
         var httpClient = new HttpClient();
         var options = new TranslaasClientOptions
         {
-            ApiKey = string.Empty, // Invalid
-            BaseUrl = "https://api.test.com"
+            ApiKey = "test-key",
+            BaseUrl = "invalid-url" // Invalid URL format
         };
 
         // Act & Assert

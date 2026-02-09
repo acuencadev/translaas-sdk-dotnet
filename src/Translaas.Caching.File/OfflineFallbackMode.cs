@@ -23,9 +23,4 @@ public enum OfflineFallbackMode
     /// </summary>
     CacheOnly = 2,
 
-    /// <summary>
-    /// Use API only, but update cache in background.
-    /// Cache serves as backup for future offline use.
-    /// </summary>
-    ApiOnlyWithBackup = 3
 }

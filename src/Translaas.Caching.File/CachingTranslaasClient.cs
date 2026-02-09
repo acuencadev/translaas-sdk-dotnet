@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Translaas.Client;
+using Translaas.Models;
 using Translaas.Models.Errors;
 using Translaas.Models.Responses;
 
@@ -15,32 +16,24 @@ namespace Translaas.Caching.File;
 /// A decorator for <see cref="ITranslaasClient"/> that adds offline caching support.
 /// Wraps an existing client and adds file-based caching based on the configured fallback mode.
 /// </summary>
-public class CachingTranslaasClient : ITranslaasClient
+/// <remarks>
+/// Initializes a new instance of the <see cref="CachingTranslaasClient"/> class.
+/// </remarks>
+/// <param name="innerClient">The underlying Translaas client.</param>
+/// <param name="cacheProvider">The offline cache provider.</param>
+/// <param name="options">The offline cache options.</param>
+/// <param name="projectId">The default project ID for entry lookups (required for caching single entries).</param>
+/// <exception cref="ArgumentNullException">Thrown when any required parameter is null.</exception>
+public class CachingTranslaasClient(
+    ITranslaasClient innerClient,
+    IOfflineCacheProvider cacheProvider,
+    OfflineCacheOptions options,
+    string projectId) : ITranslaasClient
 {
-    private readonly ITranslaasClient _innerClient;
-    private readonly IOfflineCacheProvider _cacheProvider;
-    private readonly OfflineCacheOptions _options;
-    private readonly string _projectId;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CachingTranslaasClient"/> class.
-    /// </summary>
-    /// <param name="innerClient">The underlying Translaas client.</param>
-    /// <param name="cacheProvider">The offline cache provider.</param>
-    /// <param name="options">The offline cache options.</param>
-    /// <param name="projectId">The default project ID for entry lookups (required for caching single entries).</param>
-    /// <exception cref="ArgumentNullException">Thrown when any required parameter is null.</exception>
-    public CachingTranslaasClient(
-        ITranslaasClient innerClient,
-        IOfflineCacheProvider cacheProvider,
-        OfflineCacheOptions options,
-        string projectId)
-    {
-        _innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
-        _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _projectId = projectId ?? throw new ArgumentNullException(nameof(projectId));
-    }
+    private readonly ITranslaasClient _innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
+    private readonly IOfflineCacheProvider _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+    private readonly OfflineCacheOptions _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly string _projectId = projectId ?? throw new ArgumentNullException(nameof(projectId));
 
     /// <inheritdoc />
     public async Task<string> GetEntryAsync(
@@ -56,7 +49,6 @@ public class CachingTranslaasClient : ITranslaasClient
             OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetEntryWithApiOnlyBackupAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -74,7 +66,6 @@ public class CachingTranslaasClient : ITranslaasClient
             OfflineFallbackMode.CacheFirst => await GetGroupWithCacheFirstAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetGroupWithApiFirstAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetGroupFromCacheOnlyAsync(project, group, lang, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetGroupWithApiOnlyBackupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -91,7 +82,6 @@ public class CachingTranslaasClient : ITranslaasClient
             OfflineFallbackMode.CacheFirst => await GetProjectWithCacheFirstAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetProjectWithApiFirstAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetProjectFromCacheOnlyAsync(project, lang, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetProjectWithApiOnlyBackupAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -106,7 +96,6 @@ public class CachingTranslaasClient : ITranslaasClient
             OfflineFallbackMode.CacheFirst => await GetProjectLocalesWithCacheFirstAsync(project, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.ApiFirst => await GetProjectLocalesWithApiFirstAsync(project, cancellationToken).ConfigureAwait(false),
             OfflineFallbackMode.CacheOnly => await GetProjectLocalesFromCacheOnlyAsync(project, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiOnlyWithBackup => await GetProjectLocalesWithApiOnlyBackupAsync(project, cancellationToken).ConfigureAwait(false),
             _ => await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false)
         };
     }
@@ -123,12 +112,41 @@ public class CachingTranslaasClient : ITranslaasClient
     {
         // Try cache first
         var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-        var cachedValue = cachedGroup?.GetValue(entry);
-
-        if (cachedValue != null)
+        
+        if (cachedGroup != null)
         {
-            // Perform parameter substitution on cached template
-            return SubstituteParameters(cachedValue, number, parameters);
+            // Check if entry has plural forms
+            if (cachedGroup.HasPluralForms(entry))
+            {
+                // Determine plural category based on number
+                var pluralCategory = DeterminePluralCategory(number, lang);
+                
+                // Get the plural form
+                var pluralForm = cachedGroup.GetPluralForm(entry, pluralCategory);
+                
+                // If the specific category is not found, try "other" as fallback
+                if (pluralForm == null && pluralCategory != PluralCategory.Other)
+                {
+                    pluralForm = cachedGroup.GetPluralForm(entry, PluralCategory.Other);
+                }
+                
+                if (pluralForm != null)
+                {
+                    // Perform parameter substitution on cached template
+                    return SubstituteParameters(pluralForm, number, parameters);
+                }
+            }
+            else
+            {
+                // Simple string entry
+                var cachedValue = cachedGroup.GetValue(entry);
+                
+                if (cachedValue != null)
+                {
+                    // Perform parameter substitution on cached template
+                    return SubstituteParameters(cachedValue, number, parameters);
+                }
+            }
         }
 
         // Cache miss, try API
@@ -136,8 +154,18 @@ public class CachingTranslaasClient : ITranslaasClient
         {
             var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background (fire and forget)
-            _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
+            // Update cache - fetch the specific group and update cache
+            // Note: We await this to ensure it completes, but catch errors so API call still succeeds
+            try
+            {
+                await UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - cache update failure shouldn't break the API call
+                // Note: In a production app, you might want to use ILogger here
+                System.Diagnostics.Debug.WriteLine($"Cache update failed for project '{_projectId}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            }
 
             return result;
         }
@@ -159,8 +187,18 @@ public class CachingTranslaasClient : ITranslaasClient
         {
             var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background
-            _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
+            // Update cache - fetch the specific group and update cache
+            // Note: We await this to ensure it completes, but catch errors so API call still succeeds
+            try
+            {
+                await UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - cache update failure shouldn't break the API call
+                // Note: In a production app, you might want to use ILogger here
+                System.Diagnostics.Debug.WriteLine($"Cache update failed for project '{_projectId}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            }
 
             return result;
         }
@@ -168,12 +206,41 @@ public class CachingTranslaasClient : ITranslaasClient
         {
             // API failed, try cache
             var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-            var cachedValue = cachedGroup?.GetValue(entry);
-
-            if (cachedValue != null)
+            
+            if (cachedGroup != null)
             {
-                // Perform parameter substitution on cached template
-                return SubstituteParameters(cachedValue, number, parameters);
+                // Check if entry has plural forms
+                if (cachedGroup.HasPluralForms(entry))
+                {
+                    // Determine plural category based on number
+                    var pluralCategory = DeterminePluralCategory(number, lang);
+                    
+                    // Get the plural form
+                    var pluralForm = cachedGroup.GetPluralForm(entry, pluralCategory);
+                    
+                    // If the specific category is not found, try "other" as fallback
+                    if (pluralForm == null && pluralCategory != PluralCategory.Other)
+                    {
+                        pluralForm = cachedGroup.GetPluralForm(entry, PluralCategory.Other);
+                    }
+                    
+                    if (pluralForm != null)
+                    {
+                        // Perform parameter substitution on cached template
+                        return SubstituteParameters(pluralForm, number, parameters);
+                    }
+                }
+                else
+                {
+                    // Simple string entry
+                    var cachedValue = cachedGroup.GetValue(entry);
+                    
+                    if (cachedValue != null)
+                    {
+                        // Perform parameter substitution on cached template
+                        return SubstituteParameters(cachedValue, number, parameters);
+                    }
+                }
             }
 
             throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
@@ -188,33 +255,44 @@ public class CachingTranslaasClient : ITranslaasClient
         System.Collections.Generic.Dictionary<string, string>? parameters,
         CancellationToken cancellationToken)
     {
-        var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-        var cachedValue = cachedGroup?.GetValue(entry);
+        var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false) ?? throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
 
-        if (cachedValue != null)
+        // Check if entry has plural forms
+        if (cachedGroup.HasPluralForms(entry))
         {
-            // Perform parameter substitution on cached template
-            return SubstituteParameters(cachedValue, number, parameters);
+            // Determine plural category based on number
+            var pluralCategory = DeterminePluralCategory(number, lang);
+            
+            // Get the plural form
+            var pluralForm = cachedGroup.GetPluralForm(entry, pluralCategory);
+            
+            // If the specific category is not found, try "other" as fallback
+            if (pluralForm == null && pluralCategory != PluralCategory.Other)
+            {
+                pluralForm = cachedGroup.GetPluralForm(entry, PluralCategory.Other);
+            }
+            
+            if (pluralForm != null)
+            {
+                // Perform parameter substitution on cached template
+                return SubstituteParameters(pluralForm, number, parameters);
+            }
+        }
+        else
+        {
+            // Simple string entry
+            var cachedValue = cachedGroup.GetValue(entry);
+            
+            if (cachedValue != null)
+            {
+                // Perform parameter substitution on cached template
+                return SubstituteParameters(cachedValue, number, parameters);
+            }
         }
 
         throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
     }
 
-    private async Task<string> GetEntryWithApiOnlyBackupAsync(
-        string group,
-        string entry,
-        string lang,
-        decimal? number,
-        System.Collections.Generic.Dictionary<string, string>? parameters,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
-
-        // Update cache in background
-        _ = UpdateProjectCacheAsync(_projectId, lang, cancellationToken);
-
-        return result;
-    }
 
     #endregion
 
@@ -240,8 +318,8 @@ public class CachingTranslaasClient : ITranslaasClient
         {
             var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background
-            _ = UpdateProjectCacheAsync(project, lang, cancellationToken);
+            // Update cache in background - only fetch the specific group, not entire project
+            _ = UpdateGroupCacheAsync(project, group, lang, cancellationToken);
 
             return result;
         }
@@ -262,8 +340,8 @@ public class CachingTranslaasClient : ITranslaasClient
         {
             var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background
-            _ = UpdateProjectCacheAsync(project, lang, cancellationToken);
+            // Update cache in background - only fetch the specific group, not entire project
+            _ = UpdateGroupCacheAsync(project, group, lang, cancellationToken);
 
             return result;
         }
@@ -297,20 +375,6 @@ public class CachingTranslaasClient : ITranslaasClient
         throw new TranslaasOfflineCacheMissException(project, lang, group);
     }
 
-    private async Task<TranslationGroup> GetGroupWithApiOnlyBackupAsync(
-        string project,
-        string group,
-        string lang,
-        string? format,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
-
-        // Update cache in background
-        _ = UpdateProjectCacheAsync(project, lang, cancellationToken);
-
-        return result;
-    }
 
     #endregion
 
@@ -390,19 +454,6 @@ public class CachingTranslaasClient : ITranslaasClient
         throw new TranslaasOfflineCacheMissException(project, lang);
     }
 
-    private async Task<TranslationProject> GetProjectWithApiOnlyBackupAsync(
-        string project,
-        string lang,
-        string? format,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false);
-
-        // Update cache
-        await _cacheProvider.SaveProjectAsync(project, lang, result, cancellationToken).ConfigureAwait(false);
-
-        return result;
-    }
 
     #endregion
 
@@ -483,17 +534,6 @@ public class CachingTranslaasClient : ITranslaasClient
             null, project, null);
     }
 
-    private async Task<ProjectLocales> GetProjectLocalesWithApiOnlyBackupAsync(
-        string project,
-        CancellationToken cancellationToken)
-    {
-        var result = await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false);
-
-        // Update cache
-        await _cacheProvider.SaveProjectLocalesAsync(project, result, cancellationToken).ConfigureAwait(false);
-
-        return result;
-    }
 
     #endregion
 
@@ -550,6 +590,35 @@ public class CachingTranslaasClient : ITranslaasClient
     }
 
     /// <summary>
+    /// Determines the plural category based on the number and language.
+    /// Uses simple rules: for most languages, 1 = One, everything else = Other.
+    /// </summary>
+    /// <param name="number">The number value (for pluralization).</param>
+    /// <param name="lang">The language code.</param>
+    /// <returns>The plural category.</returns>
+    private static PluralCategory DeterminePluralCategory(decimal? number, string lang)
+    {
+        // If no number provided, default to Other
+        if (!number.HasValue)
+        {
+            return PluralCategory.Other;
+        }
+
+        var num = number.Value;
+
+        // Simple rule for most languages: 1 = One, everything else = Other
+        // This covers English, Spanish, French, German, Italian, Portuguese, etc.
+        if (num == 1)
+        {
+            return PluralCategory.One;
+        }
+
+        // For more complex languages (Russian, Arabic, etc.), we'd need CLDR rules
+        // For now, default to Other as it's the most common fallback
+        return PluralCategory.Other;
+    }
+
+    /// <summary>
     /// Merges the number parameter into the parameters dictionary, creating a case-insensitive dictionary.
     /// </summary>
     /// <param name="number">The number parameter (for pluralization).</param>
@@ -578,6 +647,78 @@ public class CachingTranslaasClient : ITranslaasClient
         return merged.Count > 0 ? merged : null;
     }
 
+    /// <summary>
+    /// Updates the cache with a specific translation group (more efficient than updating entire project).
+    /// Fetches only the group from API and merges it into the existing cached project.
+    /// </summary>
+    private async Task UpdateGroupCacheAsync(string project, string group, string lang, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Fetch only the specific group from API (more efficient than entire project)
+            var groupData = await _innerClient.GetGroupAsync(project, group, lang, cancellationToken: cancellationToken).ConfigureAwait(false);
+            
+            if (groupData == null)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetGroupAsync returned null for project '{project}', group '{group}', lang '{lang}'");
+                return;
+            }
+            
+            // Get existing project from cache (if exists)
+            var existingProject = await _cacheProvider.GetProjectAsync(project, lang, cancellationToken).ConfigureAwait(false);
+            
+            TranslationProject projectToSave;
+            if (existingProject != null)
+            {
+                // Merge the new group into existing project
+                projectToSave = existingProject;
+                
+                // Extract only the Entries dictionary from the group (not the metadata)
+                // The cache file stores groups as flat entry dictionaries, not full TranslationGroup objects
+                // Use encoder that doesn't escape non-ASCII characters for readability
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries, jsonOptions);
+                projectToSave.Groups[group] = entriesJson;
+            }
+            else
+            {
+                // No existing project, create a new one with just this group
+                projectToSave = new TranslationProject();
+                // Extract only the Entries dictionary from the group (not the metadata)
+                // The cache file stores groups as flat entry dictionaries, not full TranslationGroup objects
+                // Use encoder that doesn't escape non-ASCII characters for readability
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries, jsonOptions);
+                projectToSave.Groups[group] = entriesJson;
+            }
+            
+            // Save the updated project
+            await _cacheProvider.SaveProjectAsync(project, lang, projectToSave, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Log cache update errors for debugging, but don't throw - this is a background operation
+            // Note: In a production app, you might want to use ILogger here
+            System.Diagnostics.Debug.WriteLine($"Failed to update cache for project '{project}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"  Inner exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
+            // Re-throw to let caller handle it
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates the cache with the entire translation project.
+    /// Used when fetching the full project (GetProjectAsync) or when group is unknown.
+    /// </summary>
     private async Task UpdateProjectCacheAsync(string project, string lang, CancellationToken cancellationToken)
     {
         try

@@ -12,24 +12,18 @@ namespace Translaas.Extensions.DependencyInjection;
 /// non-empty language code. If no provider returns a value, returns <c>null</c>.
 /// Provider exceptions are caught and logged, then the next provider is tried.
 /// </remarks>
-public class LanguageResolver : ILanguageResolver
+/// <remarks>
+/// Initializes a new instance of the <see cref="LanguageResolver"/> class.
+/// </remarks>
+/// <param name="providers">The ordered list of language providers.</param>
+/// <param name="logger">Optional logger for provider exceptions.</param>
+/// <exception cref="System.ArgumentNullException">Thrown when providers is null.</exception>
+public class LanguageResolver(
+    IEnumerable<ILanguageProvider> providers,
+    ILogger<LanguageResolver>? logger = null) : ILanguageResolver
 {
-    private readonly IEnumerable<ILanguageProvider> _providers;
-    private readonly ILogger<LanguageResolver>? _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LanguageResolver"/> class.
-    /// </summary>
-    /// <param name="providers">The ordered list of language providers.</param>
-    /// <param name="logger">Optional logger for provider exceptions.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown when providers is null.</exception>
-    public LanguageResolver(
-        IEnumerable<ILanguageProvider> providers,
-        ILogger<LanguageResolver>? logger = null)
-    {
-        _providers = providers ?? throw new System.ArgumentNullException(nameof(providers));
-        _logger = logger;
-    }
+    private readonly IEnumerable<ILanguageProvider> _providers = providers ?? throw new System.ArgumentNullException(nameof(providers));
+    private readonly ILogger<LanguageResolver>? _logger = logger;
 
     /// <inheritdoc />
     public string? Resolve()

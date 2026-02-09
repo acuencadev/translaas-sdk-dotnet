@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-
 using FluentAssertions;
-
-using Translaas.Caching;
-
-using Xunit;
 
 namespace Translaas.Caching.Tests;
 

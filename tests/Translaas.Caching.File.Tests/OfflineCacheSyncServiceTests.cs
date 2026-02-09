@@ -1,8 +1,6 @@
 using FluentAssertions;
 
 using Moq;
-
-using Translaas.Caching.File;
 using Translaas.Caching.File.Models;
 using Translaas.Client;
 using Translaas.Models.Responses;
@@ -23,8 +21,8 @@ public class OfflineCacheSyncServiceTests : IDisposable
         _options = new OfflineCacheOptions
         {
             Enabled = true,
-            Projects = new List<string> { "test-project" },
-            Languages = new List<string> { "en", "es" }
+            Projects = ["test-project"],
+            Languages = ["en", "es"]
         };
         _service = new OfflineCacheSyncService(_mockClient.Object, _mockCacheProvider.Object, _options);
     }
@@ -173,7 +171,7 @@ public class OfflineCacheSyncServiceTests : IDisposable
     public async Task SyncProjectAllLanguagesAsync_FetchesLocalesAndProjects()
     {
         // Arrange
-        var locales = new ProjectLocales { Locales = new List<string> { "en", "es", "fr" } };
+        var locales = new ProjectLocales { Locales = ["en", "es", "fr"] };
         _mockClient
             .Setup(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
@@ -201,12 +199,12 @@ public class OfflineCacheSyncServiceTests : IDisposable
         var optionsWithNoLanguages = new OfflineCacheOptions
         {
             Enabled = true,
-            Projects = new List<string> { "test-project" },
-            Languages = new List<string>() // Empty = all languages
+            Projects = ["test-project"],
+            Languages = [] // Empty = all languages
         };
         using var service = new OfflineCacheSyncService(_mockClient.Object, _mockCacheProvider.Object, optionsWithNoLanguages);
 
-        var locales = new ProjectLocales { Locales = new List<string> { "en", "es", "fr" } };
+        var locales = new ProjectLocales { Locales = ["en", "es", "fr"] };
         _mockClient
             .Setup(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
@@ -233,7 +231,7 @@ public class OfflineCacheSyncServiceTests : IDisposable
     public async Task SyncAllAsync_SyncsAllConfiguredProjects()
     {
         // Arrange
-        var locales = new ProjectLocales { Locales = new List<string> { "en", "es" } };
+        var locales = new ProjectLocales { Locales = ["en", "es"] };
         _mockClient
             .Setup(c => c.GetProjectLocalesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
@@ -262,8 +260,8 @@ public class OfflineCacheSyncServiceTests : IDisposable
         var optionsWithMultipleProjects = new OfflineCacheOptions
         {
             Enabled = true,
-            Projects = new List<string> { "project-1", "project-2" },
-            Languages = new List<string> { "en" }
+            Projects = ["project-1", "project-2"],
+            Languages = ["en"]
         };
         using var service = new OfflineCacheSyncService(_mockClient.Object, _mockCacheProvider.Object, optionsWithMultipleProjects);
 
@@ -273,7 +271,7 @@ public class OfflineCacheSyncServiceTests : IDisposable
             .ThrowsAsync(new Exception("Test error"));
 
         // project-2 succeeds
-        var locales = new ProjectLocales { Locales = new List<string> { "en" } };
+        var locales = new ProjectLocales { Locales = ["en"] };
         _mockClient
             .Setup(c => c.GetProjectLocalesAsync("project-2", It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);

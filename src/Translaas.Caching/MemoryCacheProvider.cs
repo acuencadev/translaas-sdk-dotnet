@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
-
 using System;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Translaas.Caching;
 
@@ -18,12 +17,7 @@ public class MemoryCacheProvider : ITranslaasCacheProvider
     /// <exception cref="ArgumentNullException">Thrown when cache is null.</exception>
     public MemoryCacheProvider(IMemoryCache cache)
     {
-        if (cache == null)
-        {
-            throw new ArgumentNullException(nameof(cache));
-        }
-
-        _cache = cache;
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
     /// <inheritdoc />

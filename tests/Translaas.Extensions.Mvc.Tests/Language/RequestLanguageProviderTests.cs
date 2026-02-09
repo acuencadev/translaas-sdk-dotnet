@@ -1,12 +1,8 @@
-using System.Collections.Generic;
-
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Http;
 
 using Moq;
-
-using Xunit;
 
 namespace Translaas.Extensions.Mvc.Tests.Language;
 
@@ -44,7 +40,7 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.Route }
+            Sources = [RequestLanguageSource.Route]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -70,7 +66,7 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.QueryString }
+            Sources = [RequestLanguageSource.QueryString]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -93,7 +89,7 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.Header }
+            Sources = [RequestLanguageSource.Header]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -116,7 +112,7 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.Cookie }
+            Sources = [RequestLanguageSource.Cookie]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -139,7 +135,7 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.AcceptLanguage }
+            Sources = [RequestLanguageSource.AcceptLanguage]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -166,11 +162,11 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> 
-            { 
+            Sources =
+            [
                 RequestLanguageSource.Route,
                 RequestLanguageSource.QueryString
-            }
+            ]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -192,11 +188,11 @@ public class RequestLanguageProviderTests
 
         var options = new RequestLanguageOptions
         {
-            Sources = new List<RequestLanguageSource> 
-            { 
+            Sources =
+            [
                 RequestLanguageSource.Route,
                 RequestLanguageSource.QueryString
-            }
+            ]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -220,7 +216,7 @@ public class RequestLanguageProviderTests
         var options = new RequestLanguageOptions
         {
             RouteParameterName = "culture",
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.Route }
+            Sources = [RequestLanguageSource.Route]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -247,7 +243,7 @@ public class RequestLanguageProviderTests
         var options = new RequestLanguageOptions
         {
             QueryParameterName = "locale",
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.QueryString }
+            Sources = [RequestLanguageSource.QueryString]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -271,7 +267,7 @@ public class RequestLanguageProviderTests
         var options = new RequestLanguageOptions
         {
             HeaderName = "X-Custom-Language",
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.Header }
+            Sources = [RequestLanguageSource.Header]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -295,7 +291,7 @@ public class RequestLanguageProviderTests
         var options = new RequestLanguageOptions
         {
             CookieName = "locale",
-            Sources = new List<RequestLanguageSource> { RequestLanguageSource.Cookie }
+            Sources = [RequestLanguageSource.Cookie]
         };
         var provider = new RequestLanguageProvider(httpContextAccessor.Object, options);
 
@@ -340,8 +336,8 @@ public class RequestLanguageProviderTests
         var request = new Mock<HttpRequest>();
         var response = new Mock<HttpResponse>();
         
-        headers ??= new HeaderDictionary();
-        routeValues ??= new Microsoft.AspNetCore.Routing.RouteValueDictionary();
+        headers ??= [];
+        routeValues ??= [];
         query ??= new QueryCollection();
         cookies ??= new MockRequestCookieCollection();
 
@@ -356,14 +352,9 @@ public class RequestLanguageProviderTests
         return httpContext.Object;
     }
 
-    private class MockRequestCookieCollection : IRequestCookieCollection
+    private class MockRequestCookieCollection(Dictionary<string, string>? cookies = null) : IRequestCookieCollection
     {
-        private readonly Dictionary<string, string> _cookies;
-
-        public MockRequestCookieCollection(Dictionary<string, string>? cookies = null)
-        {
-            _cookies = cookies ?? new Dictionary<string, string>();
-        }
+        private readonly Dictionary<string, string> _cookies = cookies ?? [];
 
         public string? this[string key] => _cookies.TryGetValue(key, out var value) ? value : null;
 
