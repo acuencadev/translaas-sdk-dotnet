@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Http;
@@ -9,8 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 using Translaas.Extensions.DependencyInjection;
-
-using Xunit;
 
 namespace Translaas.Extensions.Mvc.Tests;
 
@@ -36,12 +31,10 @@ public class TranslaasLanguageBuilderExtensionsTests
         
         // Verify the actual type by resolving the service
         var serviceProvider = services.BuildServiceProvider();
-        using (var scope = serviceProvider.CreateScope())
-        {
-            var provider = scope.ServiceProvider.GetService<ILanguageProvider>();
-            provider.Should().NotBeNull();
-            provider.Should().BeOfType<RequestLanguageProvider>();
-        }
+        using var scope = serviceProvider.CreateScope();
+        var provider = scope.ServiceProvider.GetService<ILanguageProvider>();
+        provider.Should().NotBeNull();
+        provider.Should().BeOfType<RequestLanguageProvider>();
     }
 
     [Fact]
@@ -209,11 +202,11 @@ public class TranslaasLanguageBuilderExtensionsTests
         // Act
         builder.UseRequest(options =>
         {
-            options.Sources = new System.Collections.Generic.List<RequestLanguageSource>
-            {
+            options.Sources =
+            [
                 RequestLanguageSource.AcceptLanguage,
                 RequestLanguageSource.Cookie
-            };
+            ];
         });
 
         // Assert
@@ -236,13 +229,11 @@ public class TranslaasLanguageBuilderExtensionsTests
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        
+
         // Should be able to resolve RequestLanguageProvider with its dependencies
-        using (var scope = serviceProvider.CreateScope())
-        {
-            var provider = scope.ServiceProvider.GetService<ILanguageProvider>();
-            provider.Should().NotBeNull();
-            provider.Should().BeOfType<RequestLanguageProvider>();
-        }
+        using var scope = serviceProvider.CreateScope();
+        var provider = scope.ServiceProvider.GetService<ILanguageProvider>();
+        provider.Should().NotBeNull();
+        provider.Should().BeOfType<RequestLanguageProvider>();
     }
 }

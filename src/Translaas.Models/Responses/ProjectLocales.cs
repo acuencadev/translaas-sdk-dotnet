@@ -12,5 +12,5 @@ public class ProjectLocales
     /// Gets or sets the list of available locale codes (e.g., "en", "fr", "es").
     /// </summary>
     [JsonPropertyName("locales")]
-    public List<string> Locales { get; set; } = new List<string>();
+    public List<string> Locales { get; set; } = [];
 }

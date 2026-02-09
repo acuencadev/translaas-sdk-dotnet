@@ -1,9 +1,6 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
-using Translaas.Models;
-using Translaas.Models.Responses;
 using L = Translaas.Models.LanguageCodes;
 
 namespace Translaas.Samples.WebApi.Controllers;
@@ -11,31 +8,23 @@ namespace Translaas.Samples.WebApi.Controllers;
 /// <summary>
 /// API controller demonstrating real-world usage of Translaas SDK for product data.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ProductsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
-public class ProductsController : ControllerBase
+public class ProductsController(
+    ITranslaasService translaasService,
+    ITranslaasClient translaasClient,
+    ILogger<ProductsController> logger,
+    IConfiguration configuration) : ControllerBase
 {
-    private readonly ITranslaasService _translaasService;
-    private readonly ITranslaasClient _translaasClient;
-    private readonly ILogger<ProductsController> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly ITranslaasService _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
+    private readonly ITranslaasClient _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
+    private readonly ILogger<ProductsController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     private const string ProjectId = "translaas-sdk-samples";
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ProductsController"/> class.
-    /// </summary>
-    public ProductsController(
-        ITranslaasService translaasService,
-        ITranslaasClient translaasClient,
-        ILogger<ProductsController> logger,
-        IConfiguration configuration)
-    {
-        _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
-        _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    }
 
     /// <summary>
     /// Gets a list of products with translated names and descriptions.
@@ -53,8 +42,7 @@ public class ProductsController : ControllerBase
             // Mock product data - in a real app, this would come from a database
             var products = new List<ProductDto>
             {
-                new ProductDto
-                {
+                new() {
                     Id = 1,
                     Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 1",
                     Description = await _translaasService.T("common", "welcome.message", resolvedLang),
@@ -62,8 +50,7 @@ public class ProductsController : ControllerBase
                     Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = true
                 },
-                new ProductDto
-                {
+                new() {
                     Id = 2,
                     Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 2",
                     Description = await _translaasService.T("common", "welcome.message", resolvedLang),
@@ -71,8 +58,7 @@ public class ProductsController : ControllerBase
                     Category = await _translaasService.T("common", "app.name", resolvedLang),
                     InStock = true
                 },
-                new ProductDto
-                {
+                new() {
                     Id = 3,
                     Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Product 3",
                     Description = await _translaasService.T("common", "welcome.message", resolvedLang),
@@ -184,20 +170,17 @@ public class ProductsController : ControllerBase
 
             var categories = new List<CategoryDto>
             {
-                new CategoryDto
-                {
+                new() {
                     Id = "category1",
                     Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Category 1",
                     Description = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
-                new CategoryDto
-                {
+                new() {
                     Id = "category2",
                     Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Category 2",
                     Description = await _translaasService.T("common", "welcome.message", resolvedLang)
                 },
-                new CategoryDto
-                {
+                new() {
                     Id = "category3",
                     Name = await _translaasService.T("common", "app.name", resolvedLang) + " - Category 3",
                     Description = await _translaasService.T("common", "welcome.message", resolvedLang)
@@ -270,7 +253,7 @@ public class ProductsResponse
     /// <summary>
     /// Gets or sets the list of products.
     /// </summary>
-    public List<ProductDto> Products { get; set; } = new();
+    public List<ProductDto> Products { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the total count of products.
@@ -322,7 +305,7 @@ public class CategoriesResponse
     /// <summary>
     /// Gets or sets the list of categories.
     /// </summary>
-    public List<CategoryDto> Categories { get; set; } = new();
+    public List<CategoryDto> Categories { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the count of categories.

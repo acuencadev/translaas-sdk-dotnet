@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
 using Translaas.Caching;
-using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Extensions.Mvc;
 using L = Translaas.Models.LanguageCodes;
@@ -63,13 +60,13 @@ builder.Services.AddTranslaas(options =>
         .UseRequest(request =>
         {
             // Configure which HTTP request sources to check
-            request.Sources = new List<RequestLanguageSource>
-            {
+            request.Sources =
+            [
                 RequestLanguageSource.Route,      // e.g., /api/translation/en/entry
                 RequestLanguageSource.QueryString, // e.g., ?lang=en
                 RequestLanguageSource.Header,     // e.g., X-Language: en
                 RequestLanguageSource.Cookie      // e.g., lang=en cookie
-            };
+            ];
         })
         .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
         .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)

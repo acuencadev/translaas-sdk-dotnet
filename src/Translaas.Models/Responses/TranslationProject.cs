@@ -14,7 +14,7 @@ public class TranslationProject
     /// and the value is the translation group.
     /// </summary>
     [JsonExtensionData]
-    public Dictionary<string, JsonElement> Groups { get; set; } = new Dictionary<string, JsonElement>();
+    public Dictionary<string, JsonElement> Groups { get; set; } = [];
 
     /// <summary>
     /// Gets a translation group by name.

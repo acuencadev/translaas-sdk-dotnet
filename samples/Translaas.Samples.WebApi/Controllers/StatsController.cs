@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Translaas.Extensions.DependencyInjection;
 using L = Translaas.Models.LanguageCodes;
@@ -8,26 +7,19 @@ namespace Translaas.Samples.WebApi.Controllers;
 /// <summary>
 /// API controller demonstrating real-world usage of Translaas SDK for statistics and metrics.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="StatsController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
-public class StatsController : ControllerBase
+public class StatsController(
+    ITranslaasService translaasService,
+    ILogger<StatsController> logger,
+    IConfiguration configuration) : ControllerBase
 {
-    private readonly ITranslaasService _translaasService;
-    private readonly ILogger<StatsController> _logger;
-    private readonly IConfiguration _configuration;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StatsController"/> class.
-    /// </summary>
-    public StatsController(
-        ITranslaasService translaasService,
-        ILogger<StatsController> logger,
-        IConfiguration configuration)
-    {
-        _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    }
+    private readonly ITranslaasService _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
+    private readonly ILogger<StatsController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     /// <summary>
     /// Gets application statistics with translated labels and messages.

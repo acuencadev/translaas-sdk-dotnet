@@ -11,10 +11,15 @@ namespace Translaas.Samples.Maui.ViewModels;
 /// <summary>
 /// Settings view model demonstrating configuration and testing of Translaas SDK.
 /// </summary>
-public partial class SettingsViewModel : ObservableObject
+/// <remarks>
+/// Initializes a new instance of the SettingsViewModel.
+/// </remarks>
+/// <param name="translaasService">The translation service.</param>
+/// <param name="translaasClient">The translation client.</param>
+public partial class SettingsViewModel(ITranslaasService translaasService, ITranslaasClient translaasClient) : ObservableObject
 {
-    private readonly ITranslaasService _translaasService;
-    private readonly ITranslaasClient _translaasClient;
+    private readonly ITranslaasService _translaasService = translaasService;
+    private readonly ITranslaasClient _translaasClient = translaasClient;
     private const string ProjectId = "translaas-sdk-samples";
 
     [ObservableProperty]
@@ -57,17 +62,6 @@ public partial class SettingsViewModel : ObservableObject
         L.Chinese,
         L.Japanese
     ];
-
-    /// <summary>
-    /// Initializes a new instance of the SettingsViewModel.
-    /// </summary>
-    /// <param name="translaasService">The translation service.</param>
-    /// <param name="translaasClient">The translation client.</param>
-    public SettingsViewModel(ITranslaasService translaasService, ITranslaasClient translaasClient)
-    {
-        _translaasService = translaasService;
-        _translaasClient = translaasClient;
-    }
 
     /// <summary>
     /// Tests the translation service with the specified parameters.

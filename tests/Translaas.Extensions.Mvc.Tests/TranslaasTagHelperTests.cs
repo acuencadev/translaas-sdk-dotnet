@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
-
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Razor.TagHelpers;
@@ -32,20 +29,22 @@ public class TranslaasTagHelperTests
     {
         // Arrange
         var mockService = new Mock<ITranslaasService>();
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = string.Empty;
-        tagHelper.Entry = "entry";
-        tagHelper.Lang = "en";
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = string.Empty,
+            Entry = "entry",
+            Lang = "en"
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -61,20 +60,22 @@ public class TranslaasTagHelperTests
     {
         // Arrange
         var mockService = new Mock<ITranslaasService>();
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "group";
-        tagHelper.Entry = string.Empty;
-        tagHelper.Lang = "en";
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "group",
+            Entry = string.Empty,
+            Lang = "en"
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -96,20 +97,22 @@ public class TranslaasTagHelperTests
             .Setup(s => s.T("common", "welcome", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "common";
-        tagHelper.Entry = "welcome";
-        tagHelper.Lang = null; // Optional when providers are configured
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "common",
+            Entry = "welcome",
+            Lang = null // Optional when providers are configured
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -135,20 +138,22 @@ public class TranslaasTagHelperTests
             .Setup(s => s.T("common", "welcome", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "common";
-        tagHelper.Entry = "welcome";
-        tagHelper.Lang = ""; // Empty string is treated as null by service
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "common",
+            Entry = "welcome",
+            Lang = "" // Empty string is treated as null by service
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -164,14 +169,16 @@ public class TranslaasTagHelperTests
     {
         // Arrange
         var mockService = new Mock<ITranslaasService>();
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "group";
-        tagHelper.Entry = "entry";
-        tagHelper.Lang = "en";
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "group",
+            Entry = "entry",
+            Lang = "en"
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
@@ -194,20 +201,22 @@ public class TranslaasTagHelperTests
             .Setup(s => s.T("common", "welcome", "en", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "common";
-        tagHelper.Entry = "welcome";
-        tagHelper.Lang = "en";
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "common",
+            Entry = "welcome",
+            Lang = "en"
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -233,21 +242,23 @@ public class TranslaasTagHelperTests
             .Setup(s => s.T("messages", "item", "en", 5, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTranslation);
 
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "messages";
-        tagHelper.Entry = "item";
-        tagHelper.Lang = "en";
-        tagHelper.Number = 5;
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "messages",
+            Entry = "item",
+            Lang = "en",
+            Number = 5
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -271,21 +282,23 @@ public class TranslaasTagHelperTests
             .Setup(s => s.T(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("test");
 
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "test-group";
-        tagHelper.Entry = "test-entry";
-        tagHelper.Lang = "fr";
-        tagHelper.Number = 10;
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "test-group",
+            Entry = "test-entry",
+            Lang = "fr",
+            Number = 10
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act
@@ -308,20 +321,22 @@ public class TranslaasTagHelperTests
             .Setup(s => s.T("common", "welcome", It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
-        var tagHelper = new TranslaasTagHelper(mockService.Object);
-        tagHelper.Group = "common";
-        tagHelper.Entry = "welcome";
-        tagHelper.Lang = null;
+        var tagHelper = new TranslaasTagHelper(mockService.Object)
+        {
+            Group = "common",
+            Entry = "welcome",
+            Lang = null
+        };
 
         var context = new TagHelperContext(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             new Dictionary<object, object>(),
             Guid.NewGuid().ToString());
 
         var output = new TagHelperOutput(
             "translaas",
-            new TagHelperAttributeList(),
+            [],
             (result, encoder) => Task.FromResult<TagHelperContent>(new DefaultTagHelperContent()));
 
         // Act

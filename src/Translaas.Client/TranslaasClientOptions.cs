@@ -13,7 +13,7 @@ public class TranslaasClientOptions
 {
     // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
     private const string DefaultBaseUrl = "https://sdk-api.translaas.local";
-    private static readonly Regex UrlRegex = new Regex(@"^https?://", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex UrlRegex = new(@"^https?://", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>
     /// Gets or sets the API key for authentication.

@@ -66,10 +66,11 @@ public class ProjectCacheInfoTests
     public void Status_ShouldBeSettable()
     {
         // Arrange
-        var info = new ProjectCacheInfo();
-
-        // Act
-        info.Status = CacheSyncStatus.Synced;
+        var info = new ProjectCacheInfo
+        {
+            // Act
+            Status = CacheSyncStatus.Synced
+        };
 
         // Assert
         info.Status.Should().Be(CacheSyncStatus.Synced);
@@ -84,10 +85,11 @@ public class ProjectCacheInfoTests
     public void Status_ShouldSupportAllValues(CacheSyncStatus status)
     {
         // Arrange
-        var info = new ProjectCacheInfo();
-
-        // Act
-        info.Status = status;
+        var info = new ProjectCacheInfo
+        {
+            // Act
+            Status = status
+        };
 
         // Assert
         info.Status.Should().Be(status);

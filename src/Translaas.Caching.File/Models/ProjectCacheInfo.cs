@@ -13,7 +13,7 @@ public class ProjectCacheInfo
     /// Gets or sets the list of cached language codes for this project.
     /// </summary>
     [JsonPropertyName("languages")]
-    public List<string> Languages { get; set; } = new();
+    public List<string> Languages { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the timestamp of the last successful synchronization.

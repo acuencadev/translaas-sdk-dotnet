@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
@@ -9,31 +8,23 @@ namespace Translaas.Samples.WebApi.Controllers;
 /// <summary>
 /// API controller demonstrating real-world usage of Translaas SDK for dashboard data.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="DashboardController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
-public class DashboardController : ControllerBase
+public class DashboardController(
+    ITranslaasService translaasService,
+    ITranslaasClient translaasClient,
+    ILogger<DashboardController> logger,
+    IConfiguration configuration) : ControllerBase
 {
-    private readonly ITranslaasService _translaasService;
-    private readonly ITranslaasClient _translaasClient;
-    private readonly ILogger<DashboardController> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly ITranslaasService _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
+    private readonly ITranslaasClient _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
+    private readonly ILogger<DashboardController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     private const string ProjectId = "translaas-sdk-samples";
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DashboardController"/> class.
-    /// </summary>
-    public DashboardController(
-        ITranslaasService translaasService,
-        ITranslaasClient translaasClient,
-        ILogger<DashboardController> logger,
-        IConfiguration configuration)
-    {
-        _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
-        _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    }
 
     /// <summary>
     /// Gets dashboard data with translated labels, messages, and metrics.
@@ -60,8 +51,8 @@ public class DashboardController : ControllerBase
             {
                 Title = await _translaasService.T("common", "welcome", resolvedLang),
                 Subtitle = await _translaasService.T("common", "welcome.message", resolvedLang),
-                Metrics = new List<MetricDto>
-                {
+                Metrics =
+                [
                     new MetricDto
                     {
                         Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Total Users",
@@ -98,15 +89,15 @@ public class DashboardController : ControllerBase
                         Message = await _translaasService.T("messages", "greeting", resolvedLang,
                             new Dictionary<string, string> { { "userName", await _translaasService.T("common", "app.name", resolvedLang) }, { "itemCount", totalRevenue.ToString("N0") } })
                     }
-                },
+                ],
                 Notifications = new NotificationDto
                 {
                     Count = notifications,
                     Message = await _translaasService.T("messages", "notification", resolvedLang, notifications),
                     Label = await _translaasService.T("common", "app.name", resolvedLang) + " - Notifications"
                 },
-                RecentActivity = new List<ActivityDto>
-                {
+                RecentActivity =
+                [
                     new ActivityDto
                     {
                         Type = await _translaasService.T("common", "app.name", resolvedLang),
@@ -128,7 +119,7 @@ public class DashboardController : ControllerBase
                             new Dictionary<string, string> { { "userName", await _translaasService.T("common", "app.name", resolvedLang) } }),
                         Timestamp = DateTime.UtcNow.AddHours(-1)
                     }
-                },
+                ],
                 Summary = await _translaasService.T("messages", "greeting", resolvedLang,
                     new Dictionary<string, string>
                     {
@@ -211,7 +202,7 @@ public class DashboardResponse
     /// <summary>
     /// Gets or sets the list of metrics.
     /// </summary>
-    public List<MetricDto> Metrics { get; set; } = new();
+    public List<MetricDto> Metrics { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the notifications information.
@@ -221,7 +212,7 @@ public class DashboardResponse
     /// <summary>
     /// Gets or sets the recent activity list.
     /// </summary>
-    public List<ActivityDto> RecentActivity { get; set; } = new();
+    public List<ActivityDto> RecentActivity { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the summary message (translated).

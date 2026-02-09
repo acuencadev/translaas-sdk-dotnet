@@ -31,10 +31,11 @@ public class CacheManifestTests
     public void Version_ShouldBeSettable()
     {
         // Arrange
-        var manifest = new CacheManifest();
-
-        // Act
-        manifest.Version = "2.0";
+        var manifest = new CacheManifest
+        {
+            // Act
+            Version = "2.0"
+        };
 
         // Assert
         manifest.Version.Should().Be("2.0");
@@ -44,10 +45,11 @@ public class CacheManifestTests
     public void SdkVersion_ShouldBeSettable()
     {
         // Arrange
-        var manifest = new CacheManifest();
-
-        // Act
-        manifest.SdkVersion = "1.0.0";
+        var manifest = new CacheManifest
+        {
+            // Act
+            SdkVersion = "1.0.0"
+        };
 
         // Assert
         manifest.SdkVersion.Should().Be("1.0.0");
@@ -88,7 +90,7 @@ public class CacheManifestTests
         var manifest = new CacheManifest();
         var projectInfo = new ProjectCacheInfo
         {
-            Languages = new List<string> { "en", "es" },
+            Languages = ["en", "es"],
             Status = CacheSyncStatus.Synced,
             LastSyncAt = DateTimeOffset.UtcNow
         };
@@ -98,6 +100,6 @@ public class CacheManifestTests
 
         // Assert
         manifest.Projects.Should().ContainKey("my-project");
-        manifest.Projects["my-project"].Languages.Should().BeEquivalentTo(new[] { "en", "es" });
+        manifest.Projects["my-project"].Languages.Should().BeEquivalentTo(["en", "es"]);
     }
 }

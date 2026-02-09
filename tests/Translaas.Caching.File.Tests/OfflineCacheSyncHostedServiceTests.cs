@@ -3,8 +3,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 
 using Moq;
-
-using Translaas.Caching.File;
 using Translaas.Caching.File.Models;
 
 namespace Translaas.Caching.File.Tests;
@@ -25,8 +23,8 @@ public class OfflineCacheSyncHostedServiceTests : IDisposable
             Enabled = true,
             AutoSync = true,
             AutoSyncInterval = TimeSpan.FromSeconds(1),
-            Projects = new List<string> { "test-project" },
-            Languages = new List<string> { "en" }
+            Projects = ["test-project"],
+            Languages = ["en"]
         };
     }
 

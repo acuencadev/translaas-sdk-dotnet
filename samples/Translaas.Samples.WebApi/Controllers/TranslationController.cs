@@ -1,9 +1,6 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Translaas.Client;
 using Translaas.Extensions.DependencyInjection;
-using Translaas.Models;
 using Translaas.Models.Responses;
 
 namespace Translaas.Samples.WebApi.Controllers;
@@ -13,29 +10,21 @@ namespace Translaas.Samples.WebApi.Controllers;
 /// This controller wraps the SDK API directly for testing and low-level access.
 /// For real-world usage examples, see ProductsController, StatsController, and DashboardController.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="TranslationController"/> class.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
-public class TranslationController : ControllerBase
+public class TranslationController(
+    ITranslaasService translaasService,
+    ITranslaasClient translaasClient,
+    ILogger<TranslationController> logger,
+    IConfiguration configuration) : ControllerBase
 {
-    private readonly ITranslaasService _translaasService;
-    private readonly ITranslaasClient _translaasClient;
-    private readonly ILogger<TranslationController> _logger;
-    private readonly IConfiguration _configuration;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TranslationController"/> class.
-    /// </summary>
-    public TranslationController(
-        ITranslaasService translaasService,
-        ITranslaasClient translaasClient,
-        ILogger<TranslationController> logger,
-        IConfiguration configuration)
-    {
-        _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
-        _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    }
+    private readonly ITranslaasService _translaasService = translaasService ?? throw new ArgumentNullException(nameof(translaasService));
+    private readonly ITranslaasClient _translaasClient = translaasClient ?? throw new ArgumentNullException(nameof(translaasClient));
+    private readonly ILogger<TranslationController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     /// <summary>
     /// Gets a single translation entry using ITranslaasService.
@@ -79,7 +68,7 @@ public class TranslationController : ControllerBase
             { 
                 translation, 
                 resolvedLanguage = lang ?? $"auto (default: {defaultLanguage})",
-                defaultLanguage = defaultLanguage
+                defaultLanguage
             });
         }
         catch (Exception ex)

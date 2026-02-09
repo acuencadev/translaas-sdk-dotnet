@@ -20,7 +20,7 @@ public class TimeoutConfigurationTests
         var httpClient = new HttpClient();
 
         // Act
-        var client = new TranslaasClient(httpClient, options);
+        _ = new TranslaasClient(httpClient, options);
 
         // Assert
         httpClient.Timeout.Should().Be(TimeSpan.FromSeconds(30));
@@ -41,7 +41,7 @@ public class TimeoutConfigurationTests
         var originalTimeout = httpClient.Timeout;
 
         // Act
-        var client = new TranslaasClient(httpClient, options);
+        _ = new TranslaasClient(httpClient, options);
 
         // Assert
         httpClient.Timeout.Should().Be(originalTimeout);

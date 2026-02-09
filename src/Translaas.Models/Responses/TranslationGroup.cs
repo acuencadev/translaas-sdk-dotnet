@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Translaas.Models;
-
 namespace Translaas.Models.Responses;
 
 /// <summary>
@@ -18,7 +16,7 @@ public class TranslationGroup
     /// and the value is either a translated text string or a plural form dictionary.
     /// </summary>
     [JsonExtensionData]
-    public Dictionary<string, JsonElement> Entries { get; set; } = new Dictionary<string, JsonElement>();
+    public Dictionary<string, JsonElement> Entries { get; set; } = [];
 
     /// <summary>
     /// Gets the translation value for a specific entry key as a string.

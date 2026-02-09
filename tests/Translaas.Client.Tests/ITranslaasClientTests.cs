@@ -63,7 +63,7 @@ public class ITranslaasClientTests
         foreach (var method in methods)
         {
             var parameters = method.GetParameters();
-            var lastParam = parameters[parameters.Length - 1];
+            var lastParam = parameters[^1];
             lastParam.ParameterType.Should().Be(typeof(CancellationToken));
             lastParam.Name.Should().Be("cancellationToken");
         }

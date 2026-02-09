@@ -401,7 +401,7 @@ public class TranslaasClient : ITranslaasClient
             // Note: 204 is a success status code, so check it before the error handling
             if (response.StatusCode == HttpStatusCode.NoContent)
             {
-                return new ProjectLocales { Locales = new List<string>() };
+                return new ProjectLocales { Locales = [] };
             }
 
             // Handle non-success status codes

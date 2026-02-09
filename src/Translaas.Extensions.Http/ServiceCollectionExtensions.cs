@@ -1,7 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
-
 using System;
-
+using Microsoft.Extensions.DependencyInjection;
 using Translaas.Client;
 
 namespace Translaas.Extensions.Http;

@@ -8,10 +8,15 @@ namespace Translaas.Extensions.DependencyInjection;
 /// <summary>
 /// Default implementation of <see cref="ITranslaasLanguageBuilder"/> for configuring language providers.
 /// </summary>
-internal class TranslaasLanguageBuilder : ITranslaasLanguageBuilder
+/// <remarks>
+/// Initializes a new instance of the <see cref="TranslaasLanguageBuilder"/> class.
+/// </remarks>
+/// <param name="services">The service collection to register providers with.</param>
+/// <exception cref="ArgumentNullException">Thrown when services is null.</exception>
+internal class TranslaasLanguageBuilder(IServiceCollection services) : ITranslaasLanguageBuilder
 {
-    private readonly IServiceCollection _services;
-    private readonly List<ServiceDescriptor> _providerDescriptors = new();
+    private readonly IServiceCollection _services = services ?? throw new ArgumentNullException(nameof(services));
+    private readonly List<ServiceDescriptor> _providerDescriptors = [];
 
     /// <summary>
     /// Gets the service collection for registering providers.
@@ -20,16 +25,6 @@ internal class TranslaasLanguageBuilder : ITranslaasLanguageBuilder
     /// Internal access for extension methods in other packages.
     /// </remarks>
     internal IServiceCollection Services => _services;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TranslaasLanguageBuilder"/> class.
-    /// </summary>
-    /// <param name="services">The service collection to register providers with.</param>
-    /// <exception cref="ArgumentNullException">Thrown when services is null.</exception>
-    public TranslaasLanguageBuilder(IServiceCollection services)
-    {
-        _services = services ?? throw new ArgumentNullException(nameof(services));
-    }
 
     /// <inheritdoc />
     public ITranslaasLanguageBuilder UseCulture(Action<CultureLanguageOptions>? configure = null)

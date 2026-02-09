@@ -1,20 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
 using Translaas.Extensions.DependencyInjection;
-
-using Xunit;
 
 namespace Translaas.Extensions.Mvc.Tests;
 

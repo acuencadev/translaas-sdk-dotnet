@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Translaas.Caching;
 using Translaas.Extensions.DependencyInjection;
 using Translaas.Extensions.Mvc;
@@ -59,13 +58,13 @@ builder.Services.AddTranslaas(options =>
         .UseRequest(request =>
         {
             // Configure which HTTP request sources to check
-            request.Sources = new List<RequestLanguageSource>
-            {
+            request.Sources =
+            [
                 RequestLanguageSource.Route,      // e.g., /en/products
                 RequestLanguageSource.QueryString, // e.g., ?lang=en
                 RequestLanguageSource.Header,     // e.g., X-Language: en
                 RequestLanguageSource.Cookie      // e.g., lang=en cookie
-            };
+            ];
         })
         .UseCulture()  // Resolves from thread culture (CultureInfo.CurrentUICulture)
         .UseDefault(); // Resolves from DefaultLanguage option (appsettings.json)

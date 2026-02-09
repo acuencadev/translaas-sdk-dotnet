@@ -1,12 +1,6 @@
-using System.Linq;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
-
-using Translaas.Caching;
-
-using Xunit;
 
 namespace Translaas.Extensions.DependencyInjection.Tests;
 

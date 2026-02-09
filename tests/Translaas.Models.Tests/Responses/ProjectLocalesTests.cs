@@ -1,7 +1,5 @@
-using FluentAssertions;
-
 using System.Text.Json;
-
+using FluentAssertions;
 using Translaas.Models.Responses;
 
 namespace Translaas.Models.Tests.Responses;
@@ -14,7 +12,13 @@ public class ProjectLocalesTests
         // Arrange & Act
         var locales = new ProjectLocales
         {
+
+<<<<<<< TODO: Unmerged change from project 'Translaas.Models.Tests(net10.0)', Before:
             Locales = new List<string> { "en", "fr", "es" }
+=======
+            Locales = ["en", "fr", "es"]
+>>>>>>> After
+            Locales = ["en", "fr", "es"]
         };
 
         // Assert
@@ -50,7 +54,13 @@ public class ProjectLocalesTests
         // Arrange
         var locales = new ProjectLocales
         {
+
+<<<<<<< TODO: Unmerged change from project 'Translaas.Models.Tests(net10.0)', Before:
             Locales = new List<string> { "en", "fr", "es" }
+=======
+            Locales = ["en", "fr", "es"]
+>>>>>>> After
+            Locales = ["en", "fr", "es"]
         };
 
         // Act
@@ -68,7 +78,13 @@ public class ProjectLocalesTests
         // Arrange & Act
         var locales = new ProjectLocales
         {
+
+<<<<<<< TODO: Unmerged change from project 'Translaas.Models.Tests(net10.0)', Before:
             Locales = new List<string>()
+=======
+            Locales = []
+>>>>>>> After
+            Locales = []
         };
 
         // Assert

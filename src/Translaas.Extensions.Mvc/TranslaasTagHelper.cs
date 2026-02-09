@@ -26,20 +26,15 @@ namespace Translaas.Extensions.Mvc;
 /// </code>
 /// </para>
 /// </remarks>
+/// <remarks>
+/// Initializes a new instance of the <see cref="TranslaasTagHelper"/> class.
+/// </remarks>
+/// <param name="translaasService">The Translaas service for translation lookups.</param>
+/// <exception cref="System.ArgumentNullException">Thrown when translaasService is null.</exception>
 [HtmlTargetElement("translaas")]
-public class TranslaasTagHelper : TagHelper
+public class TranslaasTagHelper(ITranslaasService translaasService) : TagHelper
 {
-    private readonly ITranslaasService _translaasService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TranslaasTagHelper"/> class.
-    /// </summary>
-    /// <param name="translaasService">The Translaas service for translation lookups.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown when translaasService is null.</exception>
-    public TranslaasTagHelper(ITranslaasService translaasService)
-    {
-        _translaasService = translaasService ?? throw new System.ArgumentNullException(nameof(translaasService));
-    }
+    private readonly ITranslaasService _translaasService = translaasService ?? throw new System.ArgumentNullException(nameof(translaasService));
 
     /// <summary>
     /// Gets or sets the translation group name.

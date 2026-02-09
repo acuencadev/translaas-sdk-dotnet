@@ -1,17 +1,9 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-using Moq;
-
 using Translaas.Extensions.DependencyInjection;
-
-using Xunit;
 
 namespace Translaas.Extensions.Mvc.Tests.Language;
 
@@ -82,11 +74,11 @@ public class LanguageResolutionIntegrationTests
             request.QueryParameterName = "locale";
             request.HeaderName = "X-Custom-Lang";
             request.CookieName = "language";
-            request.Sources = new System.Collections.Generic.List<RequestLanguageSource>
-            {
+            request.Sources =
+            [
                 RequestLanguageSource.QueryString,
                 RequestLanguageSource.Cookie
-            };
+            ];
         }));
 
         // Assert
@@ -115,10 +107,10 @@ public class LanguageResolutionIntegrationTests
             options.BaseUrl = "https://api.test.com";
         }, language => language.UseRequest(request =>
         {
-            request.Sources = new System.Collections.Generic.List<RequestLanguageSource>
-            {
+            request.Sources =
+            [
                 RequestLanguageSource.QueryString
-            };
+            ];
         }));
 
         var serviceProvider = services.BuildServiceProvider();
@@ -135,12 +127,10 @@ public class LanguageResolutionIntegrationTests
         httpContextAccessor.HttpContext = httpContext;
 
         // Act & Assert - resolver should be able to resolve language from HTTP context
-        using (var scope = serviceProvider.CreateScope())
-        {
-            var resolver = scope.ServiceProvider.GetRequiredService<ILanguageResolver>();
-            var result = resolver.Resolve();
-            result.Should().Be("fr");
-        }
+        using var scope = serviceProvider.CreateScope();
+        var resolver = scope.ServiceProvider.GetRequiredService<ILanguageResolver>();
+        var result = resolver.Resolve();
+        result.Should().Be("fr");
     }
 
     [Fact]
@@ -163,13 +153,11 @@ public class LanguageResolutionIntegrationTests
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        using (var scope = serviceProvider.CreateScope())
-        {
-            var providers = scope.ServiceProvider.GetServices<ILanguageProvider>().ToList();
-            providers.Should().HaveCount(3);
-            providers[0].Should().BeOfType<RequestLanguageProvider>();
-            providers[1].Should().BeOfType<CultureLanguageProvider>();
-            providers[2].Should().BeOfType<DefaultLanguageProvider>();
-        }
+        using var scope = serviceProvider.CreateScope();
+        var providers = scope.ServiceProvider.GetServices<ILanguageProvider>().ToList();
+        providers.Should().HaveCount(3);
+        providers[0].Should().BeOfType<RequestLanguageProvider>();
+        providers[1].Should().BeOfType<CultureLanguageProvider>();
+        providers[2].Should().BeOfType<DefaultLanguageProvider>();
     }
 }

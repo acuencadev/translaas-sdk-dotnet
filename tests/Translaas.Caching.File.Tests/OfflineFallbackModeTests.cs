@@ -1,7 +1,5 @@
 using FluentAssertions;
 
-using Translaas.Caching.File;
-
 namespace Translaas.Caching.File.Tests;
 
 public class OfflineFallbackModeTests

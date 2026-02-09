@@ -1,7 +1,5 @@
-using FluentAssertions;
-
 using System.Text.Json;
-
+using FluentAssertions;
 using Translaas.Models.Errors;
 
 namespace Translaas.Models.Tests.Errors;

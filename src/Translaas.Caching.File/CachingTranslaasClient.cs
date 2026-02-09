@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,32 +15,24 @@ namespace Translaas.Caching.File;
 /// A decorator for <see cref="ITranslaasClient"/> that adds offline caching support.
 /// Wraps an existing client and adds file-based caching based on the configured fallback mode.
 /// </summary>
-public class CachingTranslaasClient : ITranslaasClient
+/// <remarks>
+/// Initializes a new instance of the <see cref="CachingTranslaasClient"/> class.
+/// </remarks>
+/// <param name="innerClient">The underlying Translaas client.</param>
+/// <param name="cacheProvider">The offline cache provider.</param>
+/// <param name="options">The offline cache options.</param>
+/// <param name="projectId">The default project ID for entry lookups (required for caching single entries).</param>
+/// <exception cref="ArgumentNullException">Thrown when any required parameter is null.</exception>
+public class CachingTranslaasClient(
+    ITranslaasClient innerClient,
+    IOfflineCacheProvider cacheProvider,
+    OfflineCacheOptions options,
+    string projectId) : ITranslaasClient
 {
-    private readonly ITranslaasClient _innerClient;
-    private readonly IOfflineCacheProvider _cacheProvider;
-    private readonly OfflineCacheOptions _options;
-    private readonly string _projectId;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CachingTranslaasClient"/> class.
-    /// </summary>
-    /// <param name="innerClient">The underlying Translaas client.</param>
-    /// <param name="cacheProvider">The offline cache provider.</param>
-    /// <param name="options">The offline cache options.</param>
-    /// <param name="projectId">The default project ID for entry lookups (required for caching single entries).</param>
-    /// <exception cref="ArgumentNullException">Thrown when any required parameter is null.</exception>
-    public CachingTranslaasClient(
-        ITranslaasClient innerClient,
-        IOfflineCacheProvider cacheProvider,
-        OfflineCacheOptions options,
-        string projectId)
-    {
-        _innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
-        _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _projectId = projectId ?? throw new ArgumentNullException(nameof(projectId));
-    }
+    private readonly ITranslaasClient _innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
+    private readonly IOfflineCacheProvider _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+    private readonly OfflineCacheOptions _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly string _projectId = projectId ?? throw new ArgumentNullException(nameof(projectId));
 
     /// <inheritdoc />
     public async Task<string> GetEntryAsync(
@@ -189,12 +180,7 @@ public class CachingTranslaasClient : ITranslaasClient
         System.Collections.Generic.Dictionary<string, string>? parameters,
         CancellationToken cancellationToken)
     {
-        var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-        
-        if (cachedGroup == null)
-        {
-            throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
-        }
+        var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false) ?? throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
 
         // Check if entry has plural forms
         if (cachedGroup.HasPluralForms(entry))

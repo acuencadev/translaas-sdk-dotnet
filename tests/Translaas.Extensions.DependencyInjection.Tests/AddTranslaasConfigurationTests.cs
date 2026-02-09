@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.Configuration;
@@ -7,9 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 using Translaas.Caching;
-using Translaas.Extensions.DependencyInjection;
-
-using Xunit;
 
 namespace Translaas.Extensions.DependencyInjection.Tests;
 

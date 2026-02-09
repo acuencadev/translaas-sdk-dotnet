@@ -244,18 +244,10 @@ public static class ServiceCollectionExtensions
 #if NETSTANDARD2_0
         // For netstandard2.0, IHttpClientFactory might not be available
         // Use dynamic resolution
-        var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http");
-        if (httpClientFactoryType == null)
-        {
-            throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
-        }
-        var httpClientFactory = serviceProvider.GetService(httpClientFactoryType);
-        if (httpClientFactory == null)
-        {
-            throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
-        }
-        var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", new[] { typeof(string) });
-        var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, new object[] { nameof(ITranslaasClient) })!;
+        var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http") ?? throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
+        var httpClientFactory = serviceProvider.GetService(httpClientFactoryType) ?? throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
+        var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", [typeof(string)]);
+        var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, [nameof(ITranslaasClient)])!;
 #else
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         var httpClient = httpClientFactory.CreateClient(nameof(ITranslaasClient));

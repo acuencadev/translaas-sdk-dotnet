@@ -35,11 +35,11 @@ public class RequestLanguageOptions
     /// Ordered list of sources to check. First match wins.
     /// Default: [Route, QueryString, Header, Cookie]
     /// </summary>
-    public List<RequestLanguageSource> Sources { get; set; } = new()
-    {
+    public List<RequestLanguageSource> Sources { get; set; } =
+    [
         RequestLanguageSource.Route,
         RequestLanguageSource.QueryString,
         RequestLanguageSource.Header,
         RequestLanguageSource.Cookie
-    };
+    ];
 }
