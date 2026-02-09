@@ -39,6 +39,6 @@
     protected override async Task OnInitializedAsync()
     {
         appName = await Translaas.T("common", "app.name", L.English);
-        homeText = await Translaas.T("navigation", "home", L.English);
+        homeText = await Translaas.T("common", "welcome", L.English);
     }
 }

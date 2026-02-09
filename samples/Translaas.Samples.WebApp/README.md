@@ -289,10 +289,10 @@ Translaas.Samples.WebApp/
 
 <nav>
     <a href="/">
-        <translaas group="navigation" entry="home" lang="@L.English" />
+        <translaas group="common" entry="welcome" lang="@L.English" />
     </a>
     <a href="/privacy">
-        <translaas group="navigation" entry="privacy" lang="@L.English" />
+        Privacy
     </a>
 </nav>
 ```
