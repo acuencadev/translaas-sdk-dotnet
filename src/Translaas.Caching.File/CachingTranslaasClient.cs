@@ -660,7 +660,7 @@ public class CachingTranslaasClient(
             
             if (groupData == null)
             {
-                System.Console.Error.WriteLine($"[CACHE UPDATE ERROR] GetGroupAsync returned null for project '{project}', group '{group}', lang '{lang}'");
+                System.Diagnostics.Debug.WriteLine($"GetGroupAsync returned null for project '{project}', group '{group}', lang '{lang}'");
                 return;
             }
             
@@ -694,10 +694,10 @@ public class CachingTranslaasClient(
         {
             // Log cache update errors for debugging, but don't throw - this is a background operation
             // Note: In a production app, you might want to use ILogger here
-            System.Console.Error.WriteLine($"[CACHE UPDATE ERROR] Failed to update cache for project '{project}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Failed to update cache for project '{project}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
             if (ex.InnerException != null)
             {
-                System.Console.Error.WriteLine($"[CACHE UPDATE ERROR] Inner exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+                System.Diagnostics.Debug.WriteLine($"  Inner exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
             }
             // Re-throw to let caller handle it
             throw;
