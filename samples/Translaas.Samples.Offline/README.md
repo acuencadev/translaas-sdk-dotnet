@@ -60,7 +60,12 @@ The sample is configured via `appsettings.json`:
 - `AutoSync: false` - Disables background synchronization (prevents API calls)
 - `CacheDirectory: "./cache"` - Points to the local cache directory
 - `DefaultProjectId` - **Required**: The project ID that matches your cache files (must match the directory name in cache folder)
+- `DefaultLanguage` - The default language to use (e.g., "en", "fr", "es")
 - `ApiKey` and `BaseUrl` - Not used in CacheOnly mode, but still required for configuration
+
+**Language Resolution:**
+
+The sample is configured to use only `UseDefault()` provider (not `UseCulture()`). This ensures that the configured `DefaultLanguage` from `appsettings.json` is always used, regardless of the thread's current culture. This is important for offline mode where you want predictable language selection based on configuration rather than system settings.
 
 ## Running the Sample
 
