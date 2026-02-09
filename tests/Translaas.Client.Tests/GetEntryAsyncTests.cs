@@ -55,14 +55,14 @@ public class GetEntryAsyncTests
         // Assert
         result.Should().Be(expectedText);
         
-        // Verify number is included in query string as lowercase 'n' when passed directly
+        // Verify number is included in query string as uppercase 'N' via MergeNumberIntoParameters
         handlerMock.Protected()
             .Verify(
                 "SendAsync",
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.RequestUri != null && 
-                    req.RequestUri.Query.Contains("n=5")), // Number parameter becomes lowercase 'n' in query string
+                    req.RequestUri.Query.Contains("N=5")), // Number parameter becomes uppercase 'N' via MergeNumberIntoParameters
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -115,7 +115,7 @@ public class GetEntryAsyncTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req => 
                     req.RequestUri != null && 
-                    req.RequestUri.Query.Contains("n=1.31")),
+                    req.RequestUri.Query.Contains("N=1.31")), // Number parameter becomes uppercase 'N' via MergeNumberIntoParameters
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -353,7 +353,7 @@ public class GetEntryAsyncTests
                 Times.Once(),
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
-                    req.RequestUri.Query.Contains("n=5")), // Number parameter becomes lowercase 'n' when passed directly
+                    req.RequestUri.Query.Contains("N=5")), // Number parameter becomes uppercase 'N' via MergeNumberIntoParameters
                 ItExpr.IsAny<CancellationToken>());
     }
 
@@ -382,7 +382,7 @@ public class GetEntryAsyncTests
                 ItExpr.Is<HttpRequestMessage>(req =>
                     req.RequestUri != null &&
                     req.RequestUri.Query.Contains("userName=John") &&
-                    req.RequestUri.Query.Contains("n=5")), // Number parameter becomes lowercase 'n' when passed directly
+                    req.RequestUri.Query.Contains("N=5")), // When number is merged via MergeNumberIntoParameters, it becomes uppercase 'N'
                 ItExpr.IsAny<CancellationToken>());
     }
 

@@ -690,12 +690,22 @@ public class TranslaasClient : ITranslaasClient
         }
         
         // Merge additional parameters (these take precedence if there are conflicts)
+        // Note: We need to preserve the original key case from parameters, so we remove
+        // any existing case-insensitive match first, then add with the correct case
         if (parameters != null)
         {
             foreach (var kvp in parameters)
             {
                 if (!string.IsNullOrEmpty(kvp.Value))
                 {
+                    // Remove any existing key with different case (case-insensitive match)
+                    var existingKey = queryParams.Keys.FirstOrDefault(k => 
+                        string.Equals(k, kvp.Key, StringComparison.OrdinalIgnoreCase));
+                    if (existingKey != null)
+                    {
+                        queryParams.Remove(existingKey);
+                    }
+                    // Add with the original key case from parameters
                     queryParams[kvp.Key] = kvp.Value;
                 }
             }
