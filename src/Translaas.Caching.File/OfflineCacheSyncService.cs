@@ -12,33 +12,26 @@ namespace Translaas.Caching.File;
 /// <summary>
 /// Service for synchronizing offline cache with the Translaas API.
 /// </summary>
-public class OfflineCacheSyncService : IOfflineCacheSyncService, IDisposable
+/// <remarks>
+/// Initializes a new instance of the <see cref="OfflineCacheSyncService"/> class.
+/// </remarks>
+/// <param name="client">The Translaas client for API calls.</param>
+/// <param name="cacheProvider">The offline cache provider.</param>
+/// <param name="options">The offline cache options.</param>
+/// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
+public class OfflineCacheSyncService(
+    ITranslaasClient client,
+    IOfflineCacheProvider cacheProvider,
+    OfflineCacheOptions options) : IOfflineCacheSyncService, IDisposable
 {
-    private readonly ITranslaasClient _client;
-    private readonly IOfflineCacheProvider _cacheProvider;
-    private readonly OfflineCacheOptions _options;
+    private readonly ITranslaasClient _client = client ?? throw new ArgumentNullException(nameof(client));
+    private readonly IOfflineCacheProvider _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
+    private readonly OfflineCacheOptions _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly SemaphoreSlim _syncLock = new(1, 1);
 
     private CancellationTokenSource? _backgroundSyncCts;
     private Task? _backgroundSyncTask;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="OfflineCacheSyncService"/> class.
-    /// </summary>
-    /// <param name="client">The Translaas client for API calls.</param>
-    /// <param name="cacheProvider">The offline cache provider.</param>
-    /// <param name="options">The offline cache options.</param>
-    /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
-    public OfflineCacheSyncService(
-        ITranslaasClient client,
-        IOfflineCacheProvider cacheProvider,
-        OfflineCacheOptions options)
-    {
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-    }
 
     /// <inheritdoc />
     public bool IsBackgroundSyncRunning => _backgroundSyncTask != null && !_backgroundSyncTask.IsCompleted;
@@ -269,7 +262,7 @@ public class OfflineCacheSyncService : IOfflineCacheSyncService, IDisposable
 
     private static List<string> FilterLanguages(List<string> availableLanguages, List<string> requestedLanguages)
     {
-        return requestedLanguages.Where(availableLanguages.Contains).ToList();
+        return [.. requestedLanguages.Where(availableLanguages.Contains)];
     }
 
     /// <summary>

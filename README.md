@@ -392,7 +392,7 @@ services.AddTranslaas(options =>
 });
 ```
 
-See the [sample projects](./samples/) for complete examples.
+See the [sample projects](https://github.com/acuencadev/translaas-sdk-examples) for complete examples.
 
 ## Usage Examples
 
@@ -705,7 +705,6 @@ services.AddTranslaas(options =>
 - `OfflineFallbackMode.CacheFirst` - Try cache first, fall back to API (default)
 - `OfflineFallbackMode.ApiFirst` - Try API first, fall back to cache
 - `OfflineFallbackMode.CacheOnly` - Only use cache, never call API
-- `OfflineFallbackMode.ApiOnlyWithBackup` - Always call API, update cache as backup
 
 ### Configuration from appsettings.json
 

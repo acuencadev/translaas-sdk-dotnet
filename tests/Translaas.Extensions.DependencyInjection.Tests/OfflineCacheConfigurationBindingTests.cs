@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.Configuration;
@@ -8,9 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 using Translaas.Caching.File;
-using Translaas.Extensions.DependencyInjection;
-
-using Xunit;
 
 namespace Translaas.Extensions.DependencyInjection.Tests;
 
@@ -105,7 +99,6 @@ public class OfflineCacheConfigurationBindingTests
     [InlineData("CacheFirst", OfflineFallbackMode.CacheFirst)]
     [InlineData("ApiFirst", OfflineFallbackMode.ApiFirst)]
     [InlineData("CacheOnly", OfflineFallbackMode.CacheOnly)]
-    [InlineData("ApiOnlyWithBackup", OfflineFallbackMode.ApiOnlyWithBackup)]
     public void AddTranslaas_WithConfiguration_ShouldBindAllFallbackModes(string configValue, OfflineFallbackMode expected)
     {
         // Arrange
@@ -187,7 +180,7 @@ public class OfflineCacheConfigurationBindingTests
         var serviceProvider = services.BuildServiceProvider();
         var options = serviceProvider.GetRequiredService<IOptions<TranslaasOptions>>();
         options.Value.OfflineCache.Projects.Should().HaveCount(3);
-        options.Value.OfflineCache.Projects.Should().BeEquivalentTo(new[] { "project-one", "project-two", "project-three" });
+        options.Value.OfflineCache.Projects.Should().BeEquivalentTo(["project-one", "project-two", "project-three"]);
     }
 
     [Fact]
@@ -218,7 +211,7 @@ public class OfflineCacheConfigurationBindingTests
         var serviceProvider = services.BuildServiceProvider();
         var options = serviceProvider.GetRequiredService<IOptions<TranslaasOptions>>();
         options.Value.OfflineCache.Languages.Should().HaveCount(4);
-        options.Value.OfflineCache.Languages.Should().BeEquivalentTo(new[] { "en", "es", "fr", "de" });
+        options.Value.OfflineCache.Languages.Should().BeEquivalentTo(["en", "es", "fr", "de"]);
     }
 
     [Fact]
@@ -407,8 +400,8 @@ public class OfflineCacheConfigurationBindingTests
         options.Value.OfflineCache.AutoSync.Should().BeTrue();
         options.Value.OfflineCache.AutoSyncInterval.Should().Be(TimeSpan.FromHours(4));
         options.Value.OfflineCache.DefaultProjectId.Should().Be("main-project");
-        options.Value.OfflineCache.Projects.Should().BeEquivalentTo(new[] { "main-project", "secondary-project" });
-        options.Value.OfflineCache.Languages.Should().BeEquivalentTo(new[] { "en", "es" });
+        options.Value.OfflineCache.Projects.Should().BeEquivalentTo(["main-project", "secondary-project"]);
+        options.Value.OfflineCache.Languages.Should().BeEquivalentTo(["en", "es"]);
 
         // Verify HybridCacheOptions
         options.Value.OfflineCache.HybridCache.Enabled.Should().BeTrue();
@@ -604,8 +597,8 @@ public class OfflineCacheConfigurationBindingTests
         options.Value.OfflineCache.FallbackMode.Should().Be(OfflineFallbackMode.CacheFirst);
         options.Value.OfflineCache.AutoSync.Should().BeTrue();
         options.Value.OfflineCache.AutoSyncInterval.Should().Be(TimeSpan.FromHours(2));
-        options.Value.OfflineCache.Projects.Should().BeEquivalentTo(new[] { "project-a", "project-b" });
-        options.Value.OfflineCache.Languages.Should().BeEquivalentTo(new[] { "en", "es", "fr", "de" });
+        options.Value.OfflineCache.Projects.Should().BeEquivalentTo(["project-a", "project-b"]);
+        options.Value.OfflineCache.Languages.Should().BeEquivalentTo(["en", "es", "fr", "de"]);
     }
 
     #endregion

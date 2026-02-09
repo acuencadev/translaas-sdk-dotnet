@@ -56,10 +56,11 @@ public class TranslaasOptionsTests
     public void TranslaasOptions_ShouldAllowSettingCacheMode()
     {
         // Arrange
-        var options = new TranslaasOptions();
-
-        // Act & Assert
-        options.CacheMode = CacheMode.Entry;
+        var options = new TranslaasOptions
+        {
+            // Act & Assert
+            CacheMode = CacheMode.Entry
+        };
         options.CacheMode.Should().Be(CacheMode.Entry);
 
         options.CacheMode = CacheMode.Group;
@@ -118,8 +119,10 @@ public class TranslaasOptionsTests
     public void TranslaasOptions_ShouldAllowNullTimeout()
     {
         // Arrange
-        var options = new TranslaasOptions();
-        options.Timeout = TimeSpan.FromSeconds(30);
+        var options = new TranslaasOptions
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
 
         // Act
         options.Timeout = null;
@@ -132,8 +135,10 @@ public class TranslaasOptionsTests
     public void TranslaasOptions_ShouldAllowNullCacheAbsoluteExpiration()
     {
         // Arrange
-        var options = new TranslaasOptions();
-        options.CacheAbsoluteExpiration = TimeSpan.FromHours(1);
+        var options = new TranslaasOptions
+        {
+            CacheAbsoluteExpiration = TimeSpan.FromHours(1)
+        };
 
         // Act
         options.CacheAbsoluteExpiration = null;
@@ -146,8 +151,10 @@ public class TranslaasOptionsTests
     public void TranslaasOptions_ShouldAllowNullCacheSlidingExpiration()
     {
         // Arrange
-        var options = new TranslaasOptions();
-        options.CacheSlidingExpiration = TimeSpan.FromMinutes(15);
+        var options = new TranslaasOptions
+        {
+            CacheSlidingExpiration = TimeSpan.FromMinutes(15)
+        };
 
         // Act
         options.CacheSlidingExpiration = null;

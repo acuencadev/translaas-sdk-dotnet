@@ -1,7 +1,5 @@
 using FluentAssertions;
 
-using Translaas.Caching.File;
-
 namespace Translaas.Caching.File.Tests;
 
 public class OfflineFallbackModeTests
@@ -23,16 +21,15 @@ public class OfflineFallbackModeTests
         ((int)OfflineFallbackMode.CacheFirst).Should().Be(0);
         ((int)OfflineFallbackMode.ApiFirst).Should().Be(1);
         ((int)OfflineFallbackMode.CacheOnly).Should().Be(2);
-        ((int)OfflineFallbackMode.ApiOnlyWithBackup).Should().Be(3);
     }
 
     [Fact]
-    public void Enum_ShouldHaveFourValues()
+    public void Enum_ShouldHaveThreeValues()
     {
         // Arrange & Act
         var values = Enum.GetValues<OfflineFallbackMode>();
 
         // Assert
-        values.Should().HaveCount(4);
+        values.Should().HaveCount(3);
     }
 }

@@ -3,8 +3,6 @@ using System.Text.Json;
 using FluentAssertions;
 
 using Moq;
-
-using Translaas.Caching.File;
 using Translaas.Caching.File.Models;
 using Translaas.Models.Responses;
 
@@ -179,7 +177,7 @@ public class HybridCacheProviderTests
     public async Task GetProjectLocalesAsync_ReturnsFromL1_WhenInMemoryCache()
     {
         // Arrange
-        var locales = new ProjectLocales { Locales = new List<string> { "en", "es" } };
+        var locales = new ProjectLocales { Locales = ["en", "es"] };
         _mockFileCache
             .Setup(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
@@ -192,7 +190,7 @@ public class HybridCacheProviderTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Locales.Should().BeEquivalentTo(new[] { "en", "es" });
+        result!.Locales.Should().BeEquivalentTo(["en", "es"]);
         _mockFileCache.Verify(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -242,7 +240,7 @@ public class HybridCacheProviderTests
     public async Task SaveProjectLocalesAsync_SavesToBothL1AndL2()
     {
         // Arrange
-        var locales = new ProjectLocales { Locales = new List<string> { "en", "es" } };
+        var locales = new ProjectLocales { Locales = ["en", "es"] };
 
         // Act
         await _provider.SaveProjectLocalesAsync("test-project", locales);
@@ -309,10 +307,10 @@ public class HybridCacheProviderTests
         _mockFileCache.Verify(c => c.ClearAllAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         // L1 should be empty
-        var stats = _provider.GetMemoryCacheStats();
-        stats.Projects.Should().Be(0);
-        stats.Groups.Should().Be(0);
-        stats.Locales.Should().Be(0);
+        var (Projects, Groups, Locales) = _provider.GetMemoryCacheStats();
+        Projects.Should().Be(0);
+        Groups.Should().Be(0);
+        Locales.Should().Be(0);
     }
 
     #endregion
@@ -362,8 +360,8 @@ public class HybridCacheProviderTests
         _provider.ClearMemoryCache();
 
         // Assert - L1 should be empty
-        var stats = _provider.GetMemoryCacheStats();
-        stats.Projects.Should().Be(0);
+        var (Projects, Groups, Locales) = _provider.GetMemoryCacheStats();
+        Projects.Should().Be(0);
 
         // L2 should NOT be cleared
         _mockFileCache.Verify(c => c.ClearAllAsync(It.IsAny<CancellationToken>()), Times.Never);
@@ -378,18 +376,18 @@ public class HybridCacheProviderTests
     {
         // Arrange
         var project = CreateTestProject();
-        var locales = new ProjectLocales { Locales = new List<string> { "en" } };
+        var locales = new ProjectLocales { Locales = ["en"] };
 
         await _provider.SaveProjectAsync("test-project", "en", project);
         await _provider.SaveProjectLocalesAsync("test-project", locales);
 
         // Act
-        var stats = _provider.GetMemoryCacheStats();
+        var (Projects, Groups, Locales) = _provider.GetMemoryCacheStats();
 
         // Assert
-        stats.Projects.Should().Be(1);
-        stats.Groups.Should().BeGreaterThan(0); // Groups are cached from project
-        stats.Locales.Should().Be(1);
+        Projects.Should().Be(1);
+        Groups.Should().BeGreaterThan(0); // Groups are cached from project
+        Locales.Should().Be(1);
     }
 
     #endregion

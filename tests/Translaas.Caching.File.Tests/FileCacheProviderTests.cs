@@ -1,10 +1,7 @@
 using System.Text.Json;
 
 using FluentAssertions;
-
-using Translaas.Caching.File;
 using Translaas.Caching.File.Models;
-using Translaas.Models.Errors;
 using Translaas.Models.Responses;
 
 namespace Translaas.Caching.File.Tests;
@@ -272,7 +269,7 @@ public class FileCacheProviderTests : IDisposable
     public async Task GetProjectLocalesAsync_ReturnsCachedLocales_WhenExists()
     {
         // Arrange
-        var locales = new ProjectLocales { Locales = new List<string> { "en", "es", "fr" } };
+        var locales = new ProjectLocales { Locales = ["en", "es", "fr"] };
         await _provider.SaveProjectLocalesAsync("test-project", locales);
 
         // Act
@@ -280,7 +277,7 @@ public class FileCacheProviderTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result!.Locales.Should().BeEquivalentTo(new[] { "en", "es", "fr" });
+        result!.Locales.Should().BeEquivalentTo(["en", "es", "fr"]);
     }
 
     #endregion
@@ -380,7 +377,7 @@ public class FileCacheProviderTests : IDisposable
     public async Task SaveProjectLocalesAsync_ThrowsArgumentException_WhenProjectIsNull()
     {
         // Arrange
-        var locales = new ProjectLocales { Locales = new List<string> { "en" } };
+        var locales = new ProjectLocales { Locales = ["en"] };
 
         // Act
         var act = () => _provider.SaveProjectLocalesAsync(null!, locales);

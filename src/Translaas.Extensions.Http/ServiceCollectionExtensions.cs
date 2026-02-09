@@ -1,7 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
-
 using System;
-
+using Microsoft.Extensions.DependencyInjection;
 using Translaas.Client;
 
 namespace Translaas.Extensions.Http;
@@ -32,6 +30,22 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<TranslaasClientOptions> configure)
     {
+        return AddTranslaasHttpClient(services, configure, skipApiValidation: false);
+    }
+
+    /// <summary>
+    /// Adds and configures an HttpClient for use with the Translaas client.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configure">A delegate to configure the <see cref="TranslaasClientOptions"/>.</param>
+    /// <param name="skipApiValidation">If true, skips validation of ApiKey and BaseUrl. Used when offline cache is enabled with CacheOnly mode.</param>
+    /// <returns>An <see cref="IHttpClientBuilder"/> that can be used to further configure the HttpClient.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when services or configure is null.</exception>
+    public static IHttpClientBuilder AddTranslaasHttpClient(
+        this IServiceCollection services,
+        Action<TranslaasClientOptions> configure,
+        bool skipApiValidation)
+    {
         if (services == null)
         {
             throw new ArgumentNullException(nameof(services));
@@ -45,16 +59,20 @@ public static class ServiceCollectionExtensions
         // Create options instance
         var options = new TranslaasClientOptions();
         configure(options);
-        options.Validate();
+        options.Validate(skipApiValidation);
 
         // Register HttpClient with the name of ITranslaasClient
         var builder = services.AddHttpClient(nameof(ITranslaasClient), client =>
         {
-            // Configure base address
-            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/", UriKind.Absolute);
+            // Only configure base address and API key if not skipping validation
+            if (!skipApiValidation)
+            {
+                // Configure base address
+                client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/", UriKind.Absolute);
 
-            // Set API key header
-            client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
+                // Set API key header
+                client.DefaultRequestHeaders.Add("X-Api-Key", options.ApiKey);
+            }
 
             // Configure timeout if specified
             if (options.Timeout.HasValue)

@@ -90,6 +90,12 @@ public static class ServiceCollectionExtensions
         // Register TranslaasOptions using Options pattern
         services.Configure(configure);
 
+        // Check if we're in CacheOnly mode (ApiKey/BaseUrl not needed)
+        var tempOptions = new TranslaasOptions();
+        configure(tempOptions);
+        var isCacheOnlyMode = tempOptions.OfflineCache.Enabled && 
+                              tempOptions.OfflineCache.FallbackMode == OfflineFallbackMode.CacheOnly;
+
         // Register HttpClient via HttpClientFactory
         services.AddTranslaasHttpClient(options =>
         {
@@ -100,11 +106,9 @@ public static class ServiceCollectionExtensions
             options.ApiKey = translaasOptions.ApiKey;
             options.BaseUrl = translaasOptions.BaseUrl;
             options.Timeout = translaasOptions.Timeout;
-        });
+        }, skipApiValidation: isCacheOnlyMode);
 
         // Register caching services if caching is enabled
-        var tempOptions = new TranslaasOptions();
-        configure(tempOptions);
 
         if (tempOptions.CacheMode != CacheMode.None)
         {
@@ -192,6 +196,8 @@ public static class ServiceCollectionExtensions
                 return new CachingTranslaasClient(innerClient, cacheProvider, offlineOptions, offlineOptions.DefaultProjectId!);
             }
 
+            // If offline cache is disabled but in-memory cache is enabled, return the inner client
+            // (which already has in-memory cache configured via CreateInnerClient)
             return innerClient;
         });
 
@@ -240,18 +246,10 @@ public static class ServiceCollectionExtensions
 #if NETSTANDARD2_0
         // For netstandard2.0, IHttpClientFactory might not be available
         // Use dynamic resolution
-        var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http");
-        if (httpClientFactoryType == null)
-        {
-            throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
-        }
-        var httpClientFactory = serviceProvider.GetService(httpClientFactoryType);
-        if (httpClientFactory == null)
-        {
-            throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
-        }
-        var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", new[] { typeof(string) });
-        var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, new object[] { nameof(ITranslaasClient) })!;
+        var httpClientFactoryType = Type.GetType("Microsoft.Extensions.Http.IHttpClientFactory, Microsoft.Extensions.Http") ?? throw new InvalidOperationException("IHttpClientFactory is not available. Ensure Microsoft.Extensions.Http package is referenced.");
+        var httpClientFactory = serviceProvider.GetService(httpClientFactoryType) ?? throw new InvalidOperationException("IHttpClientFactory is not registered. Call services.AddHttpClient() first.");
+        var createClientMethod = httpClientFactoryType.GetMethod("CreateClient", [typeof(string)]);
+        var httpClient = (HttpClient)createClientMethod!.Invoke(httpClientFactory, [nameof(ITranslaasClient)])!;
 #else
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         var httpClient = httpClientFactory.CreateClient(nameof(ITranslaasClient));
@@ -264,10 +262,20 @@ public static class ServiceCollectionExtensions
         {
             ApiKey = translaasOptions.ApiKey,
             BaseUrl = translaasOptions.BaseUrl,
-            Timeout = translaasOptions.Timeout
+            Timeout = translaasOptions.Timeout,
+            CacheMode = translaasOptions.CacheMode,
+            CacheAbsoluteExpiration = translaasOptions.CacheAbsoluteExpiration,
+            CacheSlidingExpiration = translaasOptions.CacheSlidingExpiration
         };
 
-        return new TranslaasClient(httpClient, clientOptions);
+        // Get in-memory cache provider if caching is enabled
+        ITranslaasCacheProvider? cacheProvider = null;
+        if (translaasOptions.CacheMode != CacheMode.None)
+        {
+            cacheProvider = serviceProvider.GetService<ITranslaasCacheProvider>();
+        }
+
+        return new TranslaasClient(httpClient, clientOptions, cacheProvider);
     }
 
     /// <summary>
@@ -329,22 +337,29 @@ public static class ServiceCollectionExtensions
         {
             configurationSection.Bind(options);
             
-            // Validate required properties
-            // Check if ApiKey was explicitly set in configuration
-            var apiKeyValue = configurationSection[nameof(TranslaasOptions.ApiKey)];
-            if (string.IsNullOrWhiteSpace(apiKeyValue) || string.IsNullOrWhiteSpace(options.ApiKey))
+            // Check if we're in CacheOnly mode (ApiKey/BaseUrl not needed)
+            var isCacheOnlyMode = options.OfflineCache.Enabled && 
+                                  options.OfflineCache.FallbackMode == OfflineFallbackMode.CacheOnly;
+            
+            // Validate required properties (skip if CacheOnly mode)
+            if (!isCacheOnlyMode)
             {
-                throw new InvalidOperationException(
-                    $"Translaas configuration is invalid: ApiKey is required. Ensure '{sectionName}:ApiKey' is set in configuration.");
-            }
+                // Check if ApiKey was explicitly set in configuration
+                var apiKeyValue = configurationSection[nameof(TranslaasOptions.ApiKey)];
+                if (string.IsNullOrWhiteSpace(apiKeyValue) || string.IsNullOrWhiteSpace(options.ApiKey))
+                {
+                    throw new InvalidOperationException(
+                        $"Translaas configuration is invalid: ApiKey is required. Ensure '{sectionName}:ApiKey' is set in configuration.");
+                }
 
-            // Check if BaseUrl was explicitly set in configuration
-            // BaseUrl has a default value, so we need to check if it was actually set in config
-            var baseUrlValue = configurationSection[nameof(TranslaasOptions.BaseUrl)];
-            if (string.IsNullOrWhiteSpace(baseUrlValue))
-            {
-                throw new InvalidOperationException(
-                    $"Translaas configuration is invalid: BaseUrl is required. Ensure '{sectionName}:BaseUrl' is set in configuration.");
+                // Check if BaseUrl was explicitly set in configuration
+                // BaseUrl has a default value, so we need to check if it was actually set in config
+                var baseUrlValue = configurationSection[nameof(TranslaasOptions.BaseUrl)];
+                if (string.IsNullOrWhiteSpace(baseUrlValue))
+                {
+                    throw new InvalidOperationException(
+                        $"Translaas configuration is invalid: BaseUrl is required. Ensure '{sectionName}:BaseUrl' is set in configuration.");
+                }
             }
         }, configureLanguage);
     }

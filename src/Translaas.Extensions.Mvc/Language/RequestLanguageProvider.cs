@@ -18,22 +18,16 @@ namespace Translaas.Extensions.Mvc;
 /// This provider checks configured sources (route, query string, header, cookie, Accept-Language)
 /// in order and returns the first match. Returns null if not in HTTP context or no source has a value.
 /// </remarks>
-public class RequestLanguageProvider : ILanguageProvider
+/// <remarks>
+/// Initializes a new instance of the <see cref="RequestLanguageProvider"/> class.
+/// </remarks>
+/// <param name="httpContextAccessor">The HTTP context accessor.</param>
+/// <param name="options">The request language options.</param>
+/// <exception cref="System.ArgumentNullException">Thrown when httpContextAccessor or options is null.</exception>
+public class RequestLanguageProvider(IHttpContextAccessor httpContextAccessor, RequestLanguageOptions options) : ILanguageProvider
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly RequestLanguageOptions _options;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RequestLanguageProvider"/> class.
-    /// </summary>
-    /// <param name="httpContextAccessor">The HTTP context accessor.</param>
-    /// <param name="options">The request language options.</param>
-    /// <exception cref="System.ArgumentNullException">Thrown when httpContextAccessor or options is null.</exception>
-    public RequestLanguageProvider(IHttpContextAccessor httpContextAccessor, RequestLanguageOptions options)
-    {
-        _httpContextAccessor = httpContextAccessor ?? throw new System.ArgumentNullException(nameof(httpContextAccessor));
-        _options = options ?? throw new System.ArgumentNullException(nameof(options));
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new System.ArgumentNullException(nameof(httpContextAccessor));
+    private readonly RequestLanguageOptions _options = options ?? throw new System.ArgumentNullException(nameof(options));
 
     /// <inheritdoc />
     public string? GetLanguage()

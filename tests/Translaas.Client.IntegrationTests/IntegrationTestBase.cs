@@ -1,8 +1,3 @@
-using System;
-using System.Net.Http;
-
-using Translaas.Client;
-
 namespace Translaas.Client.IntegrationTests;
 
 /// <summary>

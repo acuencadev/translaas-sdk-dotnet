@@ -43,5 +43,5 @@ public class CacheManifest
     /// Gets or sets the dictionary of cached projects, keyed by project ID.
     /// </summary>
     [JsonPropertyName("projects")]
-    public Dictionary<string, ProjectCacheInfo> Projects { get; set; } = new();
+    public Dictionary<string, ProjectCacheInfo> Projects { get; set; } = [];
 }

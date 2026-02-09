@@ -1,9 +1,5 @@
 using FluentAssertions;
 
-using Translaas.Caching;
-
-using Xunit;
-
 namespace Translaas.Caching.Tests;
 
 /// <summary>

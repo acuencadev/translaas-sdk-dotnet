@@ -1,5 +1,3 @@
-using System;
-
 namespace Translaas.Client.IntegrationTests;
 
 /// <summary>

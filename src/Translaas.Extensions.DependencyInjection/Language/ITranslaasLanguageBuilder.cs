@@ -1,7 +1,5 @@
 using System;
 
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Translaas.Extensions.DependencyInjection;
 
 /// <summary>

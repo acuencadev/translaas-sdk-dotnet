@@ -1,7 +1,5 @@
 using FluentAssertions;
 
-using Translaas.Caching.File;
-
 namespace Translaas.Caching.File.Tests;
 
 public class OfflineCacheOptionsTests
@@ -33,10 +31,11 @@ public class OfflineCacheOptionsTests
     public void Enabled_ShouldBeSettable()
     {
         // Arrange
-        var options = new OfflineCacheOptions();
-
-        // Act
-        options.Enabled = true;
+        var options = new OfflineCacheOptions
+        {
+            // Act
+            Enabled = true
+        };
 
         // Assert
         options.Enabled.Should().BeTrue();
@@ -60,10 +59,11 @@ public class OfflineCacheOptionsTests
     public void FallbackMode_ShouldBeSettable()
     {
         // Arrange
-        var options = new OfflineCacheOptions();
-
-        // Act
-        options.FallbackMode = OfflineFallbackMode.CacheOnly;
+        var options = new OfflineCacheOptions
+        {
+            // Act
+            FallbackMode = OfflineFallbackMode.CacheOnly
+        };
 
         // Assert
         options.FallbackMode.Should().Be(OfflineFallbackMode.CacheOnly);
@@ -73,10 +73,11 @@ public class OfflineCacheOptionsTests
     public void AutoSync_ShouldBeSettable()
     {
         // Arrange
-        var options = new OfflineCacheOptions();
-
-        // Act
-        options.AutoSync = false;
+        var options = new OfflineCacheOptions
+        {
+            // Act
+            AutoSync = false
+        };
 
         // Assert
         options.AutoSync.Should().BeFalse();
@@ -100,10 +101,11 @@ public class OfflineCacheOptionsTests
     public void AutoSyncInterval_ShouldBeSettableToNull()
     {
         // Arrange
-        var options = new OfflineCacheOptions();
-
-        // Act
-        options.AutoSyncInterval = null;
+        var options = new OfflineCacheOptions
+        {
+            // Act
+            AutoSyncInterval = null
+        };
 
         // Assert
         options.AutoSyncInterval.Should().BeNull();
