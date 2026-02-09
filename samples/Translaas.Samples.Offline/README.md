@@ -1,12 +1,16 @@
 # Translaas SDK Offline Mode Sample
 
-This sample demonstrates how to use the Translaas SDK in **offline mode** using `OfflineFallbackMode.CacheOnly`. In this mode, the SDK **never attempts to connect to the backend API** and reads all translations exclusively from local cache files.
+This sample demonstrates how to use the Translaas SDK with **offline caching** and supports all three fallback modes:
+- **CacheOnly** - Only use cache, never call API (fully offline)
+- **CacheFirst** - Check cache first, fall back to API on miss
+- **ApiFirst** - Call API first, fall back to cache on API failure
 
 ## Key Features
 
-- ✅ **True Offline Mode** - Works entirely without network connectivity
-- ✅ **No API Calls** - All translations are read from local JSON cache files
-- ✅ **Cache-Only Operation** - Demonstrates `OfflineFallbackMode.CacheOnly` configuration
+- ✅ **Multiple Fallback Modes** - Test all three offline fallback modes
+- ✅ **Interactive Mode Selection** - Choose mode at runtime or via command line
+- ✅ **True Offline Mode** - CacheOnly mode works entirely without network connectivity
+- ✅ **Cache + API Hybrid** - CacheFirst and ApiFirst modes demonstrate cache/API interaction
 - ✅ **Error Handling** - Shows how to handle `TranslaasOfflineCacheMissException`
 - ✅ **Complete Examples** - Demonstrates all SDK features (translations, pluralization, parameters, groups, locales)
 
@@ -40,7 +44,9 @@ The sample is configured via `appsettings.json`:
 ```json
 {
   "Translaas": {
-    "DefaultLanguage": "en",
+    "DefaultLanguage": "ru",
+    "ApiKey": "your-api-key-here",
+    "BaseUrl": "https://api.translaas.com",
     "OfflineCache": {
       "Enabled": true,
       "CacheDirectory": "./cache",
@@ -54,12 +60,23 @@ The sample is configured via `appsettings.json`:
 
 **Important Configuration Points:**
 
-- `FallbackMode: "CacheOnly"` - **Critical**: This prevents all API calls
-- `AutoSync: false` - Disables background synchronization (prevents API calls)
+- `FallbackMode` - **Note**: This value in `appsettings.json` is ignored. The mode is selected at runtime via the interactive menu or command line argument.
+- `AutoSync: false` - Disables background synchronization (prevents automatic cache updates)
 - `CacheDirectory: "./cache"` - Points to the local cache directory
 - `DefaultProjectId` - **Required**: The project ID that matches your cache files (must match the directory name in cache folder)
-- `DefaultLanguage` - The default language to use (e.g., "en", "fr", "es")
-- `ApiKey` and `BaseUrl` - **Optional** in CacheOnly mode (not used since API is never called). Required for other `OfflineFallbackMode` values (CacheFirst, ApiFirst)
+- `DefaultLanguage` - The default language to use (e.g., "en", "fr", "es", "ru")
+- `ApiKey` - **Required** for CacheFirst and ApiFirst modes. Must be set to your actual API key. **Optional** in CacheOnly mode (not used since API is never called)
+- `BaseUrl` - **Required** for CacheFirst and ApiFirst modes. Defaults to `https://api.translaas.com` if not specified. **Optional** in CacheOnly mode (not used since API is never called)
+
+**Note:** When running CacheFirst or ApiFirst modes, the sample will throw an exception if `ApiKey` or `BaseUrl` are missing or empty. Make sure to set your actual API key in `appsettings.json` or use user secrets for production scenarios.
+
+### Mode-Specific Requirements
+
+| Mode | ApiKey Required | BaseUrl Required | Network Required |
+|------|----------------|------------------|------------------|
+| **CacheOnly** | ❌ No | ❌ No | ❌ No |
+| **CacheFirst** | ✅ Yes | ✅ Yes | ✅ Yes (for cache misses) |
+| **ApiFirst** | ✅ Yes | ✅ Yes | ✅ Yes (primary) |
 
 **Language Resolution:**
 
@@ -67,17 +84,47 @@ The sample is configured to use only `UseDefault()` provider (not `UseCulture()`
 
 ## Running the Sample
 
+### Interactive Mode Selection
+
+Run without arguments to see an interactive menu:
+
 ```bash
 dotnet run --project samples/Translaas.Samples.Offline
 ```
 
+You'll be prompted to select a fallback mode:
+1. **CacheOnly** - Only use cache, never call API (fully offline)
+2. **CacheFirst** - Check cache first, fall back to API on miss
+3. **ApiFirst** - Call API first, fall back to cache on API failure
+
+### Command Line Mode Selection
+
+You can also specify the mode directly:
+
+```bash
+# CacheOnly mode
+dotnet run --project samples/Translaas.Samples.Offline -- CacheOnly
+
+# CacheFirst mode
+dotnet run --project samples/Translaas.Samples.Offline -- CacheFirst
+
+# ApiFirst mode
+dotnet run --project samples/Translaas.Samples.Offline -- ApiFirst
+```
+
+Accepted values: `CacheOnly`, `CacheFirst`, `ApiFirst` (case-insensitive), or `1`, `2`, `3`.
+
+### What the Sample Does
+
 The sample will:
-1. Verify cache files exist
+1. Verify cache files exist (for CacheOnly and CacheFirst modes)
 2. Demonstrate various translation scenarios
 3. Show error handling for cache misses
-4. Confirm that no API calls were made
+4. Display mode-specific verification messages
 
 ## Examples Demonstrated
+
+All three modes demonstrate the same examples:
 
 1. **Basic Translation** - Simple translation lookup
 2. **Pluralization** - Handling plural forms (1 item vs 5 items)
@@ -88,7 +135,9 @@ The sample will:
 7. **Project Locales** - Getting available locales
 8. **Language Resolution** - Automatic language resolution
 9. **Explicit Override** - Overriding language explicitly
-10. **Offline Verification** - Confirming no API calls were made
+10. **Mode Verification** - Confirming mode-specific behavior
+
+The difference between modes is in how they handle cache hits/misses and API calls, which is demonstrated in the verification step.
 
 ## Cache File Format
 
@@ -158,7 +207,11 @@ catch (TranslaasOfflineCacheMissException ex)
 }
 ```
 
-In `CacheOnly` mode, missing translations cannot be fetched from the API, so you must ensure all required translations are present in the cache files.
+**Mode-Specific Behavior:**
+
+- **CacheOnly**: Missing translations cannot be fetched from the API. You must ensure all required translations are present in the cache files.
+- **CacheFirst**: Missing translations will be fetched from the API and cached for future use.
+- **ApiFirst**: API failures will fall back to cache. Successful API calls update the cache.
 
 ## Creating Your Own Cache Files
 
@@ -189,14 +242,31 @@ To use this sample with your own translations:
 
 4. **Run the sample** - It will use your cache files
 
-## Testing Offline Mode
+## Testing Different Modes
 
-To verify offline mode is working:
+### Testing CacheOnly Mode
 
 1. **Disconnect from network** (or use an invalid API key/BaseUrl)
-2. **Run the sample** - It should work perfectly from cache
-3. **Request a non-existent translation** - Should throw `TranslaasOfflineCacheMissException`
-4. **Check logs** - No HTTP requests should be logged
+2. **Select CacheOnly mode** when running the sample
+3. **Run the sample** - It should work perfectly from cache
+4. **Request a non-existent translation** - Should throw `TranslaasOfflineCacheMissException`
+5. **Check logs** - No HTTP requests should be logged
+
+### Testing CacheFirst Mode
+
+1. **Ensure network connectivity** and valid API credentials
+2. **Select CacheFirst mode** when running the sample
+3. **Run the sample** - First requests may call API, subsequent requests use cache
+4. **Disconnect network** - Cached translations should still work
+5. **Request new translation** - Should call API (if online) or throw exception (if offline)
+
+### Testing ApiFirst Mode
+
+1. **Ensure network connectivity** and valid API credentials
+2. **Select ApiFirst mode** when running the sample
+3. **Run the sample** - All requests call API first, cache is updated in background
+4. **Disconnect network** - Should fall back to cache for previously fetched translations
+5. **Request new translation** - Should fail (API unavailable) and fall back to cache if available
 
 ## Related Documentation
 
@@ -204,15 +274,27 @@ To verify offline mode is working:
 - [Caching Documentation](../../docs/CACHING.md) - Caching system overview
 - [Offline Cache Specification](../../docs/specs/OFFLINE_CACHE_SPEC.md) - Technical specification
 
+## Sample Structure
+
+The sample is organized into separate classes:
+
+- **`OfflineSampleBase`** - Base class containing shared example logic
+- **`CacheOnlySample`** - Implementation for CacheOnly mode
+- **`CacheFirstSample`** - Implementation for CacheFirst mode
+- **`ApiFirstSample`** - Implementation for ApiFirst mode
+- **`Program.cs`** - Entry point with mode selection logic
+
+This structure allows easy comparison between modes and makes it simple to add new modes in the future.
+
 ## Differences from Regular Console Sample
 
 This sample differs from `Translaas.Samples.Console` in:
 
-- **Configuration**: Uses `OfflineFallbackMode.CacheOnly` instead of online mode
-- **No User Secrets**: API key is not required (set to dummy value)
+- **Multiple Modes**: Supports all three offline fallback modes (CacheOnly, CacheFirst, ApiFirst)
+- **Mode Selection**: Interactive menu or command-line argument to choose mode
 - **Cache Files**: Includes pre-populated cache files
 - **Error Handling**: Demonstrates `TranslaasOfflineCacheMissException`
-- **Verification**: Confirms no API calls were made
+- **Mode Verification**: Confirms mode-specific behavior (cache-only vs cache+API)
 
 ## Troubleshooting
 

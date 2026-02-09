@@ -111,12 +111,41 @@ public class CachingTranslaasClient(
     {
         // Try cache first
         var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-        var cachedValue = cachedGroup?.GetValue(entry);
-
-        if (cachedValue != null)
+        
+        if (cachedGroup != null)
         {
-            // Perform parameter substitution on cached template
-            return SubstituteParameters(cachedValue, number, parameters);
+            // Check if entry has plural forms
+            if (cachedGroup.HasPluralForms(entry))
+            {
+                // Determine plural category based on number
+                var pluralCategory = DeterminePluralCategory(number, lang);
+                
+                // Get the plural form
+                var pluralForm = cachedGroup.GetPluralForm(entry, pluralCategory);
+                
+                // If the specific category is not found, try "other" as fallback
+                if (pluralForm == null && pluralCategory != PluralCategory.Other)
+                {
+                    pluralForm = cachedGroup.GetPluralForm(entry, PluralCategory.Other);
+                }
+                
+                if (pluralForm != null)
+                {
+                    // Perform parameter substitution on cached template
+                    return SubstituteParameters(pluralForm, number, parameters);
+                }
+            }
+            else
+            {
+                // Simple string entry
+                var cachedValue = cachedGroup.GetValue(entry);
+                
+                if (cachedValue != null)
+                {
+                    // Perform parameter substitution on cached template
+                    return SubstituteParameters(cachedValue, number, parameters);
+                }
+            }
         }
 
         // Cache miss, try API
@@ -156,12 +185,41 @@ public class CachingTranslaasClient(
         {
             // API failed, try cache
             var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-            var cachedValue = cachedGroup?.GetValue(entry);
-
-            if (cachedValue != null)
+            
+            if (cachedGroup != null)
             {
-                // Perform parameter substitution on cached template
-                return SubstituteParameters(cachedValue, number, parameters);
+                // Check if entry has plural forms
+                if (cachedGroup.HasPluralForms(entry))
+                {
+                    // Determine plural category based on number
+                    var pluralCategory = DeterminePluralCategory(number, lang);
+                    
+                    // Get the plural form
+                    var pluralForm = cachedGroup.GetPluralForm(entry, pluralCategory);
+                    
+                    // If the specific category is not found, try "other" as fallback
+                    if (pluralForm == null && pluralCategory != PluralCategory.Other)
+                    {
+                        pluralForm = cachedGroup.GetPluralForm(entry, PluralCategory.Other);
+                    }
+                    
+                    if (pluralForm != null)
+                    {
+                        // Perform parameter substitution on cached template
+                        return SubstituteParameters(pluralForm, number, parameters);
+                    }
+                }
+                else
+                {
+                    // Simple string entry
+                    var cachedValue = cachedGroup.GetValue(entry);
+                    
+                    if (cachedValue != null)
+                    {
+                        // Perform parameter substitution on cached template
+                        return SubstituteParameters(cachedValue, number, parameters);
+                    }
+                }
             }
 
             throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
