@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -153,8 +154,18 @@ public class CachingTranslaasClient(
         {
             var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background (fire and forget) - only fetch the specific group, not entire project
-            _ = UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken);
+            // Update cache - fetch the specific group and update cache
+            // Note: We await this to ensure it completes, but catch errors so API call still succeeds
+            try
+            {
+                await UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - cache update failure shouldn't break the API call
+                // Note: In a production app, you might want to use ILogger here
+                System.Diagnostics.Debug.WriteLine($"Cache update failed for project '{_projectId}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            }
 
             return result;
         }
@@ -176,8 +187,18 @@ public class CachingTranslaasClient(
         {
             var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
 
-            // Update cache in background - only fetch the specific group, not entire project
-            _ = UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken);
+            // Update cache - fetch the specific group and update cache
+            // Note: We await this to ensure it completes, but catch errors so API call still succeeds
+            try
+            {
+                await UpdateGroupCacheAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - cache update failure shouldn't break the API call
+                // Note: In a production app, you might want to use ILogger here
+                System.Diagnostics.Debug.WriteLine($"Cache update failed for project '{_projectId}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            }
 
             return result;
         }
@@ -637,6 +658,12 @@ public class CachingTranslaasClient(
             // Fetch only the specific group from API (more efficient than entire project)
             var groupData = await _innerClient.GetGroupAsync(project, group, lang, cancellationToken: cancellationToken).ConfigureAwait(false);
             
+            if (groupData == null)
+            {
+                System.Console.Error.WriteLine($"[CACHE UPDATE ERROR] GetGroupAsync returned null for project '{project}', group '{group}', lang '{lang}'");
+                return;
+            }
+            
             // Get existing project from cache (if exists)
             var existingProject = await _cacheProvider.GetProjectAsync(project, lang, cancellationToken).ConfigureAwait(false);
             
@@ -646,24 +673,34 @@ public class CachingTranslaasClient(
                 // Merge the new group into existing project
                 projectToSave = existingProject;
                 
-                // Serialize the group to JsonElement and add/update it in the project
-                var groupJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData);
-                projectToSave.Groups[group] = groupJson;
+                // Extract only the Entries dictionary from the group (not the metadata)
+                // The cache file stores groups as flat entry dictionaries, not full TranslationGroup objects
+                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries);
+                projectToSave.Groups[group] = entriesJson;
             }
             else
             {
                 // No existing project, create a new one with just this group
                 projectToSave = new TranslationProject();
-                var groupJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData);
-                projectToSave.Groups[group] = groupJson;
+                // Extract only the Entries dictionary from the group (not the metadata)
+                var entriesJson = System.Text.Json.JsonSerializer.SerializeToElement(groupData.Entries);
+                projectToSave.Groups[group] = entriesJson;
             }
             
             // Save the updated project
             await _cacheProvider.SaveProjectAsync(project, lang, projectToSave, cancellationToken).ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore cache update errors - this is a background operation
+            // Log cache update errors for debugging, but don't throw - this is a background operation
+            // Note: In a production app, you might want to use ILogger here
+            System.Console.Error.WriteLine($"[CACHE UPDATE ERROR] Failed to update cache for project '{project}', group '{group}', lang '{lang}': {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                System.Console.Error.WriteLine($"[CACHE UPDATE ERROR] Inner exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
+            // Re-throw to let caller handle it
+            throw;
         }
     }
 

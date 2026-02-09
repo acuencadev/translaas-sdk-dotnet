@@ -35,6 +35,28 @@ public class TranslationProject
     {
         if (Groups.TryGetValue(groupName, out var element))
         {
+            // Check if this is a full TranslationGroup JSON (from API) or just entries dictionary (from cache file)
+            // Cache files store groups as flat entry dictionaries: { "app.name": "...", "welcome": "..." }
+            // API returns full TranslationGroup: { "Project": "...", "Lang": "...", "Entries": { ... } }
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                // Check if it has "Entries" property (full TranslationGroup from API)
+                if (element.TryGetProperty("Entries", out _))
+                {
+                    // Full TranslationGroup structure - deserialize normally
+                    return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText());
+                }
+                else
+                {
+                    // Flat entries dictionary from cache file - wrap it in a TranslationGroup
+                    var group = new TranslationGroup();
+                    // Deserialize the entries dictionary directly into Entries
+                    group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(element.GetRawText()) ?? new Dictionary<string, JsonElement>();
+                    return group;
+                }
+            }
+            
+            // Fallback: try to deserialize as TranslationGroup
             return JsonSerializer.Deserialize<TranslationGroup>(element.GetRawText());
         }
         return null;

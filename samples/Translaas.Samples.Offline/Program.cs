@@ -111,7 +111,7 @@ class Program
             OfflineFallbackMode.CacheFirst => new CacheFirstSample(
                 translaasService, translaasClient, configuration, cacheProvider, languageResolver),
             OfflineFallbackMode.ApiFirst => new ApiFirstSample(
-                translaasService, translaasClient, configuration, cacheProvider, languageResolver),
+                translaasService, translaasClient, configuration, host.Services, cacheProvider, languageResolver),
             _ => throw new InvalidOperationException($"Unsupported fallback mode: {selectedMode}")
         };
 

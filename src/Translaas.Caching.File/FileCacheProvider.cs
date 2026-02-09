@@ -191,12 +191,19 @@ public class FileCacheProvider : IOfflineCacheProvider
             };
 
             await WriteJsonFileAtomicAsync(filePath, cachedProject, cancellationToken).ConfigureAwait(false);
+            
             await UpdateManifestForProjectAsync(project, lang, CacheSyncStatus.Synced, cancellationToken).ConfigureAwait(false);
         }
         catch (IOException ex)
         {
             throw new TranslaasOfflineCacheException(
                 $"Failed to save project '{project}' for language '{lang}' to cache.",
+                _cacheDirectory, project, lang, ex);
+        }
+        catch (Exception ex)
+        {
+            throw new TranslaasOfflineCacheException(
+                $"Unexpected error saving project '{project}' for language '{lang}' to cache: {ex.Message}",
                 _cacheDirectory, project, lang, ex);
         }
     }

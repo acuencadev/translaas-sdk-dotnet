@@ -12,10 +12,35 @@ namespace Translaas.Models.Responses;
 public class TranslationGroup
 {
     /// <summary>
+    /// Gets or sets the project identifier.
+    /// </summary>
+    [JsonPropertyName("Project")]
+    public string? Project { get; set; }
+
+    /// <summary>
+    /// Gets or sets the language code.
+    /// </summary>
+    [JsonPropertyName("Lang")]
+    public string? Lang { get; set; }
+
+    /// <summary>
+    /// Gets or sets the version (can be a string or number).
+    /// </summary>
+    [JsonPropertyName("Version")]
+    public JsonElement? Version { get; set; }
+
+    /// <summary>
+    /// Gets or sets the generation timestamp.
+    /// </summary>
+    [JsonPropertyName("GeneratedAt")]
+    public DateTimeOffset? GeneratedAt { get; set; }
+
+    /// <summary>
     /// Gets or sets the dictionary of translation entries, where the key is the entry identifier
     /// and the value is either a translated text string or a plural form dictionary.
+    /// This property deserializes from the "Entries" property in the JSON response.
     /// </summary>
-    [JsonExtensionData]
+    [JsonPropertyName("Entries")]
     public Dictionary<string, JsonElement> Entries { get; set; } = [];
 
     /// <summary>

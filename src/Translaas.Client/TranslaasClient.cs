@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -630,11 +632,12 @@ public class TranslaasClient : ITranslaasClient
     }
 
     /// <summary>
-    /// Builds an HTTP GET request message with JSON body, API key header, and optional query string parameters.
+    /// Builds an HTTP GET request message with query string parameters (from request model and additional parameters), API key header.
+    /// The API expects GET requests with query string parameters, not JSON body.
     /// </summary>
     /// <typeparam name="T">The type of the request model.</typeparam>
     /// <param name="endpoint">The endpoint path.</param>
-    /// <param name="requestModel">The request model to serialize as JSON.</param>
+    /// <param name="requestModel">The request model to convert to query string parameters.</param>
     /// <param name="parameters">Optional dictionary of named parameters to append as query string parameters.</param>
     /// <returns>An HttpRequestMessage configured for the API.</returns>
     /// <exception cref="ArgumentNullException">Thrown when endpoint or requestModel is null.</exception>
@@ -652,10 +655,56 @@ public class TranslaasClient : ITranslaasClient
 
         var url = BuildEndpointUrl(endpoint);
         
-        // Append query string parameters if provided
-        if (parameters != null && parameters.Count > 0)
+        // Convert request model properties to query string parameters
+        var queryParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        
+        // Use reflection to get all properties from the request model
+        var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var prop in properties)
         {
-            var queryString = BuildQueryString(parameters);
+            var value = prop.GetValue(requestModel);
+            if (value != null)
+            {
+                // Get JsonPropertyName attribute if present, otherwise use property name
+                var jsonPropertyNameAttr = prop.GetCustomAttributes(typeof(JsonPropertyNameAttribute), false)
+                    .FirstOrDefault() as JsonPropertyNameAttribute;
+                var paramName = jsonPropertyNameAttr?.Name ?? prop.Name.ToLowerInvariant();
+                
+                // Convert value to string
+                string stringValue = value switch
+                {
+                    string str => str,
+                    decimal dec => dec.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    int i => i.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    double d => d.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    float f => f.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    bool b => b.ToString().ToLowerInvariant(),
+                    _ => value.ToString() ?? string.Empty
+                };
+                
+                if (!string.IsNullOrEmpty(stringValue))
+                {
+                    queryParams[paramName] = stringValue;
+                }
+            }
+        }
+        
+        // Merge additional parameters (these take precedence if there are conflicts)
+        if (parameters != null)
+        {
+            foreach (var kvp in parameters)
+            {
+                if (!string.IsNullOrEmpty(kvp.Value))
+                {
+                    queryParams[kvp.Key] = kvp.Value;
+                }
+            }
+        }
+        
+        // Build query string
+        if (queryParams.Count > 0)
+        {
+            var queryString = BuildQueryString(queryParams);
             if (!string.IsNullOrEmpty(queryString))
             {
                 url += "?" + queryString;
@@ -663,14 +712,12 @@ public class TranslaasClient : ITranslaasClient
         }
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
-
+        
         // Set API key header
         request.Headers.Add("X-Api-Key", _options.ApiKey);
 
-        // Serialize request model to JSON
-        var json = JsonSerializer.Serialize(requestModel, _jsonOptions);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        request.Content = content;
+        // Note: GET requests should not have a body - the API expects query string parameters only
+        // Removed JSON body serialization
 
         return request;
     }
