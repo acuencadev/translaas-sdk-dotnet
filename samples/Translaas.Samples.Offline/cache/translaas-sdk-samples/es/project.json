@@ -1,5 +1,5 @@
 {
-  "cachedAt": "2026-01-09T19:44:59.5667837Z",
+  "cachedAt": "2026-02-09T13:46:58.7693551Z",
   "expiresAt": null,
   "data": {
     "common": {
@@ -10,41 +10,26 @@
       "loading": "Cargando...",
       "error": "Ocurri\u00F3 un error"
     },
-    "navigation": {
-      "home": "Inicio",
-      "privacy": "Privacidad",
-      "about": "Acerca de"
-    },
     "messages": {
       "item": {
         "other": "{N} art\u00EDculos",
         "one": "1 art\u00EDculo"
       },
       "notification": {
-        "other": "Tienes {N} notificaciones"
+        "other": "Tienes {N} notificaciones",
+        "one": "Tienes una notificaci\u00F3n"
       },
       "user.online": {
-        "other": "{N} usuarios en l\u00EDnea"
+        "other": "{N} usuarios en l\u00EDnea",
+        "one": "un usuario en l\u00EDnea"
       },
       "greeting": {
-        "one": "Hola {userName}, tienes 1 art\u00EDculo",
+        "one": "Hola {userName}, tienes un art\u00EDculo",
         "other": "Hola {userName}, tienes {itemCount} art\u00EDculos"
-      }
-    },
-    "privacy": {
-      "title": "Pol\u00EDtica de privacidad",
-      "description": "Su privacidad es importante para nosotros. Esta aplicaci\u00F3n de ejemplo demuestra c\u00F3mo usar el SDK Translaas para gestionar traducciones.",
-      "details": "Esta es una aplicaci\u00F3n de demostraci\u00F3n. No se recopilan ni almacenan datos personales."
-    },
-    "api": {
-      "translation.retrieved": "Traducci\u00F3n recuperada exitosamente",
-      "translation.not.found": "Traducci\u00F3n no encontrada",
-      "group.retrieved": "Grupo de traducci\u00F3n recuperado exitosamente",
-      "project.retrieved": "Proyecto de traducci\u00F3n recuperado exitosamente"
-    },
-    "pluralization-tests": {
-      "simple-count": {
-        "one": "Hay 1 registro"
+      },
+      "items": {
+        "one": "Hola {userName}, tienes un art\u00EDculo",
+        "other": "Hola {userName}, tienes {N} art\u00EDculos"
       }
     }
   }

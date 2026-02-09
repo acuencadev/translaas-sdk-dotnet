@@ -1,5 +1,5 @@
 {
-  "cachedAt": "2025-12-22T20:02:58.2968933Z",
+  "cachedAt": "2026-02-09T13:46:45.7969881Z",
   "expiresAt": null,
   "data": {
     "common": {
@@ -10,38 +10,26 @@
       "loading": "Chargement...",
       "error": "Une erreur s\u0027est produite"
     },
-    "navigation": {
-      "home": "Accueil",
-      "privacy": "Confidentialit\u00E9",
-      "about": "\u00C0 propos"
-    },
     "messages": {
       "item": {
         "other": "{N} articles",
         "one": "1 article"
       },
       "notification": {
-        "other": "Vous avez {N} notifications"
+        "other": "Vous avez {N} notifications",
+        "one": "You have une notification"
       },
       "user.online": {
-        "other": "{N} utilisateurs en ligne"
-      }
-    },
-    "privacy": {
-      "title": "Politique de confidentialit\u00E9",
-      "description": "Votre vie priv\u00E9e est importante pour nous. Cette application d\u0027exemple d\u00E9montre comment utiliser le SDK Translaas pour g\u00E9rer les traductions.",
-      "details": "Il s\u0027agit d\u0027une application de d\u00E9monstration. Aucune donn\u00E9e personnelle n\u0027est collect\u00E9e ou stock\u00E9e."
-    },
-    "api": {
-      "translation.retrieved": "Traduction r\u00E9cup\u00E9r\u00E9e avec succ\u00E8s",
-      "translation.not.found": "Traduction introuvable",
-      "group.retrieved": "Groupe de traduction r\u00E9cup\u00E9r\u00E9 avec succ\u00E8s",
-      "project.retrieved": "Projet de traduction r\u00E9cup\u00E9r\u00E9 avec succ\u00E8s"
-    },
-    "pluralization-tests": {
-      "simple-count": {
-        "one": "Il y a 1 enregistrement",
-        "other": "Il y a {N} enregistrements"
+        "other": "{N} utilisateurs en ligne",
+        "one": "un utilisateur en ligne"
+      },
+      "greeting": {
+        "other": "Bonjour {userName}, vous avez {itemCount} articles",
+        "one": "Bonjour {userName}, vous avez un article"
+      },
+      "items": {
+        "one": "Bonjour {userName}, vous avez un article",
+        "other": "Bonjour {userName}, vous avez {N} articles"
       }
     }
   }

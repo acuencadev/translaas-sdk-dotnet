@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "sdkVersion": "1.0.0",
-  "createdAt": "2026-02-09T11:58:48.2103122Z",
-  "lastSyncAt": "2026-02-09T11:58:48.2103122Z",
+  "createdAt": "2026-02-09T13:58:44.9037069Z",
+  "lastSyncAt": "2026-02-09T13:58:44.9037069Z",
   "projects": {
     "translaas-sdk-samples": {
       "languages": [
@@ -11,7 +11,7 @@
         "fr",
         "ru"
       ],
-      "lastSyncAt": "2026-02-09T11:58:48.2103122Z",
+      "lastSyncAt": "2026-02-09T13:58:44.9037069Z",
       "status": "synced"
     }
   }

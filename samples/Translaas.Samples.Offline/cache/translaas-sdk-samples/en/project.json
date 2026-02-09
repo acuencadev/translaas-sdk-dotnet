@@ -1,5 +1,5 @@
 {
-  "cachedAt": "2025-12-22T14:08:31.8570448Z",
+  "cachedAt": "2026-02-09T13:46:30.0569861Z",
   "expiresAt": null,
   "data": {
     "common": {
@@ -10,46 +10,26 @@
       "welcome": "Welcome",
       "welcome.message": "This is a sample application demonstrating the Translaas SDK across different .NET platforms."
     },
-    "api": {
-      "group.retrieved": "Translation group retrieved successfully",
-      "project.retrieved": "Translation project retrieved successfully",
-      "translation.not.found": "Translation not found",
-      "translation.retrieved": "Translation retrieved successfully"
-    },
     "messages": {
       "item": {
         "other": "{N} items",
         "one": "1 item"
       },
       "notification": {
-        "other": "You have {N} notifications"
+        "other": "You have {N} notifications",
+        "one": "You have a notification"
       },
       "user.online": {
-        "other": "{N} users online"
+        "other": "{N} users online",
+        "one": "one user online"
       },
       "greeting": {
         "other": "Hello {userName}, you have {itemCount} items",
-        "one": "Hello {userName}, you have 1 item"
+        "one": "Hello {userName}, you have an item"
       },
       "items": {
         "one": "Hello {userName}, you have 1 item",
         "other": "Hello {userName}, you have {N} items"
-      }
-    },
-    "navigation": {
-      "about": "About",
-      "home": "Home",
-      "privacy": "Privacy"
-    },
-    "privacy": {
-      "description": "Your privacy is important to us. This sample application demonstrates how to use the Translaas SDK for managing translations.",
-      "details": "This is a demonstration application. No personal data is collected or stored.",
-      "title": "Privacy Policy"
-    },
-    "pluralization-tests": {
-      "simple-count": {
-        "one": "There is 1 record",
-        "other": "There are {N} records"
       }
     }
   }
