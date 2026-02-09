@@ -116,7 +116,34 @@ Then navigate to `https://localhost:5001` to see the application.
 
 ---
 
-### 5. [.NET MAUI Application](./Translaas.Samples.Maui/)
+### 5. [Offline Mode Console Application](./Translaas.Samples.Offline/)
+
+A console application demonstrating **offline mode** using `OfflineFallbackMode.CacheOnly`. This sample works entirely without network connectivity by reading translations from local cache files.
+
+**Key Features:**
+- True offline mode (no API calls)
+- Cache-only operation (`CacheOnly` fallback mode)
+- Pre-populated cache files included
+- Error handling for cache misses
+- Complete examples of all SDK features
+
+**Best For:**
+- Understanding offline mode configuration
+- Testing cache file format
+- Learning how to create and manage cache files
+- Applications that need to work without network connectivity
+- Pre-populated translation scenarios
+
+**Run:**
+```bash
+dotnet run --project samples/Translaas.Samples.Offline
+```
+
+**Note:** This sample includes pre-populated cache files and does not require an API key or network connectivity.
+
+---
+
+### 6. [.NET MAUI Application](./Translaas.Samples.Maui/)
 
 A cross-platform mobile and desktop application demonstrating Translaas SDK usage in .NET MAUI.
 

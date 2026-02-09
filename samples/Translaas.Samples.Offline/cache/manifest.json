@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "sdkVersion": "1.0.0",
+  "createdAt": "2026-02-09T11:58:48.2103122Z",
+  "lastSyncAt": "2026-02-09T11:58:48.2103122Z",
+  "projects": {
+    "translaas-sdk-samples": {
+      "languages": [
+        "en",
+        "es",
+        "fr",
+        "ru"
+      ],
+      "lastSyncAt": "2026-02-09T11:58:48.2103122Z",
+      "status": "synced"
+    }
+  }
+}

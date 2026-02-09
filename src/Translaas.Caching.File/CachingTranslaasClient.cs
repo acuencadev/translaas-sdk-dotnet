@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Translaas.Client;
+using Translaas.Models;
 using Translaas.Models.Errors;
 using Translaas.Models.Responses;
 
@@ -189,12 +190,43 @@ public class CachingTranslaasClient : ITranslaasClient
         CancellationToken cancellationToken)
     {
         var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false);
-        var cachedValue = cachedGroup?.GetValue(entry);
-
-        if (cachedValue != null)
+        
+        if (cachedGroup == null)
         {
-            // Perform parameter substitution on cached template
-            return SubstituteParameters(cachedValue, number, parameters);
+            throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
+        }
+
+        // Check if entry has plural forms
+        if (cachedGroup.HasPluralForms(entry))
+        {
+            // Determine plural category based on number
+            var pluralCategory = DeterminePluralCategory(number, lang);
+            
+            // Get the plural form
+            var pluralForm = cachedGroup.GetPluralForm(entry, pluralCategory);
+            
+            // If the specific category is not found, try "other" as fallback
+            if (pluralForm == null && pluralCategory != PluralCategory.Other)
+            {
+                pluralForm = cachedGroup.GetPluralForm(entry, PluralCategory.Other);
+            }
+            
+            if (pluralForm != null)
+            {
+                // Perform parameter substitution on cached template
+                return SubstituteParameters(pluralForm, number, parameters);
+            }
+        }
+        else
+        {
+            // Simple string entry
+            var cachedValue = cachedGroup.GetValue(entry);
+            
+            if (cachedValue != null)
+            {
+                // Perform parameter substitution on cached template
+                return SubstituteParameters(cachedValue, number, parameters);
+            }
         }
 
         throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
@@ -547,6 +579,35 @@ public class CachingTranslaasClient : ITranslaasClient
             RegexOptions.None);
 
         return result;
+    }
+
+    /// <summary>
+    /// Determines the plural category based on the number and language.
+    /// Uses simple rules: for most languages, 1 = One, everything else = Other.
+    /// </summary>
+    /// <param name="number">The number value (for pluralization).</param>
+    /// <param name="lang">The language code.</param>
+    /// <returns>The plural category.</returns>
+    private static PluralCategory DeterminePluralCategory(decimal? number, string lang)
+    {
+        // If no number provided, default to Other
+        if (!number.HasValue)
+        {
+            return PluralCategory.Other;
+        }
+
+        var num = number.Value;
+
+        // Simple rule for most languages: 1 = One, everything else = Other
+        // This covers English, Spanish, French, German, Italian, Portuguese, etc.
+        if (num == 1)
+        {
+            return PluralCategory.One;
+        }
+
+        // For more complex languages (Russian, Arabic, etc.), we'd need CLDR rules
+        // For now, default to Other as it's the most common fallback
+        return PluralCategory.Other;
     }
 
     /// <summary>
