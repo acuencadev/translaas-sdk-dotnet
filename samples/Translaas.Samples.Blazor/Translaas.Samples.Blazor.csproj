@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Translaas.Caching\Translaas.Caching.csproj" />
+    <ProjectReference Include="..\..\src\Translaas.Caching.File\Translaas.Caching.File.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Client\Translaas.Client.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Extensions.DependencyInjection\Translaas.Extensions.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\src\Translaas.Extensions.Http\Translaas.Extensions.Http.csproj" />
