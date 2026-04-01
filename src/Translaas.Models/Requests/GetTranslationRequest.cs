@@ -31,4 +31,22 @@ public class GetTranslationRequest
     /// </summary>
     [JsonPropertyName("n")]
     public decimal? Number { get; set; }
+
+    /// <summary>
+    /// Gets or sets the project identifier when the API key is not scoped to a single project.
+    /// </summary>
+    [JsonPropertyName("project")]
+    public string? Project { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional release channel.
+    /// </summary>
+    [JsonPropertyName("channel")]
+    public string? Channel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional snapshot / version (query <c>v</c>).
+    /// </summary>
+    [JsonPropertyName("v")]
+    public string? Version { get; set; }
 }

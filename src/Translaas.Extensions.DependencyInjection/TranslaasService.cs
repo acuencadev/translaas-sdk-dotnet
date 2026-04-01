@@ -45,7 +45,7 @@ public class TranslaasService(ITranslaasClient client, ILanguageResolver? resolv
     public Task<string> T(string group, string entry, CancellationToken cancellationToken = default)
     {
         var lang = ResolveLanguage();
-        return _client.GetEntryAsync(group, entry, lang, null, null, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, null, null, null, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -55,9 +55,9 @@ public class TranslaasService(ITranslaasClient client, ILanguageResolver? resolv
         if (string.IsNullOrWhiteSpace(lang))
         {
             var resolvedLang = ResolveLanguage();
-            return _client.GetEntryAsync(group, entry, resolvedLang, null, null, cancellationToken);
+            return _client.GetEntryAsync(group, entry, resolvedLang, null, null, null, cancellationToken);
         }
-        return _client.GetEntryAsync(group, entry, lang, null, null, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, null, null, null, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -67,9 +67,9 @@ public class TranslaasService(ITranslaasClient client, ILanguageResolver? resolv
         if (string.IsNullOrWhiteSpace(lang))
         {
             var resolvedLang = ResolveLanguage();
-            return _client.GetEntryAsync(group, entry, resolvedLang, number, null, cancellationToken);
+            return _client.GetEntryAsync(group, entry, resolvedLang, number, null, null, cancellationToken);
         }
-        return _client.GetEntryAsync(group, entry, lang, number, null, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, number, null, null, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -79,9 +79,9 @@ public class TranslaasService(ITranslaasClient client, ILanguageResolver? resolv
         if (string.IsNullOrWhiteSpace(lang))
         {
             var resolvedLang = ResolveLanguage();
-            return _client.GetEntryAsync(group, entry, resolvedLang, null, parameters, cancellationToken);
+            return _client.GetEntryAsync(group, entry, resolvedLang, null, parameters, null, cancellationToken);
         }
-        return _client.GetEntryAsync(group, entry, lang, null, parameters, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, null, parameters, null, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -91,29 +91,29 @@ public class TranslaasService(ITranslaasClient client, ILanguageResolver? resolv
         if (string.IsNullOrWhiteSpace(lang))
         {
             var resolvedLang = ResolveLanguage();
-            return _client.GetEntryAsync(group, entry, resolvedLang, number, parameters, cancellationToken);
+            return _client.GetEntryAsync(group, entry, resolvedLang, number, parameters, null, cancellationToken);
         }
-        return _client.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, number, parameters, null, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task<string> T(string group, string entry, decimal number, CancellationToken cancellationToken = default)
     {
         var lang = ResolveLanguage();
-        return _client.GetEntryAsync(group, entry, lang, number, null, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, number, null, null, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task<string> T(string group, string entry, Dictionary<string, string> parameters, CancellationToken cancellationToken = default)
     {
         var lang = ResolveLanguage();
-        return _client.GetEntryAsync(group, entry, lang, null, parameters, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, null, parameters, null, cancellationToken);
     }
 
     /// <inheritdoc />
     public Task<string> T(string group, string entry, decimal number, Dictionary<string, string> parameters, CancellationToken cancellationToken = default)
     {
         var lang = ResolveLanguage();
-        return _client.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken);
+        return _client.GetEntryAsync(group, entry, lang, number, parameters, null, cancellationToken);
     }
 }

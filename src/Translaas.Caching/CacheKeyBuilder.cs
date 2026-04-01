@@ -22,7 +22,15 @@ public static class CacheKeyBuilder
     /// <param name="parameters">Optional dictionary of named parameters. Parameters are sorted by key for consistent cache key generation.</param>
     /// <returns>A cache key in the format: "entry:group:entry:lang[:number][:param1=value1:param2=value2...]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when group, entry, or lang is null.</exception>
-    public static string BuildEntryKey(string group, string entry, string lang, decimal? number = null, Dictionary<string, string>? parameters = null)
+    public static string BuildEntryKey(
+        string group,
+        string entry,
+        string lang,
+        decimal? number = null,
+        Dictionary<string, string>? parameters = null,
+        string? project = null,
+        string? channel = null,
+        string? version = null)
     {
         if (group == null)
         {
@@ -73,6 +81,8 @@ public static class CacheKeyBuilder
             }
         }
 
+        AppendSnapshotSuffix(keyBuilder, project, channel, version, includeContext: null);
+
         return keyBuilder.ToString();
     }
 
@@ -85,7 +95,14 @@ public static class CacheKeyBuilder
     /// <param name="format">Optional format parameter.</param>
     /// <returns>A cache key in the format: "group:project:group:lang[:format]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when project, group, or lang is null.</exception>
-    public static string BuildGroupKey(string project, string group, string lang, string? format = null)
+    public static string BuildGroupKey(
+        string project,
+        string group,
+        string lang,
+        string? format = null,
+        string? channel = null,
+        string? version = null,
+        bool? includeContext = null)
     {
         if (project == null)
         {
@@ -116,6 +133,8 @@ public static class CacheKeyBuilder
             keyBuilder.Append(format);
         }
 
+        AppendSnapshotSuffix(keyBuilder, project: null, channel, version, includeContext);
+
         return keyBuilder.ToString();
     }
 
@@ -127,7 +146,13 @@ public static class CacheKeyBuilder
     /// <param name="format">Optional format parameter.</param>
     /// <returns>A cache key in the format: "project:project:lang[:format]".</returns>
     /// <exception cref="ArgumentNullException">Thrown when project or lang is null.</exception>
-    public static string BuildProjectKey(string project, string lang, string? format = null)
+    public static string BuildProjectKey(
+        string project,
+        string lang,
+        string? format = null,
+        string? channel = null,
+        string? version = null,
+        bool? includeContext = null)
     {
         if (project == null)
         {
@@ -151,6 +176,8 @@ public static class CacheKeyBuilder
             keyBuilder.Append(format);
         }
 
+        AppendSnapshotSuffix(keyBuilder, project: null, channel, version, includeContext);
+
         return keyBuilder.ToString();
     }
 
@@ -160,13 +187,64 @@ public static class CacheKeyBuilder
     /// <param name="project">The project identifier.</param>
     /// <returns>A cache key in the format: "locales:project".</returns>
     /// <exception cref="ArgumentNullException">Thrown when project is null.</exception>
-    public static string BuildLocalesKey(string project)
+    public static string BuildLocalesKey(string project, string? channel = null, string? version = null)
     {
         if (project == null)
         {
             throw new ArgumentNullException(nameof(project));
         }
 
-        return $"locales{KeySeparator}{project}";
+        var keyBuilder = new StringBuilder("locales");
+        keyBuilder.Append(KeySeparator);
+        keyBuilder.Append(project);
+        AppendSnapshotSuffix(keyBuilder, project: null, channel, version, includeContext: null);
+        return keyBuilder.ToString();
+    }
+
+    /// <summary>
+    /// Builds a cache key for offline ZIP downloads (for example layered caching).
+    /// </summary>
+    public static string BuildOfflineCacheKey(string project, string? channel = null, string? version = null, bool? includeContext = null)
+    {
+        if (project == null)
+        {
+            throw new ArgumentNullException(nameof(project));
+        }
+
+        var keyBuilder = new StringBuilder("offline");
+        keyBuilder.Append(KeySeparator);
+        keyBuilder.Append(project);
+        AppendSnapshotSuffix(keyBuilder, project: null, channel, version, includeContext);
+        return keyBuilder.ToString();
+    }
+
+    private static void AppendSnapshotSuffix(StringBuilder keyBuilder, string? project, string? channel, string? version, bool? includeContext)
+    {
+        if (!string.IsNullOrWhiteSpace(project))
+        {
+            keyBuilder.Append(KeySeparator);
+            keyBuilder.Append("proj=");
+            keyBuilder.Append(project);
+        }
+
+        if (!string.IsNullOrWhiteSpace(channel))
+        {
+            keyBuilder.Append(KeySeparator);
+            keyBuilder.Append("ch=");
+            keyBuilder.Append(channel);
+        }
+
+        if (!string.IsNullOrWhiteSpace(version))
+        {
+            keyBuilder.Append(KeySeparator);
+            keyBuilder.Append("v=");
+            keyBuilder.Append(version);
+        }
+
+        if (includeContext.HasValue)
+        {
+            keyBuilder.Append(KeySeparator);
+            keyBuilder.Append(includeContext.Value ? "ic=1" : "ic=0");
+        }
     }
 }
