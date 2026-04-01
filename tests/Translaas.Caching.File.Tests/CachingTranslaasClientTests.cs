@@ -4,6 +4,7 @@ using FluentAssertions;
 
 using Moq;
 using Translaas.Client;
+using Translaas.Models;
 using Translaas.Models.Errors;
 using Translaas.Models.Responses;
 
@@ -100,7 +101,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello World");
-        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -114,7 +115,7 @@ public class CachingTranslaasClientTests
             .ReturnsAsync((TranslationGroup?)null);
 
         _mockInnerClient
-            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync("Hello from API");
 
         // Act
@@ -135,7 +136,7 @@ public class CachingTranslaasClientTests
             .ReturnsAsync((TranslationGroup?)null);
 
         _mockInnerClient
-            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new System.Net.Http.HttpRequestException("Network error"));
 
         // Act & Assert
@@ -154,7 +155,7 @@ public class CachingTranslaasClientTests
         var client = CreateClient(OfflineFallbackMode.ApiFirst);
 
         _mockInnerClient
-            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync("Hello from API");
 
         // Act
@@ -162,7 +163,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello from API");
-        _mockInnerClient.Verify(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockInnerClient.Verify(c => c.GetEntryAsync("common", "hello", "en", null, null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -173,7 +174,7 @@ public class CachingTranslaasClientTests
         var cachedGroup = CreateTranslationGroup("hello", "Hello from Cache");
 
         _mockInnerClient
-            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "hello", "en", null, null, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new System.Net.Http.HttpRequestException("Network error"));
 
         _mockCacheProvider
@@ -207,7 +208,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello from Cache");
-        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -247,7 +248,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello John, you have 5 items");
-        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -313,7 +314,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().Be("Hello John");
-        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -328,7 +329,7 @@ public class CachingTranslaasClientTests
             .ReturnsAsync(cachedGroup);
 
         _mockInnerClient
-            .Setup(c => c.GetEntryAsync("messages", "greeting", "en", It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("messages", "greeting", "en", It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new System.Net.Http.HttpRequestException("Network error"));
 
         var parameters = new Dictionary<string, string>
@@ -364,7 +365,7 @@ public class CachingTranslaasClientTests
 
         // Assert
         result.Should().BeSameAs(cachedProject);
-        _mockInnerClient.Verify(c => c.GetProjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockInnerClient.Verify(c => c.GetProjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -379,7 +380,7 @@ public class CachingTranslaasClientTests
             .ReturnsAsync((TranslationProject?)null);
 
         _mockInnerClient
-            .Setup(c => c.GetProjectAsync("my-project", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("my-project", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(apiProject);
 
         // Act
@@ -402,7 +403,7 @@ public class CachingTranslaasClientTests
         var apiProject = new TranslationProject();
 
         _mockInnerClient
-            .Setup(c => c.GetProjectAsync("my-project", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("my-project", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(apiProject);
 
         // Act
@@ -421,7 +422,7 @@ public class CachingTranslaasClientTests
         var cachedProject = new TranslationProject();
 
         _mockInnerClient
-            .Setup(c => c.GetProjectAsync("my-project", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("my-project", "en", null, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new System.Net.Http.HttpRequestException("Network error"));
 
         _mockCacheProvider
@@ -484,7 +485,7 @@ public class CachingTranslaasClientTests
         var apiGroup = new TranslationGroup();
 
         _mockInnerClient
-            .Setup(c => c.GetGroupAsync("my-project", "common", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetGroupAsync("my-project", "common", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(apiGroup);
 
         // Act
@@ -524,7 +525,7 @@ public class CachingTranslaasClientTests
         var apiLocales = new ProjectLocales { Locales = ["en", "es"] };
 
         _mockInnerClient
-            .Setup(c => c.GetProjectLocalesAsync("my-project", It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectLocalesAsync("my-project", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(apiLocales);
 
         // Act

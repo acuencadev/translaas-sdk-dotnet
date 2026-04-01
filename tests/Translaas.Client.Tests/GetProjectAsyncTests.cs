@@ -51,7 +51,7 @@ public class GetProjectAsyncTests
         group2.Should().NotBeNull();
         group2!.GetValue("entry3").Should().Be("Translation 3");
         
-        VerifyHttpRequest(handlerMock, "/api/translations/project");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/project");
     }
 
     [Fact]
@@ -301,7 +301,7 @@ public class GetProjectAsyncTests
         // Assert
         result.Should().NotBeNull();
         result.Groups.Should().BeEmpty(); // Client returns empty project when 204 No Content
-        VerifyHttpRequest(handlerMock, "/api/translations/project");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/project");
     }
 
     [Fact]

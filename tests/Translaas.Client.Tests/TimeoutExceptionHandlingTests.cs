@@ -11,7 +11,7 @@ public class TimeoutExceptionHandlingTests
     private readonly TranslaasClientOptions _defaultOptions = new()
     {
         ApiKey = "test-api-key",
-        BaseUrl = "https://api.test.com/api",
+        BaseUrl = "https://api.test.com",
         Timeout = TimeSpan.FromSeconds(5)
     };
 
@@ -172,7 +172,7 @@ public class TimeoutExceptionHandlingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = TimeSpan.FromSeconds(10)
         };
 

@@ -12,7 +12,7 @@ public class ParseTextResponseTests
     private readonly TranslaasClientOptions _defaultOptions = new()
     {
         ApiKey = "test-api-key",
-        BaseUrl = "https://api.test.com/api"
+        BaseUrl = "https://api.test.com"
     };
 
     private Mock<HttpMessageHandler> CreateMockHttpMessageHandler(HttpStatusCode statusCode, string responseContent)

@@ -13,7 +13,7 @@ public class TimeoutConfigurationTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = TimeSpan.FromSeconds(30)
         };
 
@@ -33,7 +33,7 @@ public class TimeoutConfigurationTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = null
         };
 
@@ -54,7 +54,7 @@ public class TimeoutConfigurationTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = TimeSpan.Zero
         };
 
@@ -70,7 +70,7 @@ public class TimeoutConfigurationTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = TimeSpan.FromSeconds(-1)
         };
 
@@ -86,7 +86,7 @@ public class TimeoutConfigurationTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = TimeSpan.FromSeconds(30)
         };
 
@@ -101,7 +101,7 @@ public class TimeoutConfigurationTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api",
+            BaseUrl = "https://api.test.com",
             Timeout = null
         };
 
