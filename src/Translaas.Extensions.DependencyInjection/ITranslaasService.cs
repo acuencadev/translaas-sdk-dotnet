@@ -14,7 +14,7 @@ namespace Translaas.Extensions.DependencyInjection;
 /// </para>
 /// <para>
 /// The <c>T</c> method is a shorthand for 
-/// <see cref="Client.ITranslaasClient.GetEntryAsync(string, string, string, decimal?, System.Collections.Generic.Dictionary{string, string}?, System.Threading.CancellationToken)"/>.
+/// <see cref="Client.ITranslaasClient.GetEntryAsync(string, string, string, decimal?, System.Collections.Generic.Dictionary{string, string}?, Translaas.Models.TranslaasRequestContext?, System.Threading.CancellationToken)"/>.
 /// </para>
 /// </remarks>
 public interface ITranslaasService

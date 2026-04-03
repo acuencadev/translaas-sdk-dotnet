@@ -27,7 +27,7 @@ public class IntegrationTestConfiguration
     public IntegrationTestConfiguration()
     {
         ApiKey = Environment.GetEnvironmentVariable("TRANSLAAS_API_KEY") ?? string.Empty;
-        // Note: Do NOT include /api in the BaseUrl - the client adds /api/ to all endpoints
+        // Note: Use the API host only (no path). The client calls /sdk/v1/translations/... and /api/v1/...
         BaseUrl = Environment.GetEnvironmentVariable("TRANSLAAS_BASE_URL") ?? "https://sdk-api.translaas.local";
         
         // Integration tests are enabled if API key is provided

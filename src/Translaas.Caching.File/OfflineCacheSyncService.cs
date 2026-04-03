@@ -94,7 +94,7 @@ public class OfflineCacheSyncService(
         try
         {
             // Get available locales for the project
-            var locales = await _client.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false);
+            var locales = await _client.GetProjectLocalesAsync(project, null, cancellationToken).ConfigureAwait(false);
             await _cacheProvider.SaveProjectLocalesAsync(project, locales, cancellationToken).ConfigureAwait(false);
 
             var languagesToSync = _options.Languages.Count > 0

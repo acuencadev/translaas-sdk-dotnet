@@ -3,25 +3,31 @@ using System.Text.Json.Serialization;
 namespace Translaas.Models.Requests;
 
 /// <summary>
-/// Request model for getting available locales for a project.
+/// Query parameters for the offline-cache ZIP endpoint.
 /// </summary>
-public class GetProjectLocalesRequest
+public sealed class GetOfflineCacheRequest
 {
     /// <summary>
-    /// Gets or sets the project identifier.
+    /// Project identifier.
     /// </summary>
     [JsonPropertyName("project")]
     public string? Project { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional release channel.
+    /// Optional release channel.
     /// </summary>
     [JsonPropertyName("channel")]
     public string? Channel { get; set; }
 
     /// <summary>
-    /// Gets or sets the optional snapshot / version (query <c>v</c>).
+    /// Optional snapshot / version (query <c>v</c>).
     /// </summary>
     [JsonPropertyName("v")]
     public string? Version { get; set; }
+
+    /// <summary>
+    /// When set, includes entry context in bundled JSON.
+    /// </summary>
+    [JsonPropertyName("includeContext")]
+    public bool? IncludeContext { get; set; }
 }

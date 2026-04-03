@@ -37,7 +37,7 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(expectedText);
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(expectedText);
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/text");
         
         // Verify number is not included in query string when null
         handlerMock.Protected()
@@ -459,7 +459,7 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(expectedText);
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -477,7 +477,7 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(expectedText);
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -494,7 +494,7 @@ public class GetEntryAsyncTests
 
         // Assert
         result.Should().Be(entryKey); // Client returns entry key as fallback when 204 No Content
-        VerifyHttpRequest(handlerMock, "/api/translations/text");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/text");
     }
 
     [Fact]

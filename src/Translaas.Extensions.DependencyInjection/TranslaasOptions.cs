@@ -11,7 +11,7 @@ namespace Translaas.Extensions.DependencyInjection;
 /// </summary>
 public class TranslaasOptions
 {
-    private const string DefaultBaseUrl = "https://sdk-api.translaas.local/api";
+    private const string DefaultBaseUrl = "https://sdk-api.translaas.local";
 
     /// <summary>
     /// Gets or sets the API key for authentication.

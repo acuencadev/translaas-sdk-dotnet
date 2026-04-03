@@ -3,6 +3,7 @@ using FluentAssertions;
 using Moq;
 
 using Translaas.Client;
+using Translaas.Models;
 
 namespace Translaas.Extensions.DependencyInjection.Tests;
 
@@ -30,7 +31,7 @@ public class TranslaasServiceTests
         var expectedResult = "Hello, World!";
         
         mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "en", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "welcome", "en", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var service = new TranslaasService(mockClient.Object);
@@ -41,7 +42,7 @@ public class TranslaasServiceTests
         // Assert
         result.Should().Be(expectedResult);
         mockClient.Verify(
-            c => c.GetEntryAsync("common", "welcome", "en", null, null, It.IsAny<CancellationToken>()),
+            c => c.GetEntryAsync("common", "welcome", "en", null, null, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -54,7 +55,7 @@ public class TranslaasServiceTests
         decimal number = 5;
         
         mockClient
-            .Setup(c => c.GetEntryAsync("messages", "item", "en", number, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("messages", "item", "en", number, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var service = new TranslaasService(mockClient.Object);
@@ -65,7 +66,7 @@ public class TranslaasServiceTests
         // Assert
         result.Should().Be(expectedResult);
         mockClient.Verify(
-            c => c.GetEntryAsync("messages", "item", "en", number, null, It.IsAny<CancellationToken>()),
+            c => c.GetEntryAsync("messages", "item", "en", number, null, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -77,7 +78,7 @@ public class TranslaasServiceTests
         var cancellationToken = new CancellationToken();
         
         mockClient
-            .Setup(c => c.GetEntryAsync("group", "entry", "en", null, null, cancellationToken))
+            .Setup(c => c.GetEntryAsync("group", "entry", "en", null, null, null, cancellationToken))
             .ReturnsAsync("test");
 
         var service = new TranslaasService(mockClient.Object);
@@ -87,7 +88,7 @@ public class TranslaasServiceTests
 
         // Assert
         mockClient.Verify(
-            c => c.GetEntryAsync("group", "entry", "en", null, null, cancellationToken),
+            c => c.GetEntryAsync("group", "entry", "en", null, null, null, cancellationToken),
             Times.Once);
     }
 
@@ -104,7 +105,7 @@ public class TranslaasServiceTests
         };
         
         mockClient
-            .Setup(c => c.GetEntryAsync("messages", "greeting", "en", null, parameters, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("messages", "greeting", "en", null, parameters, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var service = new TranslaasService(mockClient.Object);
@@ -115,7 +116,7 @@ public class TranslaasServiceTests
         // Assert
         result.Should().Be(expectedResult);
         mockClient.Verify(
-            c => c.GetEntryAsync("messages", "greeting", "en", null, parameters, It.IsAny<CancellationToken>()),
+            c => c.GetEntryAsync("messages", "greeting", "en", null, parameters, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -132,7 +133,7 @@ public class TranslaasServiceTests
         };
         
         mockClient
-            .Setup(c => c.GetEntryAsync("messages", "items", "en", number, parameters, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("messages", "items", "en", number, parameters, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         var service = new TranslaasService(mockClient.Object);
@@ -143,7 +144,7 @@ public class TranslaasServiceTests
         // Assert
         result.Should().Be(expectedResult);
         mockClient.Verify(
-            c => c.GetEntryAsync("messages", "items", "en", number, parameters, It.IsAny<CancellationToken>()),
+            c => c.GetEntryAsync("messages", "items", "en", number, parameters, null, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -155,7 +156,7 @@ public class TranslaasServiceTests
         var expectedException = new Models.Errors.TranslaasApiException("API Error", System.Net.HttpStatusCode.BadRequest);
         
         mockClient
-            .Setup(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(expectedException);
 
         var service = new TranslaasService(mockClient.Object);
@@ -177,7 +178,7 @@ public class TranslaasServiceTests
         mockResolver.Setup(r => r.Resolve()).Returns("fr");
 
         mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "en", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "welcome", "en", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync("Hello");
 
         var service = new TranslaasService(mockClient.Object, mockResolver.Object);
@@ -187,7 +188,7 @@ public class TranslaasServiceTests
 
         // Assert
         result.Should().Be("Hello");
-        mockClient.Verify(c => c.GetEntryAsync("common", "welcome", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        mockClient.Verify(c => c.GetEntryAsync("common", "welcome", "en", null, null, null, It.IsAny<CancellationToken>()), Times.Once);
         mockResolver.Verify(r => r.Resolve(), Times.Never);
     }
 
@@ -200,7 +201,7 @@ public class TranslaasServiceTests
         mockResolver.Setup(r => r.Resolve()).Returns("fr");
 
         mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync("Bonjour");
 
         var service = new TranslaasService(mockClient.Object, mockResolver.Object);
@@ -210,7 +211,7 @@ public class TranslaasServiceTests
 
         // Assert
         result.Should().Be("Bonjour");
-        mockClient.Verify(c => c.GetEntryAsync("common", "welcome", "fr", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        mockClient.Verify(c => c.GetEntryAsync("common", "welcome", "fr", null, null, null, It.IsAny<CancellationToken>()), Times.Once);
         mockResolver.Verify(r => r.Resolve(), Times.Once);
     }
 
@@ -230,7 +231,7 @@ public class TranslaasServiceTests
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*Unable to determine language*");
-        mockClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -246,7 +247,7 @@ public class TranslaasServiceTests
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*Unable to determine language*");
-        mockClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockClient.Verify(c => c.GetEntryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<decimal?>(), It.IsAny<Dictionary<string, string>?>(), It.IsAny<TranslaasRequestContext?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -258,7 +259,7 @@ public class TranslaasServiceTests
         mockResolver.Setup(r => r.Resolve()).Returns("fr");
 
         mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync("Bonjour");
 
         var service = new TranslaasService(mockClient.Object, mockResolver.Object);
@@ -280,7 +281,7 @@ public class TranslaasServiceTests
         mockResolver.Setup(r => r.Resolve()).Returns("fr");
 
         mockClient
-            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetEntryAsync("common", "welcome", "fr", null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync("Bonjour");
 
         var service = new TranslaasService(mockClient.Object, mockResolver.Object);

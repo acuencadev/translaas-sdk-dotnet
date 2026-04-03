@@ -10,6 +10,12 @@ namespace Translaas.Models.Responses;
 public class TranslationProject
 {
     /// <summary>
+    /// Optional per-group entry context when <c>includeContext</c> is enabled.
+    /// </summary>
+    [JsonPropertyName("groupEntryContext")]
+    public Dictionary<string, JsonElement>? GroupEntryContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the dictionary of translation groups, where the key is the group name
     /// and the value is the translation group.
     /// </summary>

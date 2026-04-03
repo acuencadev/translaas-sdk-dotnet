@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Translaas.Client;
 using Translaas.Models;
 using Translaas.Models.Errors;
+using Translaas.Models.Requests;
 using Translaas.Models.Responses;
 
 namespace Translaas.Caching.File;
@@ -41,15 +42,16 @@ public class CachingTranslaasClient(
         string entry,
         string lang,
         decimal? number = null,
-        System.Collections.Generic.Dictionary<string, string>? parameters = null,
+        Dictionary<string, string>? parameters = null,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default)
     {
         return _options.FallbackMode switch
         {
-            OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false),
-            _ => await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false)
+            OfflineFallbackMode.CacheFirst => await GetEntryWithCacheFirstAsync(group, entry, lang, number, parameters, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.ApiFirst => await GetEntryWithApiFirstAsync(group, entry, lang, number, parameters, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.CacheOnly => await GetEntryFromCacheOnlyAsync(group, entry, lang, number, parameters, requestContext, cancellationToken).ConfigureAwait(false),
+            _ => await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, requestContext, cancellationToken).ConfigureAwait(false)
         };
     }
 
@@ -59,14 +61,15 @@ public class CachingTranslaasClient(
         string group,
         string lang,
         string? format = null,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default)
     {
         return _options.FallbackMode switch
         {
-            OfflineFallbackMode.CacheFirst => await GetGroupWithCacheFirstAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiFirst => await GetGroupWithApiFirstAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.CacheOnly => await GetGroupFromCacheOnlyAsync(project, group, lang, cancellationToken).ConfigureAwait(false),
-            _ => await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false)
+            OfflineFallbackMode.CacheFirst => await GetGroupWithCacheFirstAsync(project, group, lang, format, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.ApiFirst => await GetGroupWithApiFirstAsync(project, group, lang, format, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.CacheOnly => await GetGroupFromCacheOnlyAsync(project, group, lang, requestContext, cancellationToken).ConfigureAwait(false),
+            _ => await _innerClient.GetGroupAsync(project, group, lang, format, requestContext, cancellationToken).ConfigureAwait(false)
         };
     }
 
@@ -75,30 +78,44 @@ public class CachingTranslaasClient(
         string project,
         string lang,
         string? format = null,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default)
     {
         return _options.FallbackMode switch
         {
-            OfflineFallbackMode.CacheFirst => await GetProjectWithCacheFirstAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiFirst => await GetProjectWithApiFirstAsync(project, lang, format, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.CacheOnly => await GetProjectFromCacheOnlyAsync(project, lang, cancellationToken).ConfigureAwait(false),
-            _ => await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false)
+            OfflineFallbackMode.CacheFirst => await GetProjectWithCacheFirstAsync(project, lang, format, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.ApiFirst => await GetProjectWithApiFirstAsync(project, lang, format, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.CacheOnly => await GetProjectFromCacheOnlyAsync(project, lang, requestContext, cancellationToken).ConfigureAwait(false),
+            _ => await _innerClient.GetProjectAsync(project, lang, format, requestContext, cancellationToken).ConfigureAwait(false)
         };
     }
 
     /// <inheritdoc />
     public async Task<ProjectLocales> GetProjectLocalesAsync(
         string project,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default)
     {
         return _options.FallbackMode switch
         {
-            OfflineFallbackMode.CacheFirst => await GetProjectLocalesWithCacheFirstAsync(project, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.ApiFirst => await GetProjectLocalesWithApiFirstAsync(project, cancellationToken).ConfigureAwait(false),
-            OfflineFallbackMode.CacheOnly => await GetProjectLocalesFromCacheOnlyAsync(project, cancellationToken).ConfigureAwait(false),
-            _ => await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false)
+            OfflineFallbackMode.CacheFirst => await GetProjectLocalesWithCacheFirstAsync(project, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.ApiFirst => await GetProjectLocalesWithApiFirstAsync(project, requestContext, cancellationToken).ConfigureAwait(false),
+            OfflineFallbackMode.CacheOnly => await GetProjectLocalesFromCacheOnlyAsync(project, requestContext, cancellationToken).ConfigureAwait(false),
+            _ => await _innerClient.GetProjectLocalesAsync(project, requestContext, cancellationToken).ConfigureAwait(false)
         };
     }
+
+    /// <inheritdoc />
+    public Task ReportMissingKeysAsync(IEnumerable<ReportMissingKeyItemRequest> keys, CancellationToken cancellationToken = default) =>
+        _innerClient.ReportMissingKeysAsync(keys, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<OfflineCacheDownloadResult> GetOfflineCacheAsync(string project, TranslaasRequestContext? requestContext = null, CancellationToken cancellationToken = default) =>
+        _innerClient.GetOfflineCacheAsync(project, requestContext, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ValidateApiKeyResponse> ValidateApiKeyAsync(CancellationToken cancellationToken = default) =>
+        _innerClient.ValidateApiKeyAsync(cancellationToken);
 
     #region GetEntry Implementations
 
@@ -107,7 +124,8 @@ public class CachingTranslaasClient(
         string entry,
         string lang,
         decimal? number,
-        System.Collections.Generic.Dictionary<string, string>? parameters,
+        Dictionary<string, string>? parameters,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         // Try cache first
@@ -152,7 +170,7 @@ public class CachingTranslaasClient(
         // Cache miss, try API
         try
         {
-            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache - fetch the specific group and update cache
             // Note: We await this to ensure it completes, but catch errors so API call still succeeds
@@ -180,12 +198,13 @@ public class CachingTranslaasClient(
         string entry,
         string lang,
         decimal? number,
-        System.Collections.Generic.Dictionary<string, string>? parameters,
+        Dictionary<string, string>? parameters,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetEntryAsync(group, entry, lang, number, parameters, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache - fetch the specific group and update cache
             // Note: We await this to ensure it completes, but catch errors so API call still succeeds
@@ -252,7 +271,8 @@ public class CachingTranslaasClient(
         string entry,
         string lang,
         decimal? number,
-        System.Collections.Generic.Dictionary<string, string>? parameters,
+        Dictionary<string, string>? parameters,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         var cachedGroup = await _cacheProvider.GetGroupAsync(_projectId, group, lang, cancellationToken).ConfigureAwait(false) ?? throw new TranslaasOfflineCacheMissException(_projectId, lang, group, entry);
@@ -303,6 +323,7 @@ public class CachingTranslaasClient(
         string group,
         string lang,
         string? format,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         // Try cache first
@@ -316,7 +337,7 @@ public class CachingTranslaasClient(
         // Cache miss, try API
         try
         {
-            var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetGroupAsync(project, group, lang, format, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache in background - only fetch the specific group, not entire project
             _ = UpdateGroupCacheAsync(project, group, lang, cancellationToken);
@@ -334,11 +355,12 @@ public class CachingTranslaasClient(
         string group,
         string lang,
         string? format,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _innerClient.GetGroupAsync(project, group, lang, format, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetGroupAsync(project, group, lang, format, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache in background - only fetch the specific group, not entire project
             _ = UpdateGroupCacheAsync(project, group, lang, cancellationToken);
@@ -363,6 +385,7 @@ public class CachingTranslaasClient(
         string project,
         string group,
         string lang,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         var cachedGroup = await _cacheProvider.GetGroupAsync(project, group, lang, cancellationToken).ConfigureAwait(false);
@@ -384,6 +407,7 @@ public class CachingTranslaasClient(
         string project,
         string lang,
         string? format,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         // Try cache first
@@ -397,7 +421,7 @@ public class CachingTranslaasClient(
         // Cache miss, try API
         try
         {
-            var result = await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetProjectAsync(project, lang, format, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache
             await _cacheProvider.SaveProjectAsync(project, lang, result, cancellationToken).ConfigureAwait(false);
@@ -414,11 +438,12 @@ public class CachingTranslaasClient(
         string project,
         string lang,
         string? format,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _innerClient.GetProjectAsync(project, lang, format, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetProjectAsync(project, lang, format, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache
             await _cacheProvider.SaveProjectAsync(project, lang, result, cancellationToken).ConfigureAwait(false);
@@ -442,6 +467,7 @@ public class CachingTranslaasClient(
     private async Task<TranslationProject> GetProjectFromCacheOnlyAsync(
         string project,
         string lang,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         var cachedProject = await _cacheProvider.GetProjectAsync(project, lang, cancellationToken).ConfigureAwait(false);
@@ -461,6 +487,7 @@ public class CachingTranslaasClient(
 
     private async Task<ProjectLocales> GetProjectLocalesWithCacheFirstAsync(
         string project,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         // Try cache first
@@ -474,7 +501,7 @@ public class CachingTranslaasClient(
         // Cache miss, try API
         try
         {
-            var result = await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetProjectLocalesAsync(project, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache
             await _cacheProvider.SaveProjectLocalesAsync(project, result, cancellationToken).ConfigureAwait(false);
@@ -491,11 +518,12 @@ public class CachingTranslaasClient(
 
     private async Task<ProjectLocales> GetProjectLocalesWithApiFirstAsync(
         string project,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await _innerClient.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false);
+            var result = await _innerClient.GetProjectLocalesAsync(project, requestContext, cancellationToken).ConfigureAwait(false);
 
             // Update cache
             await _cacheProvider.SaveProjectLocalesAsync(project, result, cancellationToken).ConfigureAwait(false);
@@ -520,6 +548,7 @@ public class CachingTranslaasClient(
 
     private async Task<ProjectLocales> GetProjectLocalesFromCacheOnlyAsync(
         string project,
+        TranslaasRequestContext? requestContext,
         CancellationToken cancellationToken)
     {
         var cachedLocales = await _cacheProvider.GetProjectLocalesAsync(project, cancellationToken).ConfigureAwait(false);
@@ -656,7 +685,7 @@ public class CachingTranslaasClient(
         try
         {
             // Fetch only the specific group from API (more efficient than entire project)
-            var groupData = await _innerClient.GetGroupAsync(project, group, lang, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var groupData = await _innerClient.GetGroupAsync(project, group, lang, format: null, requestContext: null, cancellationToken: cancellationToken).ConfigureAwait(false);
             
             if (groupData == null)
             {
@@ -723,7 +752,7 @@ public class CachingTranslaasClient(
     {
         try
         {
-            var projectData = await _innerClient.GetProjectAsync(project, lang, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var projectData = await _innerClient.GetProjectAsync(project, lang, format: null, requestContext: null, cancellationToken: cancellationToken).ConfigureAwait(false);
             await _cacheProvider.SaveProjectAsync(project, lang, projectData, cancellationToken).ConfigureAwait(false);
         }
         catch

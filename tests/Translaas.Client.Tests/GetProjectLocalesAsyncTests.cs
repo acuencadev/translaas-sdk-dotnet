@@ -42,7 +42,7 @@ public class GetProjectLocalesAsyncTests
         result.Locales.Should().Contain("fr");
         result.Locales.Should().Contain("es");
         result.Locales.Should().Contain("de");
-        VerifyHttpRequest(handlerMock, "/api/translations/locales");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/locales");
     }
 
     [Fact]
@@ -253,7 +253,7 @@ public class GetProjectLocalesAsyncTests
         // Assert
         result.Should().NotBeNull();
         result.Locales.Should().BeEmpty(); // Client returns empty locales when 204 No Content
-        VerifyHttpRequest(handlerMock, "/api/translations/locales");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/locales");
     }
 
     [Fact]
