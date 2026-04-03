@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Translaas.Models;
+using Translaas.Models.Requests;
 using Translaas.Models.Responses;
 
 namespace Translaas.Client;
@@ -16,134 +19,72 @@ public interface ITranslaasClient
     /// <param name="group">The translation group name.</param>
     /// <param name="entry">The translation entry key.</param>
     /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="number">Optional number for pluralization. Supports both integer and decimal/fractional numbers (e.g., 1.31). When provided, automatically populates the "N" parameter for placeholder replacement.</param>
-    /// <param name="parameters">Optional dictionary of named parameters to inject into translation placeholders (e.g., {{"userName", "John"}, {"pending", "3"}}). Parameter names are case-insensitive.</param>
+    /// <param name="number">Optional number for pluralization.</param>
+    /// <param name="parameters">Optional interpolation query parameters.</param>
+    /// <param name="requestContext">Optional channel, version, project (when key is not project-scoped), and conditional GET options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The translated text.</returns>
+    /// <returns>The translated text, or empty when <see cref="TranslaasRequestContext.NotModified"/> is <see langword="true"/>.</returns>
     /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
-    /// <remarks>
-    /// <para>
-    /// Named parameters are passed to the API endpoint as query string parameters and are used to replace placeholders in translation strings.
-    /// For example, if a translation contains "Hello {userName}, you have {N} items", pass parameters: {{"userName", "John"}, {"N", "5"}}.
-    /// </para>
-    /// <para>
-    /// If both <paramref name="number"/> and a parameter named "N" are provided, the "N" parameter takes precedence.
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// // Basic usage
-    /// string translation = await client.GetEntryAsync("common", "welcome", "en");
-    /// 
-    /// // With pluralization
-    /// string message = await client.GetEntryAsync("messages", "item", "en", number: 5);
-    /// 
-    /// // With named parameters
-    /// var parameters = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
-    /// string greeting = await client.GetEntryAsync("messages", "greeting", "en", parameters: parameters);
-    /// 
-    /// // With pluralization and parameters
-    /// var params = new Dictionary&lt;string, string&gt; { { "userName", "John" } };
-    /// string items = await client.GetEntryAsync("messages", "items", "en", number: 5, parameters: params);
-    /// </code>
-    /// </example>
     Task<string> GetEntryAsync(
         string group,
         string entry,
         string lang,
         decimal? number = null,
-        System.Collections.Generic.Dictionary<string, string>? parameters = null,
+        Dictionary<string, string>? parameters = null,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all translations for a translation group.
     /// </summary>
-    /// <param name="project">The project identifier.</param>
-    /// <param name="group">The translation group name.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="format">Optional format parameter.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A <see cref="TranslationGroup"/> containing all entries for the group.</returns>
-    /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
-    /// <example>
-    /// <code>
-    /// TranslationGroup group = await client.GetGroupAsync("my-project", "ui", "en");
-    /// 
-    /// // Access entries
-    /// foreach (var entry in group.Entries)
-    /// {
-    ///     Console.WriteLine($"{entry.Key}: {entry.Value}");
-    /// }
-    /// 
-    /// // Get specific value
-    /// string welcome = group.GetValue("welcome");
-    /// 
-    /// // Check for plural forms
-    /// if (group.HasPluralForms("item"))
-    /// {
-    ///     var pluralForms = group.GetPluralForms("item");
-    /// }
-    /// </code>
-    /// </example>
     Task<TranslationGroup> GetGroupAsync(
         string project,
         string group,
         string lang,
         string? format = null,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all translations for a project.
     /// </summary>
-    /// <param name="project">The project identifier.</param>
-    /// <param name="lang">The language code (e.g., "en", "fr").</param>
-    /// <param name="format">Optional format parameter.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A <see cref="TranslationProject"/> containing all groups and entries.</returns>
-    /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
-    /// <example>
-    /// <code>
-    /// TranslationProject project = await client.GetProjectAsync("my-project", "en");
-    /// 
-    /// // Access groups
-    /// foreach (var groupEntry in project.Groups)
-    /// {
-    ///     var group = project.GetGroup(groupEntry.Key);
-    ///     if (group != null)
-    ///     {
-    ///         Console.WriteLine($"Group: {groupEntry.Key}");
-    ///         foreach (var entry in group.Entries)
-    ///         {
-    ///             Console.WriteLine($"  {entry.Key}: {entry.Value}");
-    ///         }
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
     Task<TranslationProject> GetProjectAsync(
         string project,
         string lang,
         string? format = null,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets available locales for a project.
     /// </summary>
-    /// <param name="project">The project identifier.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A <see cref="ProjectLocales"/> object containing available locales.</returns>
-    /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
-    /// <example>
-    /// <code>
-    /// ProjectLocales locales = await client.GetProjectLocalesAsync("my-project");
-    /// 
-    /// foreach (string locale in locales.Locales)
-    /// {
-    ///     Console.WriteLine($"Available locale: {locale}");
-    /// }
-    /// </code>
-    /// </example>
     Task<ProjectLocales> GetProjectLocalesAsync(
         string project,
+        TranslaasRequestContext? requestContext = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Downloads the offline translation ZIP bundle for a project.
+    /// </summary>
+    /// <param name="project">Project identifier.</param>
+    /// <param name="requestContext">Optional channel, version, <c>includeContext</c>, and conditional GET (<c>If-None-Match</c>).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>ZIP bytes or a not-modified result.</returns>
+    Task<OfflineCacheDownloadResult> GetOfflineCacheAsync(
+        string project,
+        TranslaasRequestContext? requestContext = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reports one or more missing translation keys (expects HTTP 202).
+    /// </summary>
+    /// <exception cref="Translaas.Models.Errors.TranslaasApiException">Thrown when the API returns an error.</exception>
+    Task ReportMissingKeysAsync(
+        IEnumerable<ReportMissingKeyItemRequest> keys,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Validates the configured API key (<c>GET /api/v1/api-keys/validate</c>).
+    /// </summary>
+    Task<ValidateApiKeyResponse> ValidateApiKeyAsync(CancellationToken cancellationToken = default);
 }

@@ -34,14 +34,28 @@ internal sealed class TranslationGroupJsonConverter : JsonConverter<TranslationG
                 ? generatedAtElement.GetDateTimeOffset()
                 : null;
             group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(entriesElement.GetRawText(), options) ?? new Dictionary<string, JsonElement>();
+            TryReadEntryContext(root, group, options);
         }
         else
         {
             // Flat dictionary structure - treat the root object as the entries dictionary
             group.Entries = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(root.GetRawText(), options) ?? new Dictionary<string, JsonElement>();
+            TryReadEntryContext(root, group, options);
         }
 
         return group;
+    }
+
+    private static void TryReadEntryContext(JsonElement root, TranslationGroup group, JsonSerializerOptions options)
+    {
+        foreach (var name in new[] { "entryContext", "EntryContext" })
+        {
+            if (root.TryGetProperty(name, out var entryContextElement) && entryContextElement.ValueKind == JsonValueKind.Object)
+            {
+                group.EntryContext = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(entryContextElement.GetRawText(), options) ?? [];
+                return;
+            }
+        }
     }
 
     public override void Write(Utf8JsonWriter writer, TranslationGroup value, JsonSerializerOptions options)
@@ -68,10 +82,16 @@ internal sealed class TranslationGroupJsonConverter : JsonConverter<TranslationG
         {
             writer.WriteString("GeneratedAt", value.GeneratedAt.Value);
         }
-        
+
+        if (value.EntryContext is { Count: > 0 })
+        {
+            writer.WritePropertyName("entryContext");
+            JsonSerializer.Serialize(writer, value.EntryContext, options);
+        }
+
         writer.WritePropertyName("Entries");
         JsonSerializer.Serialize(writer, value.Entries, options);
-        
+
         writer.WriteEndObject();
     }
 }
@@ -113,6 +133,12 @@ public class TranslationGroup
     /// </summary>
     [JsonPropertyName("Entries")]
     public Dictionary<string, JsonElement> Entries { get; set; } = [];
+
+    /// <summary>
+    /// Optional per-entry context map when <c>includeContext</c> is enabled on the API.
+    /// </summary>
+    [JsonPropertyName("entryContext")]
+    public Dictionary<string, JsonElement>? EntryContext { get; set; }
 
     /// <summary>
     /// Gets the translation value for a specific entry key as a string.

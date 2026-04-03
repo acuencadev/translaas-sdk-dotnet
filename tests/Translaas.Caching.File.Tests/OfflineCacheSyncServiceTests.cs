@@ -99,14 +99,14 @@ public class OfflineCacheSyncServiceTests : IDisposable
         // Arrange
         var project = new TranslationProject();
         _mockClient
-            .Setup(c => c.GetProjectAsync("test-project", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("test-project", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(project);
 
         // Act
         await _service.SyncProjectAsync("test-project", "en");
 
         // Assert
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "en", null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
         _mockCacheProvider.Verify(c => c.SaveProjectAsync("test-project", "en", project, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -116,7 +116,7 @@ public class OfflineCacheSyncServiceTests : IDisposable
         // Arrange
         var project = new TranslationProject();
         _mockClient
-            .Setup(c => c.GetProjectAsync("test-project", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("test-project", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(project);
 
         CacheSyncEventArgs? eventArgs = null;
@@ -137,7 +137,7 @@ public class OfflineCacheSyncServiceTests : IDisposable
         // Arrange
         var exception = new Exception("Test error");
         _mockClient
-            .Setup(c => c.GetProjectAsync("test-project", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("test-project", "en", null, null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(exception);
 
         CacheSyncErrorEventArgs? eventArgs = null;
@@ -173,23 +173,23 @@ public class OfflineCacheSyncServiceTests : IDisposable
         // Arrange
         var locales = new ProjectLocales { Locales = ["en", "es", "fr"] };
         _mockClient
-            .Setup(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectLocalesAsync("test-project", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
 
         var project = new TranslationProject();
         _mockClient
-            .Setup(c => c.GetProjectAsync("test-project", It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("test-project", It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(project);
 
         // Act
         await _service.SyncProjectAllLanguagesAsync("test-project");
 
         // Assert - Should only sync "en" and "es" since those are in options.Languages
-        _mockClient.Verify(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectLocalesAsync("test-project", null, It.IsAny<CancellationToken>()), Times.Once);
         _mockCacheProvider.Verify(c => c.SaveProjectLocalesAsync("test-project", locales, It.IsAny<CancellationToken>()), Times.Once);
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "en", null, It.IsAny<CancellationToken>()), Times.Once);
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "es", null, It.IsAny<CancellationToken>()), Times.Once);
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "fr", null, It.IsAny<CancellationToken>()), Times.Never);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "es", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "fr", null, null, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -206,21 +206,21 @@ public class OfflineCacheSyncServiceTests : IDisposable
 
         var locales = new ProjectLocales { Locales = ["en", "es", "fr"] };
         _mockClient
-            .Setup(c => c.GetProjectLocalesAsync("test-project", It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectLocalesAsync("test-project", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
 
         var project = new TranslationProject();
         _mockClient
-            .Setup(c => c.GetProjectAsync("test-project", It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("test-project", It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(project);
 
         // Act
         await service.SyncProjectAllLanguagesAsync("test-project");
 
         // Assert - Should sync all three languages
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "en", null, It.IsAny<CancellationToken>()), Times.Once);
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "es", null, It.IsAny<CancellationToken>()), Times.Once);
-        _mockClient.Verify(c => c.GetProjectAsync("test-project", "fr", null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "en", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "es", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockClient.Verify(c => c.GetProjectAsync("test-project", "fr", null, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -233,12 +233,12 @@ public class OfflineCacheSyncServiceTests : IDisposable
         // Arrange
         var locales = new ProjectLocales { Locales = ["en", "es"] };
         _mockClient
-            .Setup(c => c.GetProjectLocalesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectLocalesAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
 
         var project = new TranslationProject();
         _mockClient
-            .Setup(c => c.GetProjectAsync(It.IsAny<string>(), It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync(It.IsAny<string>(), It.IsAny<string>(), null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(project);
 
         CacheSyncAllEventArgs? eventArgs = null;
@@ -267,18 +267,18 @@ public class OfflineCacheSyncServiceTests : IDisposable
 
         // project-1 fails
         _mockClient
-            .Setup(c => c.GetProjectLocalesAsync("project-1", It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectLocalesAsync("project-1", null, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Test error"));
 
         // project-2 succeeds
         var locales = new ProjectLocales { Locales = ["en"] };
         _mockClient
-            .Setup(c => c.GetProjectLocalesAsync("project-2", It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectLocalesAsync("project-2", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(locales);
 
         var project = new TranslationProject();
         _mockClient
-            .Setup(c => c.GetProjectAsync("project-2", "en", null, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetProjectAsync("project-2", "en", null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(project);
 
         CacheSyncAllEventArgs? eventArgs = null;

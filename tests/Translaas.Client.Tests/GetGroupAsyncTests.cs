@@ -40,7 +40,7 @@ public class GetGroupAsyncTests
         result.Entries.Should().HaveCount(2);
         result.GetValue("entry1").Should().Be("Translation 1");
         result.GetValue("entry2").Should().Be("Translation 2");
-        VerifyHttpRequest(handlerMock, "/api/translations/group");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/group");
     }
 
     [Fact]
@@ -309,7 +309,7 @@ public class GetGroupAsyncTests
         // Assert
         result.Should().NotBeNull();
         result.Entries.Should().BeEmpty(); // Client returns empty group when 204 No Content
-        VerifyHttpRequest(handlerMock, "/api/translations/group");
+        VerifyHttpRequest(handlerMock, "/sdk/v1/translations/group");
     }
 
     [Fact]

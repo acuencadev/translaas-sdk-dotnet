@@ -13,16 +13,16 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
 
         // Act
-        var url = client.BuildEndpointUrl("translations/text");
+        var url = client.BuildEndpointUrl("sdk/v1/translations/text");
 
         // Assert
-        url.Should().Be("https://api.test.com/api/translations/text");
+        url.Should().Be("https://api.test.com/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -32,16 +32,16 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-key",
-            BaseUrl = "https://api.test.com/api/"
+            BaseUrl = "https://api.test.com/"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
 
         // Act
-        var url = client.BuildEndpointUrl("translations/text");
+        var url = client.BuildEndpointUrl("sdk/v1/translations/text");
 
         // Assert
-        url.Should().Be("https://api.test.com/api/translations/text");
+        url.Should().Be("https://api.test.com/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -51,16 +51,16 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
 
         // Act
-        var url = client.BuildEndpointUrl("/translations/text");
+        var url = client.BuildEndpointUrl("/sdk/v1/translations/text");
 
         // Assert
-        url.Should().Be("https://api.test.com/api/translations/text");
+        url.Should().Be("https://api.test.com/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -70,16 +70,16 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-key",
-            BaseUrl = "https://api.test.com/api/"
+            BaseUrl = "https://api.test.com/"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
 
         // Act
-        var url = client.BuildEndpointUrl("/translations/text");
+        var url = client.BuildEndpointUrl("/sdk/v1/translations/text");
 
         // Assert
-        url.Should().Be("https://api.test.com/api/translations/text");
+        url.Should().Be("https://api.test.com/sdk/v1/translations/text");
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -101,12 +101,12 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel);
 
         // Assert
         request.Should().NotBeNull();
         request.Method.Should().Be(HttpMethod.Get);
-        request.RequestUri!.ToString().Should().StartWith("https://api.test.com/api/translations/text");
+        request.RequestUri!.ToString().Should().StartWith("https://api.test.com/sdk/v1/translations/text");
         request.RequestUri.Query.Should().Contain("group=ui");
         request.RequestUri.Query.Should().Contain("entry=button.save");
         request.RequestUri.Query.Should().Contain("lang=en");
@@ -119,7 +119,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -131,7 +131,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel);
 
         // Assert
         request.Headers.GetValues("X-Api-Key").Should().Contain("test-api-key");
@@ -144,7 +144,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -156,7 +156,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel);
 
         // Assert
         request.Content.Should().BeNull(); // GET requests with query strings don't have content
@@ -173,7 +173,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -186,7 +186,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel);
 
         // Assert
         request.Content.Should().BeNull(); // GET requests with query strings don't have content
@@ -204,7 +204,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -221,13 +221,13 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => client.BuildGetRequest<GetTranslationRequest>("translations/text", null!));
+        Assert.Throws<ArgumentNullException>(() => client.BuildGetRequest<GetTranslationRequest>("sdk/v1/translations/text", null!));
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -254,7 +254,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel, parameters);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel, parameters);
 
         // Assert
         request.Should().NotBeNull();
@@ -269,7 +269,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -286,7 +286,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel, parameters);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel, parameters);
 
         // Assert
         request.Should().NotBeNull();
@@ -301,7 +301,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -317,7 +317,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel, parameters);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel, parameters);
 
         // Assert
         request.Should().NotBeNull();
@@ -331,7 +331,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -343,7 +343,7 @@ public class HttpRequestBuildingTests
         };
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel, null);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel, null);
 
         // Assert
         request.Should().NotBeNull();
@@ -360,7 +360,7 @@ public class HttpRequestBuildingTests
         var options = new TranslaasClientOptions
         {
             ApiKey = "test-api-key",
-            BaseUrl = "https://api.test.com/api"
+            BaseUrl = "https://api.test.com"
         };
         using var httpClient = new HttpClient();
         var client = new TranslaasClient(httpClient, options);
@@ -373,7 +373,7 @@ public class HttpRequestBuildingTests
         var parameters = new Dictionary<string, string>();
 
         // Act
-        var request = client.BuildGetRequest("translations/text", requestModel, parameters);
+        var request = client.BuildGetRequest("sdk/v1/translations/text", requestModel, parameters);
 
         // Assert
         request.Should().NotBeNull();
