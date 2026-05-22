@@ -420,34 +420,6 @@ The SDK uses a centralized version management approach. To update the version fo
    }
    ```
 
-4. **Push packages to NuGet.org** (requires a [NuGet API key](https://www.nuget.org/account/apikeys)):
-   ```powershell
-   $env:NUGET_API_KEY = "your-api-key"
-
-   Get-ChildItem -Path nupkgs -Filter *.nupkg | ForEach-Object {
-     dotnet nuget push $_.FullName `
-       --api-key $env:NUGET_API_KEY `
-       --source https://api.nuget.org/v3/index.json `
-       --skip-duplicate
-   }
-
-   Get-ChildItem -Path nupkgs -Filter *.snupkg | ForEach-Object {
-     dotnet nuget push $_.FullName `
-       --api-key $env:NUGET_API_KEY `
-       --source https://api.nuget.org/v3/index.json `
-       --skip-duplicate
-   }
-   ```
-
-5. **Tag and create a GitHub Release** on [translaas-sdk-dotnet](https://github.com/acuencadev/translaas-sdk-dotnet):
-   ```bash
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
-   gh release create vX.Y.Z --generate-notes --prerelease
-   ```
-
-   Mark pre-releases with `--prerelease` when the version includes a suffix such as `-beta`. GitHub generates release notes from merged pull requests (same approach used for `v0.3.0-beta`).
-
 #### Version Numbering
 
 We follow [Semantic Versioning](https://semver.org/) (SemVer):
@@ -467,61 +439,6 @@ Once stable, release `1.0.0` as the first stable version.
 ---
 
 ### Release Notes
-
-## Version 0.4.0-beta (Pre-Release)
-
-### Summary
-
-Beta release building on **0.3.0-beta**. Ships per-package README content on NuGet and updated GitHub templates. The SDK v1 HTTP surface, offline caching, language resolution, and ASP.NET Core integration remain as documented in [README.md](README.md).
-
-### Packages Included
-
-- **Translaas.Models** (0.4.0-beta) - Data transfer objects (DTOs) for the Translaas Translation Delivery API
-- **Translaas.Client** (0.4.0-beta) - Core HTTP client implementation with caching support
-- **Translaas.Caching** (0.4.0-beta) - In-memory caching abstractions and implementations
-- **Translaas.Caching.File** (0.4.0-beta) - File-based offline caching with hybrid caching support
-- **Translaas.Extensions.Http** (0.4.0-beta) - HttpClientFactory integration extensions
-- **Translaas.Extensions.DependencyInjection** (0.4.0-beta) - Full dependency injection integration
-- **Translaas.Extensions.Mvc** (0.4.0-beta) - ASP.NET Core MVC/Razor integration with Tag Helpers
-
-### Added
-
-- Per-package **README.md** files under `src/*` for NuGet gallery context
-- **PackageReadmeFile** packaging via `Directory.Build.props` so every package embeds its README on NuGet.org
-
-### Changed
-
-- GitHub issue and pull request templates synced from the translaas-all meta repository
-
-### Supported Frameworks
-
-- .NET Standard 2.0
-- .NET 8.0
-- .NET 10.0
-
-### Installation
-
-```bash
-# Full DI integration (recommended)
-dotnet add package Translaas.Extensions.DependencyInjection --version 0.4.0-beta
-
-# Or install individual packages
-dotnet add package Translaas.Client --version 0.4.0-beta
-dotnet add package Translaas.Models --version 0.4.0-beta
-dotnet add package Translaas.Caching --version 0.4.0-beta
-dotnet add package Translaas.Caching.File --version 0.4.0-beta
-dotnet add package Translaas.Extensions.Http --version 0.4.0-beta
-dotnet add package Translaas.Extensions.Mvc --version 0.4.0-beta
-```
-
-### Documentation
-
-- [README.md](README.md) - Getting started guide
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution and release guidelines
-- [GitHub Repository](https://github.com/acuencadev/translaas-sdk-dotnet)
-- [Compare v0.3.0-beta...v0.4.0-beta](https://github.com/acuencadev/translaas-sdk-dotnet/compare/v0.3.0-beta...v0.4.0-beta)
-
----
 
 ## Version 0.1.0 (Pre-Release)
 
