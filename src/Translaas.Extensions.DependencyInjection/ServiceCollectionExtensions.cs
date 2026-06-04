@@ -265,7 +265,9 @@ public static class ServiceCollectionExtensions
             Timeout = translaasOptions.Timeout,
             CacheMode = translaasOptions.CacheMode,
             CacheAbsoluteExpiration = translaasOptions.CacheAbsoluteExpiration,
-            CacheSlidingExpiration = translaasOptions.CacheSlidingExpiration
+            CacheSlidingExpiration = translaasOptions.CacheSlidingExpiration,
+            DefaultProjectId = translaasOptions.DefaultProjectId
+                ?? translaasOptions.OfflineCache.DefaultProjectId
         };
 
         // Get in-memory cache provider if caching is enabled

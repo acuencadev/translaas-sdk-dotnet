@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -21,10 +22,22 @@ public sealed class ValidateApiKeyResponse
     public JsonElement? TenantId { get; set; }
 
     /// <summary>
-    /// Project identifier when the key is project-scoped.
+    /// Default project identifier when the key is project-scoped.
     /// </summary>
     [JsonPropertyName("projectId")]
     public JsonElement? ProjectId { get; set; }
+
+    /// <summary>
+    /// All project identifiers the API key may access. Empty for tenant-level keys.
+    /// </summary>
+    [JsonPropertyName("projectIds")]
+    public List<string>? ProjectIds { get; set; }
+
+    /// <summary>
+    /// Implicit default project for multi-project keys (first associated project).
+    /// </summary>
+    [JsonPropertyName("defaultProjectId")]
+    public JsonElement? DefaultProjectId { get; set; }
 
     /// <summary>
     /// Integration name when present.

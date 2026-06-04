@@ -61,6 +61,26 @@ public class TranslaasClient : ITranslaasClient
         };
     }
 
+    /// <summary>
+    /// Creates a client after resolving <see cref="TranslaasClientOptions.DefaultProjectId"/> via validate when it is not configured.
+    /// </summary>
+    public static async Task<TranslaasClient> CreateAsync(
+        HttpClient httpClient,
+        TranslaasClientOptions options,
+        ITranslaasCacheProvider? cacheProvider = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!string.IsNullOrWhiteSpace(options.DefaultProjectId))
+        {
+            return new TranslaasClient(httpClient, options, cacheProvider);
+        }
+
+        var temp = new TranslaasClient(httpClient, options, cacheProvider);
+        var validate = await temp.ValidateApiKeyAsync(cancellationToken).ConfigureAwait(false);
+        options.DefaultProjectId = ApiKeyProjectResolver.ResolveDefaultProjectId(options.DefaultProjectId, validate);
+        return new TranslaasClient(httpClient, options, cacheProvider);
+    }
+
     /// <inheritdoc />
     public async Task<string> GetEntryAsync(
         string group,
@@ -110,7 +130,7 @@ public class TranslaasClient : ITranslaasClient
             Lang = lang,
             Number = number
         };
-        ApplyContext(requestModel, requestContext);
+        ApplyContext(requestModel, requestContext, _options.DefaultProjectId);
 
         var request = BuildGetRequest($"{SdkTranslationsPrefix}/text", requestModel, mergedParameters, requestContext);
 
@@ -617,16 +637,20 @@ public class TranslaasClient : ITranslaasClient
         }
     }
 
-    private static void ApplyContext(GetTranslationRequest model, TranslaasRequestContext? ctx)
+    private static void ApplyContext(GetTranslationRequest model, TranslaasRequestContext? ctx, string? defaultProjectId)
     {
+        if (!string.IsNullOrEmpty(ctx?.Project))
+        {
+            model.Project = ctx.Project;
+        }
+        else if (!string.IsNullOrEmpty(defaultProjectId))
+        {
+            model.Project = defaultProjectId;
+        }
+
         if (ctx == null)
         {
             return;
-        }
-
-        if (!string.IsNullOrEmpty(ctx.Project))
-        {
-            model.Project = ctx.Project;
         }
 
         if (!string.IsNullOrEmpty(ctx.Channel))

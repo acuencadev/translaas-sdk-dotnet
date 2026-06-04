@@ -56,6 +56,11 @@ public class TranslaasClientOptions
     public TimeSpan? CacheSlidingExpiration { get; set; }
 
     /// <summary>
+    /// Gets or sets the default project id or slug for SDK text requests when not specified per call.
+    /// </summary>
+    public string? DefaultProjectId { get; set; }
+
+    /// <summary>
     /// Validates the configuration options.
     /// </summary>
     /// <param name="skipApiValidation">If true, skips validation of ApiKey and BaseUrl. Used when offline cache is enabled with CacheOnly mode.</param>

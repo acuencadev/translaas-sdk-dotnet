@@ -93,4 +93,10 @@ public class TranslaasOptions
     /// </code>
     /// </example>
     public string? DefaultLanguage { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default project id or slug for SDK text requests when not specified per call.
+    /// Required for tenant-level API keys; recommended for multi-project keys.
+    /// </summary>
+    public string? DefaultProjectId { get; set; }
 }
