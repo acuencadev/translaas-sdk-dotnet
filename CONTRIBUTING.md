@@ -431,7 +431,7 @@ The SDK uses a centralized version management approach. To update the version fo
    | Workflow File | `publish.yml` |
    | Environment | *(leave empty)* |
 
-   In the GitHub repo, add secret **`NUGET_USER`** with your NuGet.org **username** (profile name, not email).
+   Optional: add GitHub secret **`NUGET_USER`** if your NuGet.org profile name differs from `acuencadev` (profile name, not email).
 
    Publishing is handled by [`.github/workflows/publish.yml`](.github/workflows/publish.yml), which uses [Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing) (short-lived OIDC credentials via `NuGet/login@v1`). No long-lived NuGet API keys are stored in GitHub.
 
