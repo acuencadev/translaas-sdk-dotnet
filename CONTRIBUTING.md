@@ -420,24 +420,20 @@ The SDK uses a centralized version management approach. To update the version fo
    }
    ```
 
-4. **Push packages to NuGet.org** (requires a [NuGet API key](https://www.nuget.org/account/apikeys)):
-   ```powershell
-   $env:NUGET_API_KEY = "your-api-key"
+4. **Configure NuGet Trusted Publishing** (one-time, recommended):
 
-   Get-ChildItem -Path nupkgs -Filter *.nupkg | ForEach-Object {
-     dotnet nuget push $_.FullName `
-       --api-key $env:NUGET_API_KEY `
-       --source https://api.nuget.org/v3/index.json `
-       --skip-duplicate
-   }
+   On [nuget.org](https://www.nuget.org) → your profile → **Trusted Publishing**, add a policy:
 
-   Get-ChildItem -Path nupkgs -Filter *.snupkg | ForEach-Object {
-     dotnet nuget push $_.FullName `
-       --api-key $env:NUGET_API_KEY `
-       --source https://api.nuget.org/v3/index.json `
-       --skip-duplicate
-   }
-   ```
+   | Field | Value |
+   |-------|-------|
+   | Repository Owner | `acuencadev` |
+   | Repository | `translaas-sdk-dotnet` |
+   | Workflow File | `publish.yml` |
+   | Environment | *(leave empty)* |
+
+   In the GitHub repo, add secret **`NUGET_USER`** with your NuGet.org **username** (profile name, not email).
+
+   Publishing is handled by [`.github/workflows/publish.yml`](.github/workflows/publish.yml), which uses [Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing) (short-lived OIDC credentials via `NuGet/login@v1`). No long-lived NuGet API keys are stored in GitHub.
 
 5. **Tag and create a GitHub Release** on [translaas-sdk-dotnet](https://github.com/acuencadev/translaas-sdk-dotnet):
    ```bash
@@ -447,6 +443,21 @@ The SDK uses a centralized version management approach. To update the version fo
    ```
 
    Mark pre-releases with `--prerelease` when the version includes a suffix such as `-beta`. GitHub generates release notes from merged pull requests (same approach used for `v0.3.0-beta`).
+
+   Pushing the tag triggers **Publish** automatically (build → test → pack → NuGet.org). You can also run **Publish** manually from the Actions tab (`workflow_dispatch`).
+
+   **Manual CLI fallback** (only when Trusted Publishing is not configured):
+
+   ```powershell
+   $env:NUGET_API_KEY = "your-api-key"
+
+   Get-ChildItem -Path nupkgs -Filter *.nupkg | ForEach-Object {
+     dotnet nuget push $_.FullName `
+       --api-key $env:NUGET_API_KEY `
+       --source https://api.nuget.org/v3/index.json `
+       --skip-duplicate
+   }
+   ```
 
 #### Version Numbering
 
