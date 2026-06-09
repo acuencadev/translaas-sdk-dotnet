@@ -15,7 +15,7 @@
   
   <!-- Common NuGet Package Metadata -->
   <PropertyGroup Condition="'$(IsPackable)' != 'false'">
-    <Version>0.4.0-beta</Version>
+    <Version>0.4.1-beta</Version>
     <Authors>Translaas SDK Contributors</Authors>
     <Company>Translaas</Company>
     <Product>Translaas SDK</Product>
