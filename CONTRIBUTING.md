@@ -468,6 +468,63 @@ Once stable, release `1.0.0` as the first stable version.
 
 ### Release Notes
 
+## Version 0.4.1-beta (Pre-Release)
+
+### Summary
+
+Patch beta release on **0.4.0-beta**. Resolves default project id from the validate API key response for multi-project keys, wires `DefaultProjectId` through DI options, and fixes `netstandard2.0` compilation for the new validate response types.
+
+### Packages Included
+
+- **Translaas.Models** (0.4.1-beta) - Data transfer objects (DTOs) for the Translaas Translation Delivery API
+- **Translaas.Client** (0.4.1-beta) - Core HTTP client implementation with caching support
+- **Translaas.Caching** (0.4.1-beta) - In-memory caching abstractions and implementations
+- **Translaas.Caching.File** (0.4.1-beta) - File-based offline caching with hybrid caching support
+- **Translaas.Extensions.Http** (0.4.1-beta) - HttpClientFactory integration extensions
+- **Translaas.Extensions.DependencyInjection** (0.4.1-beta) - Full dependency injection integration
+- **Translaas.Extensions.Mvc** (0.4.1-beta) - ASP.NET Core MVC/Razor integration with Tag Helpers
+
+### Added
+
+- **`TranslaasClient.CreateAsync`** — resolves `DefaultProjectId` via `GET /api/v1/api-keys/validate` when not configured
+- **`ApiKeyProjectResolver`** — shared helper for default project resolution from validate responses
+- **`ValidateApiKeyResponse.ProjectIds`** and **`DefaultProjectId`** — multi-project API key metadata
+- **`TranslaasOptions.DefaultProjectId`** — DI configuration for default project id (mapped into `TranslaasClientOptions`)
+
+### Fixed
+
+- **`netstandard2.0`** — restore `List` / LINQ imports so new validate API key types compile on all target frameworks
+
+### Supported Frameworks
+
+- .NET Standard 2.0
+- .NET 8.0
+- .NET 10.0
+
+### Installation
+
+```bash
+# Full DI integration (recommended)
+dotnet add package Translaas.Extensions.DependencyInjection --version 0.4.1-beta
+
+# Or install individual packages
+dotnet add package Translaas.Client --version 0.4.1-beta
+dotnet add package Translaas.Models --version 0.4.1-beta
+dotnet add package Translaas.Caching --version 0.4.1-beta
+dotnet add package Translaas.Caching.File --version 0.4.1-beta
+dotnet add package Translaas.Extensions.Http --version 0.4.1-beta
+dotnet add package Translaas.Extensions.Mvc --version 0.4.1-beta
+```
+
+### Documentation
+
+- [README.md](README.md) - Getting started guide
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution and release guidelines
+- [GitHub Repository](https://github.com/acuencadev/translaas-sdk-dotnet)
+- [Compare v0.4.0-beta...v0.4.1-beta](https://github.com/acuencadev/translaas-sdk-dotnet/compare/v0.4.0-beta...v0.4.1-beta)
+
+---
+
 ## Version 0.4.0-beta (Pre-Release)
 
 ### Summary
